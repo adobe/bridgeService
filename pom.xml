@@ -5,6 +5,18 @@
 	<groupId>com.adobe.campaign.tests.service</groupId>
 	<artifactId>integroBridgeService</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>9</source>
+					<target>9</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 	<name>integroBridgeService</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>

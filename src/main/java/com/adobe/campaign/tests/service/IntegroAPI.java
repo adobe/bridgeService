@@ -16,8 +16,6 @@ public class IntegroAPI {
         });
         post("/call", (req, res) -> {
             JavaCalls fetchedFromJSON = JavaCallsFactory.createJavaCalls(req.body());
-            //return fetchedFromJSON.submitCalls().toString();
-            //return req.body();
 
             return JavaCallsFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls());
             //return fetchedFromJSON.submitCalls();

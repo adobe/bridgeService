@@ -1,6 +1,5 @@
 package com.adobe.campaign.tests.service;
 
-import com.adobe.campaign.tests.integro.core.SystemValueHandler;
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +13,7 @@ import spark.Spark;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
@@ -29,7 +29,8 @@ public class TestFetchCalls {
 
     @Test
     public void testJSONCall()
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
+            IOException, InstantiationException {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -51,13 +52,14 @@ public class TestFetchCalls {
 
         l_myJavaCalls.getCallContent().get("fetchEmail").setArgs(new Object[] {});
 
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
         Method l_definedMethod = l_myJavaCalls.getCallContent().get("fetchEmail").fetchMethod();
         assertThat("The method should not be null", l_definedMethod, Matchers.notNullValue());
 
         assertThat("We should have created the correct method", l_definedMethod.getName(),
                 Matchers.equalTo(l_myJavaCalls.getCallContent().get("fetchEmail").getMethodName()));
 
-        String returnedCountry = (String) l_myJavaCalls.getCallContent().get("fetchEmail").call();
+        String returnedCountry = (String) l_myJavaCalls.getCallContent().get("fetchEmail").call(iClassLoader);
         assertThat("We should get a good answer back from the call",
                 Arrays.asList("AT", "AU", "CA", "CH", "DE", "US", "FR", "CN", "IN", "JP", "RU", "BR", "ID", "GB", "MX")
                         .stream().anyMatch(f -> f.equals(returnedCountry)));
@@ -66,7 +68,8 @@ public class TestFetchCalls {
 
     @Test
     public void testJSONCallWithAruments()
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
+            IOException, InstantiationException {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -80,20 +83,23 @@ public class TestFetchCalls {
         assertThat("We should access our calls correctly", l_myJavaCalls.getCallContent().get("fetchEmail").getArgs(),
                 Matchers.arrayContainingInAnyOrder(13));
 
+
         Method l_definedMethod = l_myJavaCalls.getCallContent().get("fetchEmail").fetchMethod();
         assertThat("The method should not be null", l_definedMethod, Matchers.notNullValue());
 
         assertThat("We should have created the correct method", l_definedMethod.getName(),
                 Matchers.equalTo(l_myJavaCalls.getCallContent().get("fetchEmail").getMethodName()));
 
-        Object returnedValue = l_myJavaCalls.getCallContent().get("fetchEmail").call();
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+        Object returnedValue = l_myJavaCalls.getCallContent().get("fetchEmail").call(iClassLoader);
         assertThat("We should get a good answer back from the call", (Integer) returnedValue, Matchers.lessThan(13));
 
     }
 
     @Test
     public void testJSONCallWithTwoAruments()
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
+            IOException, InstantiationException {
 
         CallContent l_cc = new CallContent();
         l_cc.setClassName(RandomManager.class.getTypeName());
@@ -110,7 +116,8 @@ public class TestFetchCalls {
         assertThat("We should have created the correct method", l_definedMethod.getParameterCount(),
                 Matchers.equalTo(2));
 
-        Object returnedValue = l_cc.call();
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+        Object returnedValue = l_cc.call(iClassLoader);
         assertThat("We should get a good answer back from the call", returnedValue.toString(),
                 Matchers.startsWith("A+"));
         assertThat("We should get a good answer back from the call", returnedValue.toString(), Matchers.endsWith("@B"));
@@ -119,8 +126,8 @@ public class TestFetchCalls {
 
     @Test
     public void testJSONTransformation()
-            throws JsonProcessingException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-            IllegalAccessException {
+            throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException, InstantiationException {
         String l_jsonString =
                 "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + RandomManager.class.getTypeName() + "\",\n"
                         + "    \"method\": \"getUniqueEmail\",\n" + "    \"returnType\": \"java.lang.String\",\n"
@@ -131,6 +138,7 @@ public class TestFetchCalls {
         CallContent l_cc = fetchedFromJSON.getCallContent().get("call1");
         assertThat(l_cc.getMethodName(), Matchers.equalTo("getUniqueEmail"));
 
+
         Method l_definedMethod = l_cc.fetchMethod();
         assertThat("The method should not be null", l_definedMethod, Matchers.notNullValue());
 
@@ -140,7 +148,8 @@ public class TestFetchCalls {
         assertThat("We should have created the correct method", l_definedMethod.getParameterCount(),
                 Matchers.equalTo(2));
 
-        Object returnedValue = l_cc.call();
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+        Object returnedValue = l_cc.call(iClassLoader);
         assertThat("We should get a good answer back from the call", returnedValue.toString(),
                 Matchers.startsWith("A+"));
         assertThat("We should get a good answer back from the call", returnedValue.toString(), Matchers.endsWith("@B"));
@@ -149,7 +158,7 @@ public class TestFetchCalls {
     @Test
     public void testJSONTransformation2()
             throws JsonProcessingException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-            IllegalAccessException {
+            IllegalAccessException, InstantiationException {
         String l_jsonString =
                 "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + RandomManager.class.getTypeName() + "\",\n"
                         + "    \"method\": \"getUniqueEmail\",\n" + "    \"returnType\": \"java.lang.String\",\n"
@@ -177,7 +186,7 @@ public class TestFetchCalls {
     @Test
     public void testJSONTransformation_deserialize()
             throws JsonProcessingException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-            IllegalAccessException {
+            IllegalAccessException, InstantiationException {
         String l_jsonString =
                 "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + RandomManager.class.getTypeName() + "\",\n"
                         + "    \"method\": \"getUniqueEmail\",\n" + "    \"returnType\": \"java.lang.String\",\n"
@@ -197,7 +206,7 @@ public class TestFetchCalls {
     @Test(enabled = false)
     public void testJSONTransformation_deserializeEmail()
             throws JsonProcessingException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-            IllegalAccessException, MessagingException, UnsupportedEncodingException {
+            IllegalAccessException, MessagingException, UnsupportedEncodingException, InstantiationException {
         String l_jsonString =
                 "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + MimeMessageFactory.class.getTypeName()
                         + "\",\n" + "    \"method\": \"getMessage\",\n" + "    \"returnType\": \"java.lang.String\",\n"
@@ -249,10 +258,9 @@ public class TestFetchCalls {
     @Test
     public void testSeparationOfStaticFields()
             throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
-            JsonProcessingException {
+            IOException, InstantiationException {
 
         JavaCalls l_myJavaCalls = new JavaCalls();
-
 
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
@@ -265,11 +273,9 @@ public class TestFetchCalls {
         l_authentication.put("AC.INTEGRO.MAILING.BASE","boom.com");
         l_cc2.setArgs(new Object[] { l_authentication });
 
-
         l_myJavaCalls.getCallContent().put("aaa", l_cc2);
 
         l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
-
 
         JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
 
@@ -279,7 +285,6 @@ public class TestFetchCalls {
                 Matchers.startsWith("bada+"));
         assertThat("We should get a good answer back from the call", returnedValue.getReturnValues().get("getRandomEmail").toString(), Matchers.endsWith("@boom.com"));
 
-
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
         l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
@@ -287,11 +292,47 @@ public class TestFetchCalls {
         l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
 
         JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
+        //Object b = l_ccB.call(new IntegroBridgeClassLoader());
+        //System.out.println(b);
         assertThat("We should get a good answer back from the call", returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
-                Matchers.startsWith("+"));
-        assertThat("We should get a good answer back from the call", returnedValueB.getReturnValues().get("getRandomEmailB").toString(), Matchers.endsWith("@"));
+                Matchers.startsWith("testqa+"));
+        assertThat("We should get a good answer back from the call", returnedValueB.getReturnValues().get("getRandomEmailB").toString(), Matchers.endsWith("@localhost.corp.adobe.com"));
+    }
 
+    @Test
+    public void testSeparationOfStaticFields_json()
+            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
+            IOException, InstantiationException {
 
+        String l_jsonString =
+                "{\n"
+                        + "    \"callContent\": {\n"
+                        + "        \"call1\": {\n"
+                        + "            \"class\": \"com.adobe.campaign.tests.integro.tools.RandomManager\",\n"
+                        + "            \"method\": \"getRandomEmail\",\n"
+                        + "            \"returnType\": \"java.lang.String\",\n"
+                        + "            \"args\": []\n"
+                        + "        }\n"
+                        + "    },\n"
+                        + "    \"environmentVariables\": {\n"
+                        + "        \"AC.UITEST.MAILING.PREFIX\": \"tyrone\",\n"
+                        + "        \"AC.INTEGRO.MAILING.BASE\" : \"profane.com\"\n"
+                        + "    }\n"
+                        + "}";
+
+        ObjectMapper mapper = new ObjectMapper();
+        JavaCalls fetchedFromJSON = mapper.readValue(l_jsonString, JavaCalls.class);
+
+        JavaCallResults returnedValue = fetchedFromJSON.submitCalls();
+
+        System.out.println(JavaCallsFactory.transformJavaCallResultsToJSON(returnedValue));
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("call1").toString(),
+                Matchers.startsWith("tyrone+"));
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("call1").toString(), Matchers.endsWith("@profane.com"));
 
 
     }
@@ -312,7 +353,7 @@ public class TestFetchCalls {
     }
 
     @Test(groups = "E2E")
-    public void testMainHelloWorldCall() throws JsonProcessingException {
+    public void testMainHelloWorldCall() throws IOException {
 
         //  RestTools rt = new RestTools("http://localhost:4567/");
         JavaCalls l_call = new JavaCalls();

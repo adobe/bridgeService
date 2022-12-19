@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 public class CallContent {
 
+    private IntegroBridgeClassLoader iClassLoader;
+
     @JsonProperty("class")
     private String className;
 
@@ -60,25 +62,28 @@ public class CallContent {
      *
      * @return the method object
      */
-    public Method fetchMethod()  {
-        Class ourClass;
-        List<Method> lr_method = new ArrayList<>();
-        try {
-            ourClass = Class.forName(getClassName());
-            lr_method = Arrays.stream(ourClass.getMethods())
-                    .filter(f -> f.getName().equals(this.getMethodName()))
-                    .filter(fp -> fp.getParameterCount() == this.getArgs().length).collect(
-                            Collectors.toList());
+    public Method fetchMethod(Class in_class) {
 
-            if (lr_method.size()==0) {
-                throw new RuntimeException("Method "+this.getClassName()+"."+this.getMethodName()+ "   with "+this.getArgs().length+" arguments could not be found.");
-            }
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+        List<Method> lr_method = new ArrayList<>();
+
+        //ourClass = iClassLoader.loadClass(getClassName());
+        lr_method = Arrays.stream(in_class.getMethods())
+                .filter(f -> f.getName().equals(this.getMethodName()))
+                .filter(fp -> fp.getParameterCount() == this.getArgs().length).collect(
+                        Collectors.toList());
+
+        if (lr_method.size() == 0) {
+            throw new RuntimeException(
+                    "Method " + this.getClassName() + "." + this.getMethodName() + "   with " + this.getArgs().length
+                            + " arguments could not be found.");
         }
 
-
         return lr_method.get(0);
+    }
+
+    public Method fetchMethod() throws ClassNotFoundException {
+
+        return fetchMethod(Class.forName(getClassName(),true, new IntegroBridgeClassLoader()));
     }
 
     /**
@@ -86,9 +91,13 @@ public class CallContent {
      *
      * @return the value of this call
      */
-    public Object call()
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public Object call(IntegroBridgeClassLoader iClassLoader)
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
+            InstantiationException {
 
-        return fetchMethod().invoke(null, this.getArgs());
+        Class ourClass = Class.forName(getClassName(),true, iClassLoader);
+        Object ourInstance = ourClass.newInstance();
+
+        return fetchMethod(ourClass).invoke(ourInstance, this.getArgs());
     }
 }

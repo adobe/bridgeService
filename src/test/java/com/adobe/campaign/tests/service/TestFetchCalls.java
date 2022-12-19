@@ -1,12 +1,10 @@
 package com.adobe.campaign.tests.service;
 
-import com.adobe.campaign.tests.integro.apitools.RestTools;
+import com.adobe.campaign.tests.integro.core.SystemValueHandler;
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.testng.Assert;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -22,7 +20,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Properties;
 
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestFetchCalls {
@@ -188,7 +188,10 @@ public class TestFetchCalls {
 
         JavaCallResults l_returnValue = fetchedFromJSON.submitCalls();
 
-        System.out.println(mapper.writeValueAsString(l_returnValue));
+        assertThat("The retun value should be of a correct format",l_returnValue.returnValues.containsKey("call1"));
+        assertThat("The retun value should be of a correct format",l_returnValue.returnValues.get("call1").toString(), Matchers.startsWith("A"));
+        assertThat("The retun value should be of a correct format",l_returnValue.returnValues.get("call1").toString(), Matchers.endsWith("B"));
+
     }
 
     @Test(enabled = false)
@@ -237,65 +240,105 @@ public class TestFetchCalls {
 
         assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
         assertThat(l_result.get("size"), Matchers.equalTo(-1));
-        assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me "+l_suffix));
-        assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truely "+l_suffix));
+        assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me " + l_suffix));
+        assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truely " + l_suffix));
         assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
 
     }
 
+    @Test
+    public void testSeparationOfStaticFields()
+            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
+            JsonProcessingException {
 
-    @BeforeGroups//(groups = "E2E")
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc.setMethodName("getRandomEmail");
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
+        l_cc2.setMethodName("setIntegroCache");
+        Properties l_authentication = new Properties();
+        l_authentication.put("AC.UITEST.MAILING.PREFIX","bada");
+        l_authentication.put("AC.INTEGRO.MAILING.BASE","boom.com");
+        l_cc2.setArgs(new Object[] { l_authentication });
+
+
+        l_myJavaCalls.getCallContent().put("aaa", l_cc2);
+
+        l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
+
+
+        JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
+
+        System.out.println(JavaCallsFactory.transformJavaCallResultsToJSON(returnedValue));
+
+        assertThat("We should get a good answer back from the call", returnedValue.getReturnValues().get("getRandomEmail").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call", returnedValue.getReturnValues().get("getRandomEmail").toString(), Matchers.endsWith("@boom.com"));
+
+
+        JavaCalls l_myJavaCallsB = new JavaCalls();
+        CallContent l_ccB = new CallContent();
+        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_ccB.setMethodName("getRandomEmail");
+        l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
+
+        JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
+        assertThat("We should get a good answer back from the call", returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.startsWith("+"));
+        assertThat("We should get a good answer back from the call", returnedValueB.getReturnValues().get("getRandomEmailB").toString(), Matchers.endsWith("@"));
+
+
+
+
+    }
+
+    @BeforeGroups(groups = "E2E")
     public void startUpService() {
         IntegroAPI iapi = new IntegroAPI();
         iapi.startServices();
         Spark.awaitInitialization();
     }
 
+    public static final String EndPointURL = "http://localhost:4567/";
+
     @Test(groups = "E2E")
     public void testMainHelloWorld() {
-        String[] args = new String[0];
-        IntegroAPI.main(args);
-        RestTools rt = new RestTools("http://localhost:4567/");
-
-        String result = rt.get("hello");
-        assertThat("We should get the correct value", result, Matchers.equalTo("Hello World"));
+        given().when().get(EndPointURL + "hello").then().assertThat().equals("Hello Worlds");
 
     }
 
-        @Test(groups = "E2E")
-    public void testMainHelloWorldCall() {
+    @Test(groups = "E2E")
+    public void testMainHelloWorldCall() throws JsonProcessingException {
 
-        RestTools rt = new RestTools("http://localhost:4567/");
+        //  RestTools rt = new RestTools("http://localhost:4567/");
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        myContent.setMethodName("getCountries");
+        myContent.setReturnType("java.lang.String");
+        l_call.getCallContent().put("call1PL", myContent);
 
-        JSONObject payload = new JSONObject();
-        JSONObject callContentPL = new JSONObject();
-        JSONObject call1PL = new JSONObject();
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
+                Matchers.containsInAnyOrder("AT", "AU", "CA", "CH", "DE", "US", "FR", "CN", "IN", "JP", "RU", "BR",
+                        "ID", "GB", "MX"));
 
-        payload.put("callContent", callContentPL);
-        callContentPL.put("call1", call1PL);
-        call1PL.put("class", "com.adobe.campaign.tests.integro.tools.RandomManager");
-        call1PL.put("method", "getCountries");
-        call1PL.put("returnType", "java.lang.String");
-        call1PL.put("args", new JSONArray());
+    }
 
-        JSONObject returnPayLoad = rt.post("call", payload);
+    @Test(groups = "E2E")
+    public void testErrors() {
+        JavaCallResults jcr = new JavaCallResults();
 
-        assertThat("The payload should contain only one entry ", returnPayLoad.keySet().size(), Matchers.equalTo(1));
-        assertThat("The payload should contain only one entry called returnValues", returnPayLoad.containsKey("returnValues"));
-
-        JSONObject call1RP = (JSONObject) returnPayLoad.get("returnValues");
-        assertThat("The payload should contain only one entry ", call1RP.keySet().size(), Matchers.equalTo(1));
-        assertThat("The payload should contain only one entry called returnValues", call1RP.containsKey("call1"));
-
-        JSONArray call1RPValue = (JSONArray) call1RP.get("call1");
-        assertThat("The payload should contain all countries ", call1RPValue.size(), Matchers.equalTo(15));
-
-
+        given().body(jcr).post(EndPointURL + "call").then().statusCode(400).and().assertThat()
+                .equals(IntegroAPI.ERROR_JSON_TRANSFORMATION);
     }
 
     @AfterGroups(groups = "E2E")
     public void tearDown() {
-       // Spark.stop();
+        Spark.stop();
     }
 
 }

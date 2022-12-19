@@ -1,37 +1,38 @@
 package com.adobe.campaign.tests.service;
 
 import com.adobe.campaign.tests.service.JavaCalls;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static spark.Spark.*;
 
 public class IntegroAPI {
 
-    public static void main(String[] args) {
-       // IntegroAPI iapi = new IntegroAPI();
-       // iapi.startServices();
-        startServices();
-    }
+    public static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
 
     protected static void startServices() {
-        get("/hello", (req, res) -> "Hello World");
+        get("/hello", (req, res) -> {
+            return "Hello World";
+        });
         post("/call", (req, res) -> {
-            ObjectMapper mapper = new ObjectMapper();
-            JavaCalls fetchedFromJSON = mapper.readValue(req.body(), JavaCalls.class);
+            JavaCalls fetchedFromJSON = JavaCallsFactory.createJavaCalls(req.body());
             //return fetchedFromJSON.submitCalls().toString();
             //return req.body();
-            return mapper.writeValueAsString(fetchedFromJSON.submitCalls());
+
+            return JavaCallsFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls());
+            //return fetchedFromJSON.submitCalls();
         });
 
-        /*
+
         after((req, res) -> {
             res.type("application/json");
         });
 
-        exception(IllegalArgumentException.class, (e, req, res) -> {
+        exception( JsonProcessingException.class, (e, req, res) -> {
+            res.body(ERROR_JSON_TRANSFORMATION);
             res.status(400);
         });
 
-         */
+
     }
 }

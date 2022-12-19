@@ -34,6 +34,7 @@ public class MetaUtils {
 
             if (lt_m.getReturnType() instanceof Serializable) {
                 if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && ManagedClasses.contains(lt_m.getReturnType())) {
+                //if (lt_m.getParameterCount()==0 && ManagedClasses.contains(lt_m.getReturnType())) {
                     System.out.println(lt_m.getName()+":");
                     Object lt_returnValue = null;
                     try {
@@ -54,4 +55,5 @@ public class MetaUtils {
         }
         return lr_value;
     }
+
 }

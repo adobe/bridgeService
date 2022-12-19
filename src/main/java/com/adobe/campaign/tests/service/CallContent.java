@@ -19,6 +19,10 @@ public class CallContent {
     private String returnType;
     private Object[] args;
 
+    CallContent() {
+        args = new Object[] {};
+    }
+
     public String getClassName() {
         return className;
     }
@@ -67,7 +71,7 @@ public class CallContent {
                             Collectors.toList());
 
             if (lr_method.size()==0) {
-                throw new RuntimeException("Method "+this.getClassName()+"."+this.getMethodName()+ "   with "+this.getArgs().length+" could not be found.");
+                throw new RuntimeException("Method "+this.getClassName()+"."+this.getMethodName()+ "   with "+this.getArgs().length+" arguments could not be found.");
             }
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);

@@ -1,5 +1,6 @@
 package com.adobe.campaign.tests.service;
 
+import java.util.List;
 import java.util.Map;
 
 public class GenericUnserialisableObject {
@@ -7,7 +8,8 @@ public class GenericUnserialisableObject {
     Map<String, Object> values;
 
     GenericUnserialisableObject(Object in_Object) {
-        this.values = MetaUtils.extractValuesFromObject(in_Object);
+        //List x = MetaUtils.extractValuesFromObject(in_Object);
+        //this.values = MetaUtils.extractValuesFromObject(in_Object);
     }
 
 }

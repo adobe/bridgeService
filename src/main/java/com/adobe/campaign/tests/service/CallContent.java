@@ -1,5 +1,7 @@
 package com.adobe.campaign.tests.service;
 
+import com.adobe.campaign.tests.service.exceptions.AmbiguousMethodException;
+import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.lang.reflect.InvocationTargetException;
@@ -64,6 +66,15 @@ public class CallContent {
      */
     public Method fetchMethod(Class in_class) {
 
+        List<Method> lr_method = fetchMethodCandidates(in_class);
+        if (lr_method.size() > 1) {
+            throw new AmbiguousMethodException(
+                    "We could not find a unique method for " + this.getClassName() + "." + this.getMethodName());
+        }
+        return lr_method.get(0);
+    }
+
+    public List<Method> fetchMethodCandidates(Class in_class) {
         List<Method> lr_method = new ArrayList<>();
 
         //ourClass = iClassLoader.loadClass(getClassName());
@@ -73,17 +84,16 @@ public class CallContent {
                         Collectors.toList());
 
         if (lr_method.size() == 0) {
-            throw new RuntimeException(
+            throw new NonExistantJavaObjectException(
                     "Method " + this.getClassName() + "." + this.getMethodName() + "   with " + this.getArgs().length
                             + " arguments could not be found.");
         }
-
-        return lr_method.get(0);
+        return lr_method;
     }
 
     public Method fetchMethod() throws ClassNotFoundException {
 
-        return fetchMethod(Class.forName(getClassName(),true, new IntegroBridgeClassLoader()));
+        return fetchMethod(Class.forName(getClassName(), true, new IntegroBridgeClassLoader()));
     }
 
     /**
@@ -91,13 +101,28 @@ public class CallContent {
      *
      * @return the value of this call
      */
-    public Object call(IntegroBridgeClassLoader iClassLoader)
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
-            InstantiationException {
+    public Object call(IntegroBridgeClassLoader iClassLoader) throws InstantiationException {
 
-        Class ourClass = Class.forName(getClassName(),true, iClassLoader);
-        Object ourInstance = ourClass.newInstance();
+        Object lr_object = null;
+        try {
+            Class ourClass = Class.forName(getClassName(), true, iClassLoader);
 
-        return fetchMethod(ourClass).invoke(ourInstance, this.getArgs());
+            Method l_method = fetchMethod(ourClass);
+
+            Object ourInstance = ourClass.newInstance();
+            lr_object = l_method.invoke(ourInstance, this.getArgs());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new NonExistantJavaObjectException("The given class " + this.getClassName() + "could not be found.",
+                    e);
+        }
+
+        return lr_object;
     }
 }

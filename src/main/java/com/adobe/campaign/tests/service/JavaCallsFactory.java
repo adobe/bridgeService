@@ -1,7 +1,10 @@
 package com.adobe.campaign.tests.service;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class JavaCallsFactory {
     public static JavaCalls createJavaCalls(String in_requestJSON) throws JsonProcessingException {

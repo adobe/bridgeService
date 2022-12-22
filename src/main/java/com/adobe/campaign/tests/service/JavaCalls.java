@@ -1,6 +1,7 @@
 package com.adobe.campaign.tests.service;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -56,6 +57,22 @@ public class JavaCalls {
             throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
             InstantiationException {
 
+        updateEnvironmentVariables();
+
+        JavaCallResults lr_returnObject = new JavaCallResults();
+
+        for (String lt_key : this.getCallContent().keySet()) {
+            Object callResult = this.call(lt_key);
+
+            lr_returnObject.addResult(lt_key, MetaUtils.extractValuesFromObject(callResult));
+        }
+
+        return lr_returnObject;
+    }
+
+    private void updateEnvironmentVariables()
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
+            InstantiationException {
         CallContent l_setEnvironmetVars = new CallContent();
         l_setEnvironmetVars.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
         l_setEnvironmetVars.setMethodName("setIntegroCache");
@@ -65,14 +82,6 @@ public class JavaCalls {
         environmentVariables.keySet().stream().forEach(k -> argumentProps.put(k, environmentVariables.get(k)));
         l_setEnvironmetVars.setArgs(new Object[] { argumentProps });
         l_setEnvironmetVars.call(this.localClassLoader);
-
-        JavaCallResults lr_returnObject = new JavaCallResults();
-
-        for (String lt_key : this.getCallContent().keySet()) {
-            lr_returnObject.getReturnValues().put(lt_key, this.call(lt_key));
-        }
-
-        return lr_returnObject;
     }
 
     public Map<String, Object> getEnvironmentVariables() {

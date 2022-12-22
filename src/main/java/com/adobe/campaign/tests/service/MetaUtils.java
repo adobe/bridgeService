@@ -1,12 +1,11 @@
 package com.adobe.campaign.tests.service;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MetaUtils {
     public static final List<Class<?>> ManagedClasses = Arrays.asList(String.class, int.class, long.class, boolean.class,Integer.class, Long.class, Boolean.class, Object.class);
@@ -28,13 +27,57 @@ public class MetaUtils {
         return sb.toString();
     }
 
-    public static Map<String, Object> extractValuesFromObject(Object in_object) {
-        Map<String, Object> lr_value = new HashMap<>();
-        for (Method lt_m : in_object.getClass().getDeclaredMethods()) {
+    public static List extractValuesFromList(Collection in_object) {
+        List<Map<String,Object>> lr_list = (List<Map<String, Object>>) in_object.stream().map(MetaUtils::extractValuesFromObject).collect(Collectors.toList());
+        return lr_list;
+    }
 
-            if (lt_m.getReturnType() instanceof Serializable) {
-                if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && ManagedClasses.contains(lt_m.getReturnType())) {
-                //if (lt_m.getParameterCount()==0 && ManagedClasses.contains(lt_m.getReturnType())) {
+    public static boolean isExtractable(Class in_class) {
+        return ManagedClasses.contains(in_class) || in_class.isPrimitive() || Collection.class.isAssignableFrom(in_class) ;
+    }
+
+    /**
+     * Objects of these types should be returned as is
+     * @param in_class a Class object
+     * @return true if the class needs not be managed
+     */
+    public static boolean isBasicReturnType(Class in_class) {
+        return ManagedClasses.contains(in_class) || in_class.isPrimitive() ;
+    }
+
+    /**
+     * Lets us know if we can extract this method
+     * @param in_method a method object
+     * @return true if this method can be invoked in the case of extracting results
+     */
+    public static boolean isExtractable(Method in_method) {
+        List<Boolean> tests = new ArrayList<Boolean>();
+
+        tests.add(in_method.getReturnType() instanceof Serializable);
+        tests.add(in_method.getName().startsWith("get") || in_method.getName().startsWith("is")|| in_method.getName().startsWith("has"));
+        tests.add(isExtractable(in_method.getReturnType()));
+        tests.add(in_method.getParameterCount()==0);
+
+        return tests.stream().noneMatch(r -> r.equals(Boolean.FALSE));
+    }
+
+    public static Object extractValuesFromObject(Object in_object) {
+        Map<String, Object> lr_value = new HashMap<>();
+        if (in_object==null) {
+            return lr_value;
+        } else if (isBasicReturnType(in_object.getClass())) {
+            return in_object;
+        } else if (in_object instanceof Collection) {
+            return extractValuesFromList((Collection) in_object);
+        }
+
+        Field[] s = in_object.getClass().getDeclaredFields();
+        for (Method lt_m : Arrays.stream(in_object.getClass().getMethods()).filter(t -> (isExtractable(t))).collect(
+                Collectors.toSet())) {
+
+
+                if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && isExtractable(lt_m.getReturnType())) {
+               // if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object)) {
                     System.out.println(lt_m.getName()+":");
                     Object lt_returnValue = null;
                     try {
@@ -49,11 +92,12 @@ public class MetaUtils {
                         throw new RuntimeException(e);
                     }
 
-                }
+
             }
 
         }
         return lr_value;
     }
+
 
 }

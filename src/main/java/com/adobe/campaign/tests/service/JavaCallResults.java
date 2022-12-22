@@ -19,5 +19,12 @@ public class JavaCallResults  implements Serializable {
         this.returnValues = returnValues;
     }
 
-
+    /**
+     * Stored the given result in the return Object
+     * @param in_key a key to store the result with
+     * @param callResult a result object
+     */
+    public void addResult(String in_key, Object callResult) {
+        returnValues.put(in_key, callResult);
+    }
 }

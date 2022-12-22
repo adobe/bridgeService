@@ -1,7 +1,5 @@
 package com.adobe.campaign.tests.service;
 
-import jia.blog.JiaClassLoader;
-
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;

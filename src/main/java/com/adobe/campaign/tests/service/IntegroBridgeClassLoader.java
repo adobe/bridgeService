@@ -5,13 +5,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class IntegroBridgeClassLoader extends ClassLoader {
-    /*
-    public IntegroBridgeClassLoader() throws IOException {
-        super(Thread.currentThread().getContextClassLoader());
-        //super(((URLClassLoader) Thread.currentThread().getContextClassLoader()).getURLs());
-    }
-    */
+    private static final Logger log = LogManager.getLogger();
 
     /**
      * Parent ClassLoader passed to this constructor
@@ -38,10 +37,10 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         // is this class already loaded?
         Class cls = findLoadedClass(name);
         if (cls != null) {
-            System.out.println("class " + name + "has been loaded.");
+            log.debug("class {} has been loaded.",name);
             return cls;
         } else {
-            System.out.println("class " + name + " has not been loaded. Loading now.");
+            log.debug("class {} has not been loaded. Loading now.", name);
         }
 
 
@@ -80,7 +79,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
     @Override
     public Class loadClass(String name)
             throws ClassNotFoundException {
-        System.out.println("loading class '" + name + "'");
+        log.debug("loading class {}",name);
 
         if (name.startsWith("com.adobe.campaign.")) {
             return getClass(name);
@@ -102,6 +101,9 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         // Opening the file
         InputStream stream = getClass().getClassLoader()
                 .getResourceAsStream(name);
+        if (stream==null) {
+            throw new NonExistantJavaObjectException("The given class path "+name+" could not be found.");
+        }
         int size = stream.available();
         byte buff[] = new byte[size];
         DataInputStream in = new DataInputStream(stream);

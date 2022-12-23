@@ -1,5 +1,8 @@
 package com.adobe.campaign.tests.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -8,6 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class MetaUtils {
+    private static final Logger log = LogManager.getLogger();
     public static final List<Class<?>> ManagedClasses = Arrays.asList(String.class, int.class, long.class, boolean.class,Integer.class, Long.class, Boolean.class, Object.class);
 
     /**
@@ -75,16 +79,16 @@ public class MetaUtils {
         for (Method lt_m : Arrays.stream(in_object.getClass().getMethods()).filter(t -> (isExtractable(t))).collect(
                 Collectors.toSet())) {
 
-
                 if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && isExtractable(lt_m.getReturnType())) {
-               // if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object)) {
-                    System.out.println(lt_m.getName()+":");
+
                     Object lt_returnValue = null;
                     try {
                         lt_returnValue = lt_m.invoke(in_object);
-                        System.out.println("-> "+ ((lt_returnValue == null) ? "null" : lt_returnValue.toString()));
+
+                        //TODO Add option with null values (extract null)
                         if (lt_returnValue != null) {
                             lr_value.put(extractFieldName(lt_m.getName()),lt_returnValue);
+                            log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue.toString());
                         }
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);

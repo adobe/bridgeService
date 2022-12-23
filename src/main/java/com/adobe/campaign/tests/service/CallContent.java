@@ -2,6 +2,8 @@ package com.adobe.campaign.tests.service;
 
 import com.adobe.campaign.tests.service.exceptions.AmbiguousMethodException;
 import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
+import com.adobe.campaign.tests.service.exceptions.TargetJavaClassException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.lang.reflect.InvocationTargetException;
@@ -9,6 +11,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class CallContent {
@@ -101,7 +104,7 @@ public class CallContent {
      *
      * @return the value of this call
      */
-    public Object call(IntegroBridgeClassLoader iClassLoader) throws InstantiationException {
+    public Object call(IntegroBridgeClassLoader iClassLoader) {
 
         Object lr_object = null;
         try {
@@ -109,20 +112,45 @@ public class CallContent {
 
             Method l_method = fetchMethod(ourClass);
 
-            Object ourInstance = ourClass.newInstance();
+            Object ourInstance = ourClass.getDeclaredConstructor().newInstance();
             lr_object = l_method.invoke(ourInstance, this.getArgs());
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException(e);
+            throw new NonExistantJavaObjectException("The given method " + this.getFullName() + " could not accept the given arguments..");
 
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
+            throw new TargetJavaClassException("We experienced an exception when calling the provided method "+this.getFullName()+".", e);
         } catch (ClassNotFoundException e) {
-            throw new NonExistantJavaObjectException("The given class " + this.getClassName() + "could not be found.",
-                    e);
+            throw new NonExistantJavaObjectException("The given class " + this.getClassName() + "could not be found.");
+        } catch (InstantiationException | NoSuchMethodException e) {
+            throw new NonExistantJavaObjectException("Could not instantiate class. The given class " + this.getClassName() + "could not be found.");
         }
 
         return lr_object;
     }
+
+    /**
+     * Returns the full name of the method
+     * @return the full name of the method
+     */
+    @JsonIgnore
+    public String getFullName() {
+        return this.getClassName() +"."+ this.getMethodName();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        CallContent that = (CallContent) o;
+        return getClassName().equals(that.getClassName()) && getMethodName().equals(that.getMethodName())
+                && Objects.equals(getReturnType(), that.getReturnType()) && Arrays.equals(getArgs(),
+                that.getArgs());
+    }
+
 }

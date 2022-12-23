@@ -3,10 +3,7 @@ package com.adobe.campaign.tests.service;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class JavaCalls {
 
@@ -19,7 +16,7 @@ public class JavaCalls {
 
 
 
-    public JavaCalls() throws IOException {
+    public JavaCalls() {
         callContent = new LinkedHashMap<>();
         environmentVariables = new HashMap<>();
         localClassLoader = new IntegroBridgeClassLoader();
@@ -90,5 +87,24 @@ public class JavaCalls {
 
     public void setEnvironmentVariables(Map<String, Object> environmentVariables) {
         this.environmentVariables = environmentVariables;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        JavaCalls javaCalls = (JavaCalls) o;
+
+        return getCallContent().equals(javaCalls.getCallContent()) && getEnvironmentVariables().equals(
+                javaCalls.getEnvironmentVariables());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getCallContent(), getEnvironmentVariables());
     }
 }

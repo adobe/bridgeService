@@ -1,8 +1,10 @@
 package com.adobe.campaign.tests.service;
 
+import com.adobe.campaign.tests.integro.tools.DateAndTimeTools;
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.adobe.campaign.tests.service.exceptions.AmbiguousMethodException;
 import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
+import com.adobe.campaign.tests.service.exceptions.TargetJavaClassException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
@@ -96,6 +98,32 @@ public class TestFetchCalls {
     }
 
     @Test
+    public void testMakeMultipleCalls()
+            throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException,
+            IllegalAccessException, InstantiationException {
+        //Call 1
+        JavaCalls l_myJavaCalls1 = new JavaCalls();
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName(RandomManager.class.getTypeName());
+        l_cc1.setMethodName("fetchRandomCountry");
+        l_cc1.setArgs(new Object[] {  });
+        l_myJavaCalls1.getCallContent().put("fetchCountry", l_cc1);
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(RandomManager.class.getTypeName());
+        l_cc2.setMethodName("getUniqueEmail");
+        l_cc2.setArgs(new Object[] { "A", "B" });
+        l_myJavaCalls1.getCallContent().put("fetchEmail", l_cc2);
+
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+        JavaCallResults jcr = l_myJavaCalls1.submitCalls();
+        assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("fetchEmail").toString(),
+                Matchers.startsWith("A+"));
+        assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("fetchEmail").toString(), Matchers.endsWith("@B"));
+
+    }
+
+    @Test
     public void testJSONCallWithTwoAruments()
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
             IOException, InstantiationException {
@@ -121,6 +149,67 @@ public class TestFetchCalls {
                 Matchers.startsWith("A+"));
         assertThat("We should get a good answer back from the call", returnedValue.toString(), Matchers.endsWith("@B"));
 
+    }
+
+
+    @Test
+    public void testJSONCallWithBadArguments()
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
+            IOException, InstantiationException, MessagingException {
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(RandomManager.class.getTypeName());
+        l_cc.setMethodName("getRandomString");
+
+        l_cc.setArgs(new Object[] { MimeMessageFactory.getMessage("ab") });
+
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+        Assert.assertThrows(NonExistantJavaObjectException.class, () -> l_cc.call(iClassLoader));
+    }
+
+    @Test
+    public void testJSONCallWithFailingTargetMethod() {
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(DateAndTimeTools.class.getTypeName());
+        l_cc.setMethodName("convertStringToDate");
+
+        l_cc.setArgs(new Object[] { "", "" });
+
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+        Assert.assertThrows(TargetJavaClassException.class, ()->l_cc.call(iClassLoader));
+    }
+
+    @Test
+    public void testMainHelloWorldCall_problem() throws IOException {
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        myContent.setMethodName("getCountries");
+        myContent.setReturnType("java.lang.String");
+        l_call.getCallContent().put("call1PL", myContent);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        String mappedJSON = mapper.writeValueAsString(l_call);
+        System.out.println(mappedJSON);
+
+        ObjectMapper m2 = new ObjectMapper();
+        JavaCalls j2 = JavaCallsFactory.createJavaCalls(mappedJSON);
+
+        assertThat("Both calls should be equal" , j2.getCallContent().get("call1PL"), Matchers.equalTo(myContent));
+
+        assertThat("Both calls should be equal" , j2, Matchers.equalTo(l_call));
+
+        //Equal tests
+        assertThat("Both calls should be equal" , j2.getCallContent().get("call1PL"), Matchers.not(Matchers.equalTo(null)));
+
+        assertThat("Both calls should be equal" , j2, Matchers.equalTo(j2));
+
+        assertThat("Both calls should be equal" , myContent, Matchers.equalTo(myContent));
+
+        assertThat("Both calls should be equal" , j2, Matchers.not(Matchers.equalTo(null)));
     }
 
     @Test
@@ -384,10 +473,22 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testIssueWithNonExistantObjectException() throws ClassNotFoundException {
+    public void testIssueWithNonExistantMethodException() throws ClassNotFoundException {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
         l_cc.setMethodName("fetchEmailNonExistant");
+        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
+        IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
+
+        Assert.assertThrows(NonExistantJavaObjectException.class,
+                () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
+    }
+
+    @Test
+    public void testIssueWithNonExistantClassException() throws ClassNotFoundException {
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailNonExistantTools");
+        l_cc.setMethodName("fetchEmail");
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
@@ -408,7 +509,7 @@ public class TestFetchCalls {
         assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
     }
 
-    @Test
+    @Test(enabled = false)
     public void testThatWeCanSendAndReceiveEmails()
             throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException,
             IllegalAccessException, InstantiationException {
@@ -595,7 +696,6 @@ public class TestFetchCalls {
     @Test(groups = "E2E")
     public void testMainHelloWorldCall() throws IOException {
 
-        //  RestTools rt = new RestTools("http://localhost:4567/");
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
         myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");

@@ -15,9 +15,6 @@ public class JavaCallResults  implements Serializable {
         return returnValues;
     }
 
-    public void setReturnValues(Map<String, Object> returnValues) {
-        this.returnValues = returnValues;
-    }
 
     /**
      * Stored the given result in the return Object

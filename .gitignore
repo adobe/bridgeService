@@ -11,3 +11,5 @@ buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
 .DS_Store
 .idea
+ac_test_output
+ibstest_output

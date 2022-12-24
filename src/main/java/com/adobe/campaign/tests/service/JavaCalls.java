@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class JavaCalls {
 
@@ -37,7 +38,7 @@ public class JavaCalls {
      * @return A map of the results
      */
     public Object call(String in_key)
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
+            throws IllegalAccessException,
             InstantiationException {
         if (!this.callContent.containsKey(in_key)) {
             throw new CallDefinitionNotFoundException("Could not find a call definition with the given key "+in_key);
@@ -58,7 +59,9 @@ public class JavaCalls {
 
         JavaCallResults lr_returnObject = new JavaCallResults();
 
-        for (String lt_key : this.getCallContent().keySet()) {
+        for (String lt_key : this.getCallContent().keySet().stream().sorted().collect(Collectors.toList())) {
+            //Adapt CallContent to results
+            //this.getCallContent().get(lt_key).expandArgs(lr_returnObject);
             Object callResult = this.call(lt_key);
 
             lr_returnObject.addResult(lt_key, MetaUtils.extractValuesFromObject(callResult));

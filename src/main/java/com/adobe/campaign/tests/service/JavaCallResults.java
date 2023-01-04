@@ -7,6 +7,10 @@ import java.util.Map;
 public class JavaCallResults  implements Serializable {
     Map<String, Object> returnValues;
 
+
+
+    boolean finished = true;
+
     JavaCallResults() {
         returnValues = new HashMap<>();
     }
@@ -23,5 +27,13 @@ public class JavaCallResults  implements Serializable {
      */
     public void addResult(String in_key, Object callResult) {
         returnValues.put(in_key, callResult);
+    }
+
+    public boolean isFinished() {
+        return finished;
+    }
+
+    public void setFinished(boolean finished) {
+        this.finished = finished;
     }
 }

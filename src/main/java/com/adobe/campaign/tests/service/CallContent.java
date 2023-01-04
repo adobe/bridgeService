@@ -153,4 +153,21 @@ public class CallContent {
                 that.getArgs());
     }
 
+    /**
+     * Given the previous Call Results, we expand the arguments with those in the call results
+     * @param in_returnObject
+     */
+    public void expandArgs(JavaCallResults in_returnObject) {
+        List<Object> l_newArgs = new ArrayList<>();
+        int i = 0;
+        for (Object lt_arg : this.getArgs()) {
+            Object lt_currentArg = lt_arg;
+            if (lt_arg.toString().startsWith("returnValues")) {
+                String[] splitVals = lt_arg.toString().split("\\.");
+                //in_returnObject.getReturnValues().get()
+            }
+            l_newArgs.add(lt_arg);
+        }
+        //this.setArgs(new Object[] {});
+    }
 }

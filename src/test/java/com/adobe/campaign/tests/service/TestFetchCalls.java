@@ -678,6 +678,26 @@ public class TestFetchCalls {
 
     }
 
+    @Test(enabled = false)
+    public void testExpand1() {
+        JavaCallResults jcr = new JavaCallResults();
+
+        jcr.addResult("A","B");
+
+        CallContent cc = new CallContent();
+        cc.setMethodName("lk");
+        cc.setClassName("DFFF");
+        cc.setArgs(new Object[]{"F"});
+
+        cc.expandArgs(jcr);
+
+        assertThat("We should have expanded anything",Arrays.asList(cc.getArgs()),Matchers.containsInAnyOrder("F"));
+
+        cc.setArgs(new Object[]{"F","returnValues.A"});
+        cc.expandArgs(jcr);
+        assertThat("We should have expanded anything",Arrays.asList(cc.getArgs()),Matchers.containsInAnyOrder("F","B"));
+    }
+
     @BeforeGroups(groups = "E2E")
     public void startUpService() {
         IntegroAPI iapi = new IntegroAPI();

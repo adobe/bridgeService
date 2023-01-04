@@ -13,3 +13,4 @@ buildNumber.properties
 .idea
 ac_test_output
 ibstest_output
+*.bkp

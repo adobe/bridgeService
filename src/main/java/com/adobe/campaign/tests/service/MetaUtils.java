@@ -79,8 +79,8 @@ public class MetaUtils {
         for (Method lt_m : Arrays.stream(in_object.getClass().getMethods()).filter(t -> (isExtractable(t))).collect(
                 Collectors.toSet())) {
 
-                if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && isExtractable(lt_m.getReturnType())) {
-
+              //  if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && isExtractable(lt_m.getReturnType())) {
+            if (lt_m.getParameterCount()==0 && isExtractable(lt_m.getReturnType())) {
                     Object lt_returnValue = null;
                     try {
                         lt_returnValue = lt_m.invoke(in_object);

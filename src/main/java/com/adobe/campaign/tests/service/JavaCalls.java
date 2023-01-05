@@ -55,7 +55,9 @@ public class JavaCalls {
             throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
             InstantiationException {
 
-        updateEnvironmentVariables();
+        if (!getEnvironmentVariables().isEmpty()) {
+            updateEnvironmentVariables();
+        }
 
         JavaCallResults lr_returnObject = new JavaCallResults();
 

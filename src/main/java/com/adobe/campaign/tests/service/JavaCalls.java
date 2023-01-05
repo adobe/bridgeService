@@ -61,7 +61,8 @@ public class JavaCalls {
 
         JavaCallResults lr_returnObject = new JavaCallResults();
 
-        for (String lt_key : this.getCallContent().keySet().stream().sorted().collect(Collectors.toList())) {
+        //for (String lt_key : this.getCallContent().keySet().stream().sorted().collect(Collectors.toList())) {
+        for (String lt_key : this.getCallContent().keySet()) {
             //Adapt CallContent to results
             //this.getCallContent().get(lt_key).expandArgs(lr_returnObject);
             Object callResult = this.call(lt_key);

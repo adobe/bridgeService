@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
 
 public class CallContent {
 
-    private IntegroBridgeClassLoader iClassLoader;
-
     @JsonProperty("class")
     private String className;
 

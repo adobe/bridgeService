@@ -101,14 +101,18 @@
             <groupId>com.adobe.campaign.tests.integro</groupId>
             <artifactId>integro-v7</artifactId>
             <version>0.0.16.5-UI-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.adobe.campaign.tests.integro</groupId>
+                    <artifactId>integro-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
-        <!--
         <dependency>
             <groupId>com.adobe.campaign.tests.integro</groupId>
             <artifactId>integro-core</artifactId>
             <version>1.0.39-SNAPSHOT</version>
         </dependency>
-        -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>

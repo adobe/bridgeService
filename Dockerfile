@@ -1,4 +1,4 @@
-FROM maven:3.6.0-jdk-11-slim AS build
+FROM --platform=linux/x86_64 maven:3.8.7-ibmjava-8 AS build
 
 ARG ARTIFACTORY_USER
 ARG ARTIFACTORY_API_TOKEN

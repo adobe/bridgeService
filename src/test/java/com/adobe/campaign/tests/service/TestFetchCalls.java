@@ -66,7 +66,6 @@ public class TestFetchCalls {
         assertThat("We should get a good answer back from the call",
                 Arrays.asList("AT", "AU", "CA", "CH", "DE", "US", "FR", "CN", "IN", "JP", "RU", "BR", "ID", "GB", "MX")
                         .stream().anyMatch(f -> f.equals(returnedCountry)));
-
     }
 
     @Test
@@ -116,11 +115,14 @@ public class TestFetchCalls {
         l_cc2.setArgs(new Object[] { "A", "B" });
         l_myJavaCalls1.getCallContent().put("fetchEmail", l_cc2);
 
-        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
         JavaCallResults jcr = l_myJavaCalls1.submitCalls();
         assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("fetchEmail").toString(),
                 Matchers.startsWith("A+"));
         assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("fetchEmail").toString(), Matchers.endsWith("@B"));
+
+        //ClassLoader should maintain the context
+        assertThat("The Classloader should maintain the cache of the results", l_myJavaCalls1.getLocalClassLoader().getCallResultCache().containsKey("fetchEmail"));
+        assertThat("The Classloader should maintain the cache of the results", l_myJavaCalls1.getLocalClassLoader().getCallResultCache().get("fetchEmail"), Matchers.instanceOf(String.class));
 
     }
 
@@ -690,38 +692,44 @@ public class TestFetchCalls {
         assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
     }
 
-    @Test(enabled = false)
-    public void testThatWeCanSendAndReceiveEmails()
-            throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException,
-            IllegalAccessException, InstantiationException {
-        JavaCalls l_myJavaCalls = new JavaCalls();
-        // testqa+qvm6747@acc-simulators.email.corp.adobe.com hzgiwz AC.UITEST.MAILING_PORT=143 (-1)
-        CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
-        l_cc.setMethodName("fetchEmail");
-        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq" });
-        l_myJavaCalls.getCallContent().put("emailCheck", l_cc);
+    @Test(description = "Issue #2 : Allowing for passing values between calls")
+    public void testValuePassing()
+            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
+            InstantiationException {
+        JavaCalls l_myJavaCalls1 = new JavaCalls();
 
-        l_myJavaCalls.getEnvironmentVariables().put("AC.UITEST.MAILING.HOST", "acc-simulators.email.corp.adobe.com");
-        l_myJavaCalls.getEnvironmentVariables().put("AC.UITEST.MAILING_PORT", "143");
-        l_myJavaCalls.getEnvironmentVariables().put("AC.UITEST.MAILING.PREFIX", "testqa");
-        l_myJavaCalls.getEnvironmentVariables()
-                .put("AC.UITEST.MAILING.ID", "testqa@acc-simulators.email.corp.adobe.com");
-        l_myJavaCalls.getEnvironmentVariables().put("AC.UITEST.MAILING.PWD", "changeme");
-        l_myJavaCalls.getEnvironmentVariables().put("AC.UITEST.MAILING.PROVIDER", "imap");
-        l_myJavaCalls.getEnvironmentVariables().put("AC.UITEST.MAILING.FOLDER", "INBOX");
+        CallContent l_cc1A = new CallContent();
+        l_cc1A.setClassName(RandomManager.class.getTypeName());
+        l_cc1A.setMethodName("getRandomPersonFirstName");
+        l_myJavaCalls1.getCallContent().put("fetchFirstName", l_cc1A);
 
-        JavaCallResults jcr = l_myJavaCalls.submitCalls();
+        CallContent l_cc1B = new CallContent();
+        l_cc1B.setClassName(RandomManager.class.getTypeName());
+        l_cc1B.setMethodName("getUniqueEmail");
+        l_cc1B.setArgs(new Object[] { "fetchFirstName", "B" });
+        l_myJavaCalls1.getCallContent().put("fetchMail", l_cc1B);
 
-//        Map x = (Map) MetaUtils.extractValuesFromObject(jcr.getReturnValues().get("emailCheck"));
-        System.err.println(JavaCallsFactory.transformJavaCallResultsToJSON(jcr));
+        JavaCallResults x = l_myJavaCalls1.submitCalls();
 
-/*
-        ObjectMapper mapper = new ObjectMapper();
+        assertThat("We should have fetched the value from the first call", x.getReturnValues().get("fetchMail").toString(), Matchers.startsWith(
+                x.getReturnValues().get("fetchFirstName").toString()));
 
-        mapper.writeValueAsString(jcr);
-        System.out.println(mapper.writeValueAsString(l_myJavaCalls));
-*/
+    }
+
+
+    @Test
+    public void testValueReplacement() {
+        IntegroBridgeClassLoader icl = new IntegroBridgeClassLoader();
+        icl.getCallResultCache().put("AAA", "XXXX");
+
+        CallContent l_cc1B = new CallContent();
+        l_cc1B.setClassName(RandomManager.class.getTypeName());
+        l_cc1B.setMethodName("getUniqueEmail");
+        l_cc1B.setArgs(new Object[] { "AAA", "B" });
+
+        Object[] result = l_cc1B.enrichArgs(icl);
+        assertThat("We should have replaced the value correctly", result.length, Matchers.equalTo(2));
+        assertThat("We should have replaced the value correctly", result[0].toString(), Matchers.equalTo("XXXX"));
 
     }
 
@@ -857,26 +865,6 @@ public class TestFetchCalls {
 
         System.out.println(value);
 
-    }
-
-    @Test(enabled = false)
-    public void testExpand1() {
-        JavaCallResults jcr = new JavaCallResults();
-
-        jcr.addResult("A","B");
-
-        CallContent cc = new CallContent();
-        cc.setMethodName("lk");
-        cc.setClassName("DFFF");
-        cc.setArgs(new Object[]{"F"});
-
-        cc.expandArgs(jcr);
-
-        assertThat("We should have expanded anything",Arrays.asList(cc.getArgs()),Matchers.containsInAnyOrder("F"));
-
-        cc.setArgs(new Object[]{"F","returnValues.A"});
-        cc.expandArgs(jcr);
-        assertThat("We should have expanded anything",Arrays.asList(cc.getArgs()),Matchers.containsInAnyOrder("F","B"));
     }
 
     @BeforeGroups(groups = "E2E")

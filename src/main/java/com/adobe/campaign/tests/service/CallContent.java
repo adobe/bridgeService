@@ -111,18 +111,21 @@ public class CallContent {
             Method l_method = fetchMethod(ourClass);
 
             Object ourInstance = ourClass.getDeclaredConstructor().newInstance();
-            lr_object = l_method.invoke(ourInstance, this.getArgs());
+            lr_object = l_method.invoke(ourInstance, enrichArgs(iClassLoader));
         } catch (IllegalArgumentException e) {
-            throw new NonExistantJavaObjectException("The given method " + this.getFullName() + " could not accept the given arguments..");
+            throw new NonExistantJavaObjectException(
+                    "The given method " + this.getFullName() + " could not accept the given arguments..");
 
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
-            throw new TargetJavaClassException("We experienced an exception when calling the provided method "+this.getFullName()+".", e);
+            throw new TargetJavaClassException(
+                    "We experienced an exception when calling the provided method " + this.getFullName() + ".", e);
         } catch (ClassNotFoundException e) {
             throw new NonExistantJavaObjectException("The given class " + this.getClassName() + "could not be found.");
         } catch (InstantiationException | NoSuchMethodException e) {
-            throw new NonExistantJavaObjectException("Could not instantiate class. The given class " + this.getClassName() + "could not be found.");
+            throw new NonExistantJavaObjectException(
+                    "Could not instantiate class. The given class " + this.getClassName() + "could not be found.");
         }
 
         return lr_object;
@@ -130,11 +133,12 @@ public class CallContent {
 
     /**
      * Returns the full name of the method
+     *
      * @return the full name of the method
      */
     @JsonIgnore
     public String getFullName() {
-        return this.getClassName() +"."+ this.getMethodName();
+        return this.getClassName() + "." + this.getMethodName();
     }
 
     @Override
@@ -153,6 +157,7 @@ public class CallContent {
 
     /**
      * Given the previous Call Results, we expand the arguments with those in the call results
+     *
      * @param in_returnObject
      */
     public void expandArgs(JavaCallResults in_returnObject) {
@@ -167,5 +172,18 @@ public class CallContent {
             l_newArgs.add(lt_arg);
         }
         //this.setArgs(new Object[] {});
+    }
+
+    /**
+     * This method returns an enriched array of parameters based on the current args. I.e. if we have stored the value
+     * in the classloader context we replace the value
+     *
+     * @param in_currentClassLoader
+     * @return an array with values enriched with the previous results
+     */
+    public Object[] enrichArgs(IntegroBridgeClassLoader in_currentClassLoader) {
+        return Arrays.stream(getArgs()).map(arg -> in_currentClassLoader.getCallResultCache()
+                .containsKey(arg) ? in_currentClassLoader.getCallResultCache().get(
+                arg) : arg).toArray();
     }
 }

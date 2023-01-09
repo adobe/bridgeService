@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
 import org.apache.logging.log4j.LogManager;
@@ -11,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 public class IntegroBridgeClassLoader extends ClassLoader {
     private static final Logger log = LogManager.getLogger();
+    private Map<String, Object> callResultCache;
 
     /**
      * Parent ClassLoader passed to this constructor
@@ -21,6 +24,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      */
     public IntegroBridgeClassLoader() {
         super(IntegroBridgeClassLoader.class.getClassLoader());
+        this.setCallResultCache(new HashMap<>());
     }
 
     /**
@@ -112,5 +116,13 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         in.readFully(buff);
         in.close();
         return buff;
+    }
+
+    public Map<String, Object> getCallResultCache() {
+        return callResultCache;
+    }
+
+    public void setCallResultCache(Map<String, Object> callResultCache) {
+        this.callResultCache = callResultCache;
     }
 }

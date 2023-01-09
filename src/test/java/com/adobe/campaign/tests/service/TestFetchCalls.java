@@ -1,6 +1,7 @@
 package com.adobe.campaign.tests.service;
 
 import com.adobe.campaign.tests.integro.tools.DateAndTimeTools;
+import com.adobe.campaign.tests.integro.tools.LanguageEncodings;
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.adobe.campaign.tests.service.exceptions.AmbiguousMethodException;
 import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
@@ -692,6 +693,7 @@ public class TestFetchCalls {
         assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
     }
 
+    /***** #2 Variable replacement ******/
     @Test(description = "Issue #2 : Allowing for passing values between calls")
     public void testValuePassing()
             throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
@@ -713,9 +715,7 @@ public class TestFetchCalls {
 
         assertThat("We should have fetched the value from the first call", x.getReturnValues().get("fetchMail").toString(), Matchers.startsWith(
                 x.getReturnValues().get("fetchFirstName").toString()));
-
     }
-
 
     @Test
     public void testValueReplacement() {
@@ -731,6 +731,22 @@ public class TestFetchCalls {
         assertThat("We should have replaced the value correctly", result.length, Matchers.equalTo(2));
         assertThat("We should have replaced the value correctly", result[0].toString(), Matchers.equalTo("XXXX"));
 
+    }
+
+    @Test
+    public void testVariableReplacementComplexObjects() {
+        IntegroBridgeClassLoader icl = new IntegroBridgeClassLoader();
+        icl.getCallResultCache().put("AAA", LanguageEncodings.CHINESE);
+
+        CallContent l_cc1B = new CallContent();
+        l_cc1B.setClassName(RandomManager.class.getTypeName());
+        l_cc1B.setMethodName("getUniqueEmail");
+        l_cc1B.setArgs(new Object[] { "AAA", "B" });
+
+        Object[] result = l_cc1B.enrichArgs(icl);
+        assertThat("We should have replaced the value correctly", result.length, Matchers.equalTo(2));
+        assertThat("We should have replaced the value correctly", result[0], Matchers.instanceOf(LanguageEncodings.class));
+        assertThat("We should have replaced the value correctly", result[0], Matchers.equalTo(LanguageEncodings.CHINESE));
     }
 
     @Test

@@ -81,7 +81,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
             throws ClassNotFoundException {
         log.debug("loading class {}",name);
 
-        if (name.startsWith("com.adobe.campaign.") || name.startsWith("util.") || name.startsWith("testhelper.")) {
+        if (name.startsWith("com.adobe.campaign.") || name.startsWith("utils.") || name.startsWith("testhelper.")) {
 
             return getClass(name);
         }

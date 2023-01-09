@@ -460,7 +460,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testStaticFieldIntegrityIntegroV7_calls()
+    public void testStaticFieldIntegrityIntegroV7()
             throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
             IOException, InstantiationException {
 
@@ -488,29 +488,10 @@ public class TestFetchCalls {
         l_cc1B.setArgs(new Object[]{"AC.UITEST.LANGUAGE"});
         l_myJavaCalls1.getCallContent().put("fetchProperties", l_cc1B);
 
-/*
-        CallContent l_cc1A = new CallContent();
-        l_cc1A.setClassName(SystemValueHandler.class.getTypeName());
-        l_cc1A.setMethodName("fetchExecutionProperty");
-        l_cc1A.setArgs(new Object[]{"AC.UITEST.LANGUAGE"});
-
-        Map l_authentication = new HashMap();
-        l_authentication.put("AC.UITEST.LANGUAGE", "rus");
-*/
-
-
-        //    l_myJavaCalls1.setEnvironmentVariables(l_authentication);
-
         JavaCallResults returnedValue = l_myJavaCalls1.submitCalls();
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("fetchProperties").toString(),
                 Matchers.equalTo("rus"));
-/*
-        assertThat("We should get a good answer back from the call",
-                returnedValue.getReturnValues().get("labelValue").toString(),
-                Matchers.equalTo("rus"));
-
-*/
 
         //Call 2
         JavaCalls l_myJavaCalls2 = new JavaCalls();
@@ -521,16 +502,18 @@ public class TestFetchCalls {
         l_cc2A.setMethodName("testParam");
         l_cc2A.setArgs(new Object[]{"AC.UITEST.LANGUAGE"});
         l_myJavaCalls2.getCallContent().put("labelValueB", l_cc2A);
-/*
+
         Map l_authenticationB = new HashMap();
         l_authenticationB.put("AC.UITEST.LANGUAGE", "deu");
-        l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
+        l_myJavaCalls1.setEnvironmentVariables(l_authenticationB);
 
-
- */
         JavaCallResults returnedValueB = l_myJavaCalls2.submitCalls();
         Object b = l_cc2A.call(new IntegroBridgeClassLoader());
         //System.out.println(b);
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("labelValueB").toString(),
+                Matchers.not(Matchers.equalTo("rus")));
+
         assertThat("We should get a good answer back from the call",
                 returnedValueB.getReturnValues().get("labelValueB").toString(),
                 Matchers.not(Matchers.equalTo("rus")));
@@ -542,16 +525,22 @@ public class TestFetchCalls {
             IOException, InstantiationException {
 
         JavaCalls l_myJavaCalls1 = new JavaCalls();
-        
+
         CallContent l_cc1A = new CallContent();
         l_cc1A.setClassName(CampaignUtils.class.getTypeName());
         l_cc1A.setMethodName("testParam");
-        l_cc1A.setArgs(new Object[]{"AC.UITEST.LANGUAGE"});
+        l_cc1A.setArgs(new Object[]{"AC.UITEST.MAILING.PREFIX"});
         l_myJavaCalls1.getCallContent().put("fetchProperties", l_cc1A);
+
+        CallContent l_cc1B = new CallContent();
+        l_cc1B.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc1B.setMethodName("getRandomEmail");
+        l_myJavaCalls1.getCallContent().put("getRandomEmail", l_cc1B);
 
 
         Map l_envVars1 = new HashMap();
-        l_envVars1.put("AC.UITEST.LANGUAGE", "rus");
+        l_envVars1.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_envVars1.put("AC.INTEGRO.MAILING.BASE", "boom.com");
         l_myJavaCalls1.setEnvironmentVariables(l_envVars1);
 
         JavaCallResults returnedValue = l_myJavaCalls1.submitCalls();
@@ -559,31 +548,45 @@ public class TestFetchCalls {
 
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("fetchProperties").toString(),
-                Matchers.equalTo("rus"));
-/*
+                Matchers.equalTo("bada"));
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(),
+                Matchers.startsWith("bada"));
+
         //Call 2
-        JavaCalls l_myJavaCallsB = new JavaCalls();
-        CallContent l_ccB = new CallContent();
-        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_ccB.setMethodName("getRandomEmail");
-        l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
+        JavaCalls l_myJavaCalls2 = new JavaCalls();
+        CallContent l_cc2A = new CallContent();
+        l_cc2A.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc2A.setMethodName("getRandomEmail");
+        l_myJavaCalls2.getCallContent().put("getRandomEmailB", l_cc2A);
 
-        Map l_authenticationB = new HashMap();
-        l_authenticationB.put("AC.UITEST.MAILING.PREFIX", "nana");
-        l_authenticationB.put("AC.INTEGRO.MAILING.BASE", "noon.com");
-        l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
+        CallContent l_cc2B = new CallContent();
+        l_cc2B.setClassName(CampaignUtils.class.getTypeName());
+        l_cc2B.setMethodName("testParam");
+        l_cc2B.setArgs(new Object[]{"AC.UITEST.MAILING.PREFIX"});
+        l_myJavaCalls2.getCallContent().put("fetchProperties", l_cc2B);
 
-        JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
+        Map l_envVarsB = new HashMap();
+        l_envVarsB.put("AC.UITEST.MAILING.PREFIX", "nana");
+        l_envVarsB.put("AC.INTEGRO.MAILING.BASE", "noon.com");
+        l_myJavaCalls2.setEnvironmentVariables(l_envVarsB);
+
+        JavaCallResults returnedValue2 = l_myJavaCalls2.submitCalls();
         //Object b = l_ccB.call(new IntegroBridgeClassLoader());
         //System.out.println(b);
         assertThat("We should get a good answer back from the call",
-                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                returnedValue2.getReturnValues().get("getRandomEmailB").toString(),
                 Matchers.startsWith("nana+"));
         assertThat("We should get a good answer back from the call",
-                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                returnedValue2.getReturnValues().get("getRandomEmailB").toString(),
                 Matchers.endsWith("@noon.com"));
 
-         */
+        assertThat("We should get a good answer back from the call",
+                returnedValue2.getReturnValues().get("fetchProperties").toString(),
+                Matchers.equalTo("nana"));
+
+
     }
 
     @Test

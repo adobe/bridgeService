@@ -920,7 +920,13 @@ public class TestFetchCalls {
 
     @Test(groups = "E2E")
     public void testMainHelloWorld() {
-        given().when().get(EndPointURL + "hello").then().assertThat().equals("Hello Worlds");
+        given().when().get(EndPointURL + "test").then().assertThat().equals("All systems up");
+
+    }
+
+    @Test(groups = "E2E")
+    public void testMainHelloWorld_negative() {
+        given().when().get(EndPointURL + "hello").then().assertThat().statusCode(404);
 
     }
 

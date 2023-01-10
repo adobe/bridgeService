@@ -1,10 +1,7 @@
 package com.adobe.campaign.tests.service;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class JavaCalls {
 
@@ -13,14 +10,14 @@ public class JavaCalls {
    // private Map<String,String> environmentVariables;
    private Map<String,Object> environmentVariables;
 
-    IntegroBridgeClassLoader localClassLoader;
+    private IntegroBridgeClassLoader localClassLoader;
 
 
 
     public JavaCalls() {
         callContent = new LinkedHashMap<>();
         environmentVariables = new HashMap<>();
-        localClassLoader = new IntegroBridgeClassLoader();
+        setLocalClassLoader(new IntegroBridgeClassLoader());
     }
 
 
@@ -43,7 +40,7 @@ public class JavaCalls {
         if (!this.callContent.containsKey(in_key)) {
             throw new CallDefinitionNotFoundException("Could not find a call definition with the given key "+in_key);
         }
-        return this.getCallContent().get(in_key).call(localClassLoader);
+        return this.getCallContent().get(in_key).call(getLocalClassLoader());
     }
 
     /**
@@ -66,7 +63,7 @@ public class JavaCalls {
             //Adapt CallContent to results
             //this.getCallContent().get(lt_key).expandArgs(lr_returnObject);
             Object callResult = this.call(lt_key);
-
+            getLocalClassLoader().getCallResultCache().put(lt_key, callResult);
             lr_returnObject.addResult(lt_key, MetaUtils.extractValuesFromObject(callResult));
         }
 
@@ -84,7 +81,7 @@ public class JavaCalls {
         Properties argumentProps = new Properties();
         environmentVariables.keySet().stream().forEach(k -> argumentProps.put(k, environmentVariables.get(k)));
         l_setEnvironmetVars.setArgs(new Object[] { argumentProps });
-        l_setEnvironmetVars.call(this.localClassLoader);
+        l_setEnvironmetVars.call(this.getLocalClassLoader());
     }
 
     public Map<String, Object> getEnvironmentVariables() {
@@ -112,5 +109,13 @@ public class JavaCalls {
     @Override
     public int hashCode() {
         return Objects.hash(getCallContent(), getEnvironmentVariables());
+    }
+
+    public IntegroBridgeClassLoader getLocalClassLoader() {
+        return localClassLoader;
+    }
+
+    public void setLocalClassLoader(IntegroBridgeClassLoader localClassLoader) {
+        this.localClassLoader = localClassLoader;
     }
 }

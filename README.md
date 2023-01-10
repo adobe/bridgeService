@@ -1,8 +1,26 @@
 # integroBridgeService
 This project allows you to expose Integro ACC as a REST service. It allows you to make calls to Java code.
 
+## Getting started
+The best way to start this in the beginning is to simply start the program:
+
+```mvn exec:java```
+
+This will make the service available under :
+```http://localhost:4567```
+
+We are working on implementing a universal service, but for now this is simplest way to start.
+
+## Testing That all is working
+All you need to do is to call :
+```/test```
+
+If all is good you should get:
+```All systems up```
+
 ## Making a basic Java Call
 The simplest java call is done in the following way:
+```/call```
 
 ```JSON
 {
@@ -112,12 +130,6 @@ To run the image:
 
 ```
 docker run -d -p 4567:4567 integrobridgeservice
-```
-
-Test Success:
-First perform a simple test:
-```
-http://localhost:4567/hello
 ```
 
 

@@ -123,9 +123,12 @@ public class CallContent {
                     "We experienced an exception when calling the provided method " + this.getFullName() + ".", e);
         } catch (ClassNotFoundException e) {
             throw new NonExistantJavaObjectException("The given class " + this.getClassName() + "could not be found.");
-        } catch (InstantiationException | NoSuchMethodException e) {
+        } catch (InstantiationException e) {
             throw new NonExistantJavaObjectException(
                     "Could not instantiate class. The given class " + this.getClassName() + "could not be found.");
+        } catch (NoSuchMethodException e) {
+            throw new NonExistantJavaObjectException(
+                    "Could not find the method " + this.getFullName() +".");
         }
 
         return lr_object;

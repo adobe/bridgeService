@@ -70,7 +70,7 @@ public class CallContent {
         List<Method> lr_method = fetchMethodCandidates(in_class);
         if (lr_method.size() > 1) {
             throw new AmbiguousMethodException(
-                    "We could not find a unique method for " + this.getClassName() + "." + this.getMethodName());
+                    "We could not find a unique method for " + this.getFullName());
         }
         return lr_method.get(0);
     }

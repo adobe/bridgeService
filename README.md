@@ -118,6 +118,19 @@ We sometimes need to set environment variables when making calls. This are usual
 
 When making the call we first update the environment variables for the system.
 
+## Known Issues and Limitations
+As this is a new project there are a few limitations to our solution:
+### Cannot call overloaded methods with the same number of arguments.
+Today, in order to simply the call model, we have chosen not to specify the argument types in the call. The consequence of this is that in the case of overloaded methods, we only pick the method with the same number of arguments. If two such overloaded methods exist, we choose to throw an exception:
+``We could not find a unique method for <method>.`` 
+
+### Only simple arguments
+Since this is a REST call we can only correctly manage simple arguments in the payload. One workaround is to use Call Dependencies in Call Chaining (see above). I.e. you can pass simple arguments to one method, and use the complex results of that method as an argument for the following java call.  
+
+### Complex Non-Serialisable Return Objects
+In many cases the object a method returns is not rerializable. If that is the case we mine the object, and extract all simple values from the object.
+
+
 ## Building Image
 In order to build an image you need to run the following command:
 ```

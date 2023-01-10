@@ -727,7 +727,7 @@ public class TestFetchCalls {
         l_cc1B.setMethodName("getUniqueEmail");
         l_cc1B.setArgs(new Object[] { "AAA", "B" });
 
-        Object[] result = l_cc1B.enrichArgs(icl);
+        Object[] result = l_cc1B.expandArgs(icl);
         assertThat("We should have replaced the value correctly", result.length, Matchers.equalTo(2));
         assertThat("We should have replaced the value correctly", result[0].toString(), Matchers.equalTo("XXXX"));
 
@@ -743,7 +743,7 @@ public class TestFetchCalls {
         l_cc1B.setMethodName("getUniqueEmail");
         l_cc1B.setArgs(new Object[] { "AAA", "B" });
 
-        Object[] result = l_cc1B.enrichArgs(icl);
+        Object[] result = l_cc1B.expandArgs(icl);
         assertThat("We should have replaced the value correctly", result.length, Matchers.equalTo(2));
         assertThat("We should have replaced the value correctly", result[0], Matchers.instanceOf(LanguageEncodings.class));
         assertThat("We should have replaced the value correctly", result[0], Matchers.equalTo(LanguageEncodings.CHINESE));

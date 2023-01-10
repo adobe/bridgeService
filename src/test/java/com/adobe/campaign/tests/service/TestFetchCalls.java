@@ -157,7 +157,7 @@ public class TestFetchCalls {
 
 
     @Test
-    public void testJSONCallWithBadArguments()
+    public void testJSONCall_negativeWithBadArguments()
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
             IOException, InstantiationException, MessagingException {
 
@@ -166,6 +166,32 @@ public class TestFetchCalls {
         l_cc.setMethodName("getRandomString");
 
         l_cc.setArgs(new Object[] { MimeMessageFactory.getMessage("ab") });
+
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+        Assert.assertThrows(NonExistantJavaObjectException.class, () -> l_cc.call(iClassLoader));
+    }
+
+    @Test
+    public void testJSONCall_negativeNonExistingClass()
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
+            IOException, InstantiationException, MessagingException {
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("non.existant.class.NoWhereToBeFound");
+        l_cc.setMethodName("getRandomString");
+
+        l_cc.setArgs(new Object[] { MimeMessageFactory.getMessage("ab") });
+
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+        Assert.assertThrows(NonExistantJavaObjectException.class, () -> l_cc.call(iClassLoader));
+    }
+
+    @Test
+    public void testJSONCall_negativeNonExistingMethod() {
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(RandomManager.class.getTypeName());
+        l_cc.setMethodName("getNonExistingRandomString");
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
         Assert.assertThrows(NonExistantJavaObjectException.class, () -> l_cc.call(iClassLoader));
@@ -727,7 +753,7 @@ public class TestFetchCalls {
         l_cc1B.setMethodName("getUniqueEmail");
         l_cc1B.setArgs(new Object[] { "AAA", "B" });
 
-        Object[] result = l_cc1B.enrichArgs(icl);
+        Object[] result = l_cc1B.expandArgs(icl);
         assertThat("We should have replaced the value correctly", result.length, Matchers.equalTo(2));
         assertThat("We should have replaced the value correctly", result[0].toString(), Matchers.equalTo("XXXX"));
 
@@ -743,7 +769,7 @@ public class TestFetchCalls {
         l_cc1B.setMethodName("getUniqueEmail");
         l_cc1B.setArgs(new Object[] { "AAA", "B" });
 
-        Object[] result = l_cc1B.enrichArgs(icl);
+        Object[] result = l_cc1B.expandArgs(icl);
         assertThat("We should have replaced the value correctly", result.length, Matchers.equalTo(2));
         assertThat("We should have replaced the value correctly", result[0], Matchers.instanceOf(LanguageEncodings.class));
         assertThat("We should have replaced the value correctly", result[0], Matchers.equalTo(LanguageEncodings.CHINESE));

@@ -2,6 +2,7 @@ package com.adobe.campaign.tests.service;
 
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 import spark.Spark;
 
@@ -13,6 +14,14 @@ import static io.restassured.RestAssured.given;
 
 public class E2ETests {
     public static final String EndPointURL = "http://localhost:4567/";
+
+    @BeforeGroups(groups = "E2E")
+    public void startUpService() {
+        IntegroAPI iapi = new IntegroAPI();
+        iapi.startServices();
+        Spark.awaitInitialization();
+    }
+
 
     @Test(groups = "E2E")
     public void testMainHelloWorld() {

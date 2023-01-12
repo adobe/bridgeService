@@ -226,7 +226,7 @@ public class TestFetchCalls {
         System.out.println(mappedJSON);
 
         ObjectMapper m2 = new ObjectMapper();
-        JavaCalls j2 = JavaCallsFactory.createJavaCalls(mappedJSON);
+        JavaCalls j2 = BridgeServiceFactory.createJavaCalls(mappedJSON);
 
         assertThat("Both calls should be equal" , j2.getCallContent().get("call1PL"), Matchers.equalTo(myContent));
 
@@ -413,7 +413,7 @@ public class TestFetchCalls {
 
         JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
 
-        System.out.println(JavaCallsFactory.transformJavaCallResultsToJSON(returnedValue));
+        System.out.println(BridgeServiceFactory.transformJavaCallResultsToJSON(returnedValue));
 
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("getRandomEmail").toString(),
@@ -644,7 +644,7 @@ public class TestFetchCalls {
 
         JavaCallResults returnedValue = fetchedFromJSON.submitCalls();
 
-        System.out.println(JavaCallsFactory.transformJavaCallResultsToJSON(returnedValue));
+        System.out.println(BridgeServiceFactory.transformJavaCallResultsToJSON(returnedValue));
 
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("call1").toString(),
@@ -862,7 +862,7 @@ public class TestFetchCalls {
 
 
 
-        String value = JavaCallsFactory.transformJavaCallResultsToJSON(jcr);
+        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
         System.out.println(value);
 
@@ -883,7 +883,7 @@ public class TestFetchCalls {
 
 
 
-        String value = JavaCallsFactory.transformJavaCallResultsToJSON(jcr);
+        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
         System.out.println(value);
 
@@ -903,7 +903,7 @@ public class TestFetchCalls {
 
 
 
-        String value = JavaCallsFactory.transformJavaCallResultsToJSON(jcr);
+        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
         System.out.println(value);
 
@@ -948,6 +948,14 @@ public class TestFetchCalls {
 
     @Test(groups = "E2E")
     public void testErrors() {
+        JavaCallResults jcr = new JavaCallResults();
+
+        given().body(jcr).post(EndPointURL + "call").then().statusCode(400).and().assertThat()
+                .equals(IntegroAPI.ERROR_JSON_TRANSFORMATION);
+    }
+
+    @Test(groups = "E2E")
+    public void testTestAccess() {
         JavaCallResults jcr = new JavaCallResults();
 
         given().body(jcr).post(EndPointURL + "call").then().statusCode(400).and().assertThat()

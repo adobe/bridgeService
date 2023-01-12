@@ -17,12 +17,17 @@ public class IntegroAPI {
             return "All systems up";
         });
 
-        post("/call", (req, res) -> {
-            JavaCalls fetchedFromJSON = JavaCallsFactory.createJavaCalls(req.body());
-
-            return JavaCallsFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls());
+        post("/service-check", (req, res) -> {
+            System.out.println("in sc");
+            ServiceAccess l_serviceAccess = BridgeServiceFactory.createServiceAccess(req.body());
+            return BridgeServiceFactory.transformServiceAccessResult(l_serviceAccess.checkAccessibilityOfExternalResources());
         });
 
+        post("/call", (req, res) -> {
+            JavaCalls fetchedFromJSON = BridgeServiceFactory.createJavaCalls(req.body());
+
+            return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls());
+        });
 
         after((req, res) -> {
             res.type("application/json");

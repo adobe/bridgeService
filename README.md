@@ -1,7 +1,7 @@
 # integroBridgeService
 This project allows you to expose Integro ACC as a REST service. It allows you to make calls to Java code.
 
-## Getting started
+## Getting Started
 The best way to start this in the beginning is to simply start the program:
 
 ```mvn exec:java```
@@ -11,12 +11,38 @@ This will make the service available under :
 
 We are working on implementing a universal service, but for now this is simplest way to start.
 
-## Testing That all is working
+## Testing That all is Working
 All you need to do is to call :
 ```/test```
 
 If all is good you should get:
 ```All systems up```
+
+## Testing That all External Dervices can be Accessed
+One of the added values of this service is to create a single point of access for external dependencies. However, this needs to be checked, before using this service. In order to do this you need to the following POST call:
+
+```
+/service-check
+```
+
+The payload needs to have the following format:
+
+```JSON
+{
+    "<URL ID 1>": "http://<dns 1>",
+    "<URL ID 2>": "http://<dns 2>"
+}
+```
+
+The payload returns a JSON with the test results:
+```JSON
+{
+    "<URL ID 1>": true,
+    "<URL ID 2>": false
+}
+```
+
+In the example above "<URL ID 2>" is marked as false because it can not be accessed from the BridgeService.
 
 ## Making a basic Java Call
 The simplest java call is done in the following way:

@@ -10,9 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.testng.Assert;
-import org.testng.annotations.AfterGroups;
-import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 import spark.Spark;
 import utils.CampaignUtils;
 
@@ -30,6 +28,11 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestFetchCalls {
+    @BeforeMethod
+    @AfterMethod
+    public void reset() {
+        ConfigValueHandler.resetAllValues();
+    }
 
     @Test
     public void testJSONCall()
@@ -900,12 +903,11 @@ public class TestFetchCalls {
         assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
         JavaCallResults jcr = new JavaCallResults();
         jcr.returnValues.put("value",MetaUtils.extractValuesFromObject(x));
-        
+
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
         System.out.println(value);
 
     }
-
 
 }

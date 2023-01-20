@@ -4,7 +4,7 @@ This project allows you to expose Integro ACC as a REST service. It allows you t
 ## Getting Started
 The best way to start this in the beginning is to simply start the program:
 
-```mvn exec:java```
+```mvn exec:java -Dexec.args="test"```
 
 This will make the service available under :
 ```http://localhost:4567```
@@ -29,8 +29,8 @@ The payload needs to have the following format:
 
 ```JSON
 {
-    "<URL ID 1>": "http://<dns 1>",
-    "<URL ID 2>": "http://<dns 2>"
+    "<URL ID 1>": "<dns 1>:<Port>",
+    "<URL ID 2>": "<dns 2>:<Port>"
 }
 ```
 
@@ -168,7 +168,7 @@ ARTIFACTORY_USER and ARTIFACTORY_API_TOKEN are locally stored credentials for co
 To run the image:
 
 ```
-docker run -d -p 4567:4567 integrobridgeservice
+docker run -rm -d -p 4567:4567 integrobridgeservice
 ```
 
 

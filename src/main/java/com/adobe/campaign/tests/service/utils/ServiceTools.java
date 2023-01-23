@@ -1,6 +1,13 @@
 package com.adobe.campaign.tests.service.utils;
 
 import com.adobe.campaign.tests.service.ConfigValueHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 public class ServiceTools {
 
@@ -49,6 +56,91 @@ public class ServiceTools {
         String l_pathWithoutProtocol = stripProtocol(in_url);
         String l_pathWithoutDNS = l_pathWithoutProtocol.indexOf(':')>=0 ? l_pathWithoutProtocol.substring(l_pathWithoutProtocol.indexOf(':')+1) : ConfigValueHandler.DEFAULT_SERVICE_PORT.fetchValue();
         return Integer.parseInt(l_pathWithoutDNS.indexOf('/')>=0?l_pathWithoutDNS.substring(0, l_pathWithoutDNS.indexOf('/')) : l_pathWithoutDNS);
+    }
+
+    private static int STD_WAIT_BEFORE_INVALIDATE = 5000;
+
+    protected static Logger log = LogManager.getLogger();
+
+    protected static int STD_PORT_SERIES_START = 50000;
+
+    public static void setWAIT_BEFORE_INVALIDATE(int in_waitTimeMS) {
+        STD_WAIT_BEFORE_INVALIDATE = in_waitTimeMS;
+    }
+
+    /**
+     * This method lets us know if the given IP Address (or DNS) is reachable
+     *
+     * @param in_inetAddress
+     *            An IP or DNS Address
+     * @return true if the IP Can be accessed
+     * @throws IOException if a network error occurs
+     */
+    protected static boolean isInetAddressReachable(InetAddress in_inetAddress)
+            throws IOException {
+
+        return in_inetAddress.isReachable(STD_WAIT_BEFORE_INVALIDATE);
+
+    }
+
+    /**
+     * This method lets us know if the given IP Address (or DNS) is reachable. This method also treats badly defined
+     * urls as unreachable.
+     *
+     * @param in_dnsAddress An IP or DNS Address
+     * @return true if the IP Can be accessed
+     */
+    public static boolean isServiceAvailable(String in_dnsAddress) {
+        String dns = ServiceTools.getIPPath(in_dnsAddress);
+        Integer port = ServiceTools.getPort(in_dnsAddress);
+
+        if (dns == null || port == null) {
+            return false;
+        }
+
+        return isServerListening(dns, port);
+
+    }
+
+    /**
+     * This method lets us know if the given IP Address (or DNS) is reachable
+     *
+     * @param in_ipAddress
+     *            An IP or DNS Address
+     * @return true if the IP Can be accessed
+     */
+    public static boolean isServerAvailable(String in_ipAddress) {
+
+        try {
+            return isInetAddressReachable(InetAddress.getByName(in_ipAddress));
+        } catch (UnknownHostException e) {
+            log.error("Caught UnknownHost Error : " + e);
+        } catch (IOException e) {
+            log.error("IOException " + e + " occurred.");
+        }
+        return false;
+    }
+
+
+
+    /**
+     * This method lets you know if a port on a given server is accessible
+     *
+     * @param host The server you want to use
+     * @param port The port number you want to use
+     * @return true if port is used
+     */
+    public static boolean isServerListening(String host, int port) {
+        if (!isServerAvailable(host))
+            return false;
+        else {
+            try (Socket s = new Socket(host, port)){
+                return true;
+            } catch (Exception e) {
+                log.error("Found error " + e);
+                return false;
+            }
+        }
     }
 
 

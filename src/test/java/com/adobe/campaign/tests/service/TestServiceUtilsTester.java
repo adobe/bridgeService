@@ -1,5 +1,6 @@
 package com.adobe.campaign.tests.service;
 
+import com.adobe.campaign.tests.integro.tools.NetworkTools;
 import com.adobe.campaign.tests.service.utils.ServiceTools;
 import org.hamcrest.Matchers;
 import org.testng.annotations.Test;
@@ -7,20 +8,15 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class TestAccessTester {
+public class TestServiceUtilsTester {
     private static final List<String> urls = Arrays.asList("acc-simulators.email.corp.adobe.com:143", "acc-simulators.smpp.corp.adobe.com");
 
     @Test
-    public void testTestCall() throws IOException {
-        ServiceAccess ac = new ServiceAccess();
-        assertThat("We should have a map of values", ac.getExternalServices(), Matchers.instanceOf(Map.class));
-        assertThat("We should have a empty map of values", ac.getExternalServices().size(), Matchers.equalTo(0));
+    public void testTestAvailability() throws IOException {
 
         assertThat(urls.get(0)+" should be reachable",
                 ServiceTools.isServiceAvailable(urls.get(0)));
@@ -37,7 +33,6 @@ public class TestAccessTester {
 
     @Test
     public void testTestCall_negative() throws IOException {
-
         assertThat("EmptyString should NOT be reachable",
                 !ServiceTools.isServiceAvailable(""));
 
@@ -45,54 +40,6 @@ public class TestAccessTester {
                 !ServiceTools.isServiceAvailable(null));
     }
 
-    @Test
-    public void testTestCalls() throws IOException {
-        ServiceAccess ac = new ServiceAccess();
-        Map<String, String> urlsMap = new HashMap<>();
-        urlsMap.put("url1", urls.get(0));
-        urlsMap.put("url2", urls.get(1));
-        urlsMap.put("url3", "");
-
-        ac.setExternalServices(urlsMap);
-
-        Map<String, Boolean> result = ac.checkAccessibilityOfExternalResources();
-
-        assertThat("We should have results for the urlsMap we passed", result.size()
-                , Matchers.equalTo(urlsMap.size()));
-
-
-        assertThat(urlsMap.get("url1")+" should be reachable",
-                result.get("url1"));
-
-        assertThat(urlsMap.get("url2")+" should be reachable",
-                result.get("url2"));
-
-        assertThat("Empty String should NOT  be reachable",
-                !result.get("url3"));
-    }
-
-
-    @Test
-    public void testTestCalls_negativeAndPositive() throws IOException {
-        ServiceAccess ac = new ServiceAccess();
-        Map<String, String> urlsMap = new HashMap<>();
-        urlsMap.put("url1", "not really a url");
-        urlsMap.put("url2", urls.get(1));
-
-        ac.setExternalServices(urlsMap);
-
-        Map<String, Boolean> result = ac.checkAccessibilityOfExternalResources();
-
-        assertThat("We should have results for the urlsMap we passed", result.size()
-                , Matchers.equalTo(urlsMap.size()));
-
-
-        assertThat(urlsMap.get("url1")+" should Not be reachable",
-                Matchers.not(result.get("url1")));
-
-        assertThat(urlsMap.get("url2")+"  should be reachable",
-                result.get("url2"));
-    }
 
     @Test
     public void testServiceParsing() throws MalformedURLException {
@@ -129,5 +76,59 @@ public class TestAccessTester {
         assertThat("We should get the correct path", ServiceTools.getPort(""), Matchers.nullValue());
 
     }
+
+
+    @Test
+    public void testISIPReachable() {
+
+        assertThat("127.0.0.1 should be reachable",
+                NetworkTools.isServerAvailable("127.0.0.1"));
+
+        assertThat("Localhost should be reachable",
+                NetworkTools.isServerAvailable("localhost"));
+
+    }
+
+    @Test
+    public void testISIPUnreachable() {
+        NetworkTools.setWAIT_BEFORE_INVALIDATE(500);
+        assertThat("Inexisting ip adress should not be found",
+                !NetworkTools.isServerAvailable("remoteHost"));
+
+        assertThat("Inexisting ip adress should not be found",
+                !NetworkTools.isServerAvailable("128.0.0.1"));
+    }
+
+
+    /**
+     * Hello world to see if we can fetch the correct port
+     *
+     * @throws IOException
+     */
+    @Test
+    public void getFreePort() throws IOException {
+
+        int l_nextFreePort = NetworkTools.fetchNextFreePortNumber();
+
+        assertThat(
+                "The next free port should be our default port "
+                        + l_nextFreePort,
+                NetworkTools.isPortFree(l_nextFreePort));
+    }
+
+    /**
+     * Negative test. Checking that an unreachables server's port doesn't cause
+     * unwanted side effects
+     *
+     * @throws IOException
+     */
+    @Test
+    public void getListeningPort_UnExistingServer() throws IOException {
+
+        assertThat("The inexisting server shouldn't return true",
+                !NetworkTools.isServerListening("RemoteUnexistingHost", 1233));
+
+    }
+
 
 }

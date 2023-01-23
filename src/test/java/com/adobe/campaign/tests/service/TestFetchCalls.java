@@ -10,9 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.testng.Assert;
-import org.testng.annotations.AfterGroups;
-import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 import spark.Spark;
 import utils.CampaignUtils;
 
@@ -30,6 +28,11 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestFetchCalls {
+    @BeforeMethod
+    @AfterMethod
+    public void reset() {
+        ConfigValueHandler.resetAllValues();
+    }
 
     @Test
     public void testJSONCall()
@@ -226,7 +229,7 @@ public class TestFetchCalls {
         System.out.println(mappedJSON);
 
         ObjectMapper m2 = new ObjectMapper();
-        JavaCalls j2 = JavaCallsFactory.createJavaCalls(mappedJSON);
+        JavaCalls j2 = BridgeServiceFactory.createJavaCalls(mappedJSON);
 
         assertThat("Both calls should be equal" , j2.getCallContent().get("call1PL"), Matchers.equalTo(myContent));
 
@@ -413,7 +416,7 @@ public class TestFetchCalls {
 
         JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
 
-        System.out.println(JavaCallsFactory.transformJavaCallResultsToJSON(returnedValue));
+        System.out.println(BridgeServiceFactory.transformJavaCallResultsToJSON(returnedValue));
 
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("getRandomEmail").toString(),
@@ -644,7 +647,7 @@ public class TestFetchCalls {
 
         JavaCallResults returnedValue = fetchedFromJSON.submitCalls();
 
-        System.out.println(JavaCallsFactory.transformJavaCallResultsToJSON(returnedValue));
+        System.out.println(BridgeServiceFactory.transformJavaCallResultsToJSON(returnedValue));
 
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("call1").toString(),
@@ -862,7 +865,7 @@ public class TestFetchCalls {
 
 
 
-        String value = JavaCallsFactory.transformJavaCallResultsToJSON(jcr);
+        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
         System.out.println(value);
 
@@ -883,7 +886,7 @@ public class TestFetchCalls {
 
 
 
-        String value = JavaCallsFactory.transformJavaCallResultsToJSON(jcr);
+        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
         System.out.println(value);
 
@@ -901,62 +904,10 @@ public class TestFetchCalls {
         JavaCallResults jcr = new JavaCallResults();
         jcr.returnValues.put("value",MetaUtils.extractValuesFromObject(x));
 
-
-
-        String value = JavaCallsFactory.transformJavaCallResultsToJSON(jcr);
+        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
         System.out.println(value);
 
-    }
-
-    @BeforeGroups(groups = "E2E")
-    public void startUpService() {
-        IntegroAPI iapi = new IntegroAPI();
-        iapi.startServices();
-        Spark.awaitInitialization();
-    }
-
-    public static final String EndPointURL = "http://localhost:4567/";
-
-    @Test(groups = "E2E")
-    public void testMainHelloWorld() {
-        given().when().get(EndPointURL + "test").then().assertThat().equals("All systems up");
-
-    }
-
-    @Test(groups = "E2E")
-    public void testMainHelloWorld_negative() {
-        given().when().get(EndPointURL + "hello").then().assertThat().statusCode(404);
-
-    }
-
-    @Test(groups = "E2E")
-    public void testMainHelloWorldCall() throws IOException {
-
-        JavaCalls l_call = new JavaCalls();
-        CallContent myContent = new CallContent();
-        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        myContent.setMethodName("getCountries");
-        myContent.setReturnType("java.lang.String");
-        l_call.getCallContent().put("call1PL", myContent);
-
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
-                Matchers.containsInAnyOrder("AT", "AU", "CA", "CH", "DE", "US", "FR", "CN", "IN", "JP", "RU", "BR",
-                        "ID", "GB", "MX"));
-
-    }
-
-    @Test(groups = "E2E")
-    public void testErrors() {
-        JavaCallResults jcr = new JavaCallResults();
-
-        given().body(jcr).post(EndPointURL + "call").then().statusCode(400).and().assertThat()
-                .equals(IntegroAPI.ERROR_JSON_TRANSFORMATION);
-    }
-
-    @AfterGroups(groups = "E2E")
-    public void tearDown() {
-        Spark.stop();
     }
 
 }

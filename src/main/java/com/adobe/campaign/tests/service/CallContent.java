@@ -24,7 +24,7 @@ public class CallContent {
     private String returnType;
     private Object[] args;
 
-    CallContent() {
+    public CallContent() {
         args = new Object[] {};
     }
 

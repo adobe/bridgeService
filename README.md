@@ -168,7 +168,7 @@ ARTIFACTORY_USER and ARTIFACTORY_API_TOKEN are locally stored credentials for co
 To run the image:
 
 ```
-docker run -rm -d -p 4567:4567 integrobridgeservice
+docker run --rm -d -p 4567:4567 integrobridgeservice
 ```
 
 

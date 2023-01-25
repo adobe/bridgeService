@@ -38,14 +38,15 @@ public class IntegrationTests {
 
         //CALL1 accintg-dev134
         String l_systemURL1 = "";
-        String l_systemID1 = "admin";
+        String l_systemID1 = "";
         String l_systemPWD1 = "";
 
         //CALL2 accintg-dev90
         String l_systemURL2 = "";
-        String l_systemID2 = "admin";
+        String l_systemID2 = "";
         String l_systemPWD2 = "";
 
+        System.out.println("------------- Call 1");
         {
             JavaCalls l_call1 = new JavaCalls();
             CallContent call1Content1 = new CallContent();
@@ -75,7 +76,7 @@ public class IntegrationTests {
             l_recipientID1 = jcr1.getReturnValues().get("call1RecipientID").toString();
         }
 
-
+        System.out.println("------------- Call 2");
         //CALL2 accintg-dev90
         {
 
@@ -117,7 +118,7 @@ public class IntegrationTests {
             assertThat(jcr1.getReturnValues().get("call2RecipientExists").toString(), Matchers.not(Matchers.equalTo(randomEmailCall1)));
         }
 
-
+        System.out.println("------------- Call 3");
         //CALL3 accintg-dev134 randomEmailCall2 should not be here either
         {
             JavaCalls l_call3 = new JavaCalls();

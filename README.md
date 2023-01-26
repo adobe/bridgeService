@@ -174,8 +174,9 @@ docker run -rm -d -p 4567:4567 integrobridgeservice
 ## Existing Images
 We currently upload the following versions of the docker image:
 ### Standard SSL
-The current standard version is available here at : 
-`docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice`
+The current standard version is available here at :
+
+```docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice```
 
 You can run it with: 
 ```
@@ -188,7 +189,7 @@ If you want to access the logs you will need to include a mapping of the logs to
 
 ### Without SSL : 
 The current Non-SSL version is available here at :
-`docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl`
+```docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl```
 
 You can run it with:
 ```

@@ -171,4 +171,32 @@ To run the image:
 docker run --rm -d -p 4567:4567 integrobridgeservice
 ```
 
+## Existing Images
+We currently upload the following versions of the docker image:
+### Standard SSL
+The current standard version is available here at :
+
+```docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice```
+
+You can run it with: 
+```
+docker run --rm -d -p 443:4567 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice
+```
+
+The current standard image expects the certificate to be availavle in the directory `/home/app/certificates`. We solve this by mapping the directory containing the JKS certificate to that directory.
+
+If you want to access the logs you will need to include a mapping of the logs to the host machine. This is done by adding `-v /root/ibs:/home/app/ibs_output`. In this example all logs are store in the local directory `/root/ibs/ibs`.
+
+### Without SSL : 
+The current Non-SSL version is available here at :
+```docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl```
+
+You can run it with:
+```
+docker run --rm -d -p 443:4567 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl
+```
+
+The current standard image expects the certificate to be availavle in the directory `/home/app/certificates`. We solve this by mapping the directory containing the JKS certificate to that directory.
+
+If you want to access the logs you will need to include a mapping of the logs to the host machine. This is done by adding `-v /root/ibs:/home/app/ibs_output`. In this example all logs are store in the local directory `/root/ibs/ibs`.
 

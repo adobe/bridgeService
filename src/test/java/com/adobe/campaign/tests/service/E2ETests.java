@@ -82,6 +82,10 @@ public class E2ETests {
 
     }
 
+    /**
+     * Testing that we provide the correct error messages whenever the target method throws an error
+     * @throws IOException
+     */
     @Test(groups = "E2E")
     public void testMainEror_Case1InvocationError() throws IOException {
 

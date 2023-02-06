@@ -741,6 +741,10 @@ public class TestFetchCalls {
         assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
     }
 
+    /**
+     * Related to issue #3: Where we want a clear message + the original error whenever there is an invocation target exception
+     * @throws ClassNotFoundException
+     */
     @Test
     public void testIssueWithBetterMessageOnInvocationTarget() throws ClassNotFoundException {
         CallContent l_cc = new CallContent();

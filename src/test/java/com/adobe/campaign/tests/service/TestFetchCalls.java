@@ -758,7 +758,7 @@ public class TestFetchCalls {
         } catch(Exception e) {
             assertThat("The error should be of the type TargetJavaMethodCallException", e, Matchers.instanceOf(TargetJavaMethodCallException.class));
             assertThat("We should have correct static messages ", e.getMessage(), Matchers.startsWith("We experienced an exception when calling the provided method com.adobe.campaign.tests.integro.tools.RandomManager.getRandomNumber."));
-            assertThat("The message should contain the target message as well", e.getMessage(), Matchers.endsWith("Provided error message : Minimum number must be strictly inferior than maximum number."));
+            assertThat("The message should contain the target message as well", e.getMessage(), Matchers.endsWith("Provided error message : java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number."));
         }
 
     }

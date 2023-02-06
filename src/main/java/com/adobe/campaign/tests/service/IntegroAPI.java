@@ -75,7 +75,6 @@ public class IntegroAPI {
 
             res.status(400);
             response.append(e.getMessage()).append("\n");
-            //Arrays.stream(e.getStackTrace()).sequential().forEach(t -> response.append(t).append("\n"));
             res.body(response.toString());
         });
 

@@ -119,9 +119,10 @@ public class CallContent {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
+            //Arrays.stream(e.getTargetException().getStackTrace()).sequential().forEach(t -> response.append(t).append("\n"));
             throw new TargetJavaMethodCallException(
                     "We experienced an exception when calling the provided method " + this.getFullName()
-                            + ".\nProvided error message : " + e.getTargetException().getMessage(), e);
+                            + ".\nProvided error message : " + e.getTargetException().toString(), e);
         } catch (ClassNotFoundException e) {
             throw new NonExistantJavaObjectException("The given class " + this.getClassName() + "could not be found.");
         } catch (InstantiationException e) {

@@ -144,6 +144,37 @@ We sometimes need to set environment variables when making calls. This are usual
 
 When making the call we first update the environment variables for the system.
 
+## Error Management
+Currently, whenever there is an error in the underlying java call we will include the orginal error message in the error response. For example, for the call:
+
+```json
+{
+    "callContent": {
+        "call1": {
+            "class": "com.adobe.campaign.tests.integro.tools.RandomManager",
+            "method": "getRandomNumber",
+            "returnType": "java.lang.String",
+            "args": [
+                3,
+                3
+            ]
+        }
+    }
+}
+```
+
+We would normally get the error:
+```java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number.```
+
+When using the bridge service, we also include additional info:
+```
+Error during call of target Java Class and Method.
+We experienced an exception when calling the provided method com.adobe.campaign.tests.integro.tools.RandomManager.getRandomNumber.
+Provided error message : 
+java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number.
+```
+
+
 ## Known Issues and Limitations
 As this is a new project there are a few limitations to our solution:
 ### Cannot call overloaded methods with the same number of arguments.

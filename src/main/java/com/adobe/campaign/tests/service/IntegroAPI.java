@@ -32,7 +32,7 @@ public class IntegroAPI {
         }
 
         get("/test", (req, res) -> {
-            return "All systems up "+TEST_CHECK.fetchValue();
+            return "All systems up "+TEST_CHECK.fetchValue()+"\nversion : 0.0.7";
         });
 
         post("/service-check", (req, res) -> {

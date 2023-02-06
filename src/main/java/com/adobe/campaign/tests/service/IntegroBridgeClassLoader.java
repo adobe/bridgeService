@@ -52,7 +52,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         // javablogging.package.ClassToLoad
         // and we have to convert it into the .class file name
         // like javablogging/package/ClassToLoad.class
-        String file = name.replace('.', File.separatorChar)
+        String file = name.replace('.', '/')
                 + ".class";
         byte[] b = null;
         try {

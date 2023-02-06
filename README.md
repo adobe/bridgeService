@@ -164,9 +164,12 @@ Currently, whenever there is an error in the underlying java call we will includ
 ```
 
 We would normally get the error:
-```java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number.```
+```
+java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number.
+```
 
 When using the bridge service, we also include additional info:
+
 ```
 Error during call of target Java Class and Method.
 We experienced an exception when calling the provided method com.adobe.campaign.tests.integro.tools.RandomManager.getRandomNumber.

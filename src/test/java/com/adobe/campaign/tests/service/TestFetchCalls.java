@@ -393,6 +393,26 @@ public class TestFetchCalls {
     }
 
     @Test
+    public void testDeserializerNull()
+            throws MessagingException, UnsupportedEncodingException, InvocationTargetException, IllegalAccessException,
+            JsonProcessingException {
+        JavaCallResults lr_resultObject = new JavaCallResults();
+        String l_returnObject = null;
+
+        //List<Message> = ArrayList
+        assertThat("This class should not be serializable", !(l_returnObject instanceof Serializable));
+
+        Object extractedReturnObject = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_returnObject);
+        assertThat(extractedReturnObject, Matchers.instanceOf(Map.class));
+
+        assertThat(((Map) extractedReturnObject).size(), Matchers.equalTo(0));
+
+
+
+
+    }
+
+    @Test
     public void testStaticFieldIntegrityCore()
             throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
             IOException, InstantiationException {

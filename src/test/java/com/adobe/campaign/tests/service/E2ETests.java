@@ -1,5 +1,6 @@
 package com.adobe.campaign.tests.service;
 
+import com.adobe.campaign.tests.integro.tools.RandomManager;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -78,6 +79,27 @@ public class E2ETests {
 
         given().body(urlsMap).post(EndPointURL + "service-check").then().assertThat().statusCode(200)
                 .body("url1", Matchers.equalTo(false), "url2", Matchers.equalTo(true));
+
+    }
+
+    /**
+     * Testing that we provide the correct error messages whenever the target method throws an error
+     * @throws IOException
+     */
+    @Test(groups = "E2E")
+    public void testMainEror_Case1InvocationError() throws IOException {
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        myContent.setMethodName("getRandomNumber");
+        myContent.setReturnType("java.lang.String");
+        myContent.setArgs(
+                new Object[] { 3, 3 });
+        l_call.getCallContent().put("call1PL", myContent);
+
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+                Matchers.containsString("Minimum number must be strictly inferior than maximum number."));
 
     }
 

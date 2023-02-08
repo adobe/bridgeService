@@ -5,13 +5,12 @@ import com.adobe.campaign.tests.integro.tools.LanguageEncodings;
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.adobe.campaign.tests.service.exceptions.AmbiguousMethodException;
 import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
-import com.adobe.campaign.tests.service.exceptions.TargetJavaClassException;
+import com.adobe.campaign.tests.service.exceptions.TargetJavaMethodCallException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.testng.Assert;
 import org.testng.annotations.*;
-import spark.Spark;
 import utils.CampaignUtils;
 
 import javax.mail.Message;
@@ -210,7 +209,7 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { "", "" });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
-        Assert.assertThrows(TargetJavaClassException.class, ()->l_cc.call(iClassLoader));
+        Assert.assertThrows(TargetJavaMethodCallException.class, ()->l_cc.call(iClassLoader));
     }
 
     @Test
@@ -740,6 +739,28 @@ public class TestFetchCalls {
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
         List<Method> l_methods = l_cc.fetchMethodCandidates(ibcl.loadClass(l_cc.getClassName()));
         assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
+    }
+
+    /**
+     * Related to issue #3: Where we want a clear message + the original error whenever there is an invocation target exception
+     * @throws ClassNotFoundException
+     */
+    @Test
+    public void testIssueWithBetterMessageOnInvocationTarget() throws ClassNotFoundException {
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc.setMethodName("getRandomNumber");
+        l_cc.setArgs(new Object[] { 3,3 });
+        IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
+        try {
+            l_cc.call(ibcl);
+            assertThat("We should not get here", false);
+        } catch(Exception e) {
+            assertThat("The error should be of the type TargetJavaMethodCallException", e, Matchers.instanceOf(TargetJavaMethodCallException.class));
+            assertThat("We should have correct static messages ", e.getMessage(), Matchers.startsWith("We experienced an exception when calling the provided method com.adobe.campaign.tests.integro.tools.RandomManager.getRandomNumber."));
+            assertThat("The message should contain the target message as well", e.getMessage(), Matchers.endsWith("Provided error message : java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number."));
+        }
+
     }
 
     /***** #2 Variable replacement ******/

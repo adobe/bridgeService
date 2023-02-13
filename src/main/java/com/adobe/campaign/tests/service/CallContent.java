@@ -2,7 +2,7 @@ package com.adobe.campaign.tests.service;
 
 import com.adobe.campaign.tests.service.exceptions.AmbiguousMethodException;
 import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
-import com.adobe.campaign.tests.service.exceptions.TargetJavaClassException;
+import com.adobe.campaign.tests.service.exceptions.TargetJavaMethodCallException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -119,8 +119,10 @@ public class CallContent {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
-            throw new TargetJavaClassException(
-                    "We experienced an exception when calling the provided method " + this.getFullName() + ".", e);
+            //Arrays.stream(e.getTargetException().getStackTrace()).sequential().forEach(t -> response.append(t).append("\n"));
+            throw new TargetJavaMethodCallException(
+                    "We experienced an exception when calling the provided method " + this.getFullName()
+                            + ".\nProvided error message : " + e.getTargetException().toString(), e);
         } catch (ClassNotFoundException e) {
             throw new NonExistantJavaObjectException("The given class " + this.getClassName() + "could not be found.");
         } catch (InstantiationException e) {
@@ -128,7 +130,7 @@ public class CallContent {
                     "Could not instantiate class. The given class " + this.getClassName() + "could not be found.");
         } catch (NoSuchMethodException e) {
             throw new NonExistantJavaObjectException(
-                    "Could not find the method " + this.getFullName() +".");
+                    "Could not find the method " + this.getFullName() + ".");
         }
 
         return lr_object;

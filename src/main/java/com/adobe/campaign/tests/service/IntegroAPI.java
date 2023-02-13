@@ -2,13 +2,14 @@ package com.adobe.campaign.tests.service;
 
 import com.adobe.campaign.tests.service.exceptions.AmbiguousMethodException;
 import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
-import com.adobe.campaign.tests.service.exceptions.TargetJavaClassException;
+import com.adobe.campaign.tests.service.exceptions.TargetJavaMethodCallException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import spark.Spark;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 
 import static com.adobe.campaign.tests.service.ConfigValueHandler.*;
 import static spark.Spark.*;
@@ -17,6 +18,8 @@ public class IntegroAPI {
     private static final Logger log = LogManager.getLogger();
 
     public static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
+    private static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
+    private static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not fid the given class or method.";
 
     protected static void
     startServices() {
@@ -29,7 +32,7 @@ public class IntegroAPI {
         }
 
         get("/test", (req, res) -> {
-            return "All systems up "+TEST_CHECK.fetchValue();
+            return "All systems up "+TEST_CHECK.fetchValue()+"\nversion : 0.0.7";
         });
 
         post("/service-check", (req, res) -> {
@@ -48,29 +51,41 @@ public class IntegroAPI {
         });
 
         exception( JsonProcessingException.class, (e, req, res) -> {
-            res.body(ERROR_JSON_TRANSFORMATION);
+            StringBuilder response = new StringBuilder();
+            response.append(ERROR_JSON_TRANSFORMATION);
+            response.append("\n");
+            response.append(e.getMessage());
             res.status(400);
-            res.body(e.getMessage());
+            res.body(response.toString());
         });
 
         exception( AmbiguousMethodException.class, (e, req, res) -> {
-            res.body(ERROR_JSON_TRANSFORMATION);
+            StringBuilder response = new StringBuilder();
+            response.append(ERROR_JSON_TRANSFORMATION);
+            response.append("\n");
+            response.append(e.getMessage());
             res.status(400);
-            res.body(e.getMessage());
+            res.body(response.toString());
         });
 
-        exception( TargetJavaClassException.class, (e, req, res) -> {
-            res.body(ERROR_JSON_TRANSFORMATION);
+        exception( TargetJavaMethodCallException.class, (e, req, res) -> {
+            StringBuilder response = new StringBuilder();
+            response.append(ERROR_CALLING_JAVA_METHOD);
+            response.append("\n");
+
             res.status(400);
-            res.body(e.getMessage());
+            response.append(e.getMessage()).append("\n");
+            res.body(response.toString());
         });
 
         exception( NonExistantJavaObjectException.class, (e, req, res) -> {
-            res.body(ERROR_JSON_TRANSFORMATION);
+            StringBuilder response = new StringBuilder();
+            response.append(ERROR_JAVA_OBJECT_NOT_FOUND);
+            response.append("\n");
+            response.append(e.getMessage());
             res.status(400);
-            res.body(e.getMessage());
+            res.body(response.toString());
         });
-
 
     }
 }

@@ -14,12 +14,11 @@ import java.util.Map;
 import static io.restassured.RestAssured.given;
 
 public class E2ETests {
-    public static final String EndPointURL = "http://localhost:4567/";
+    public static final String EndPointURL = "http://localhost:8080/";
 
     @BeforeGroups(groups = "E2E")
     public void startUpService() {
-        IntegroAPI iapi = new IntegroAPI();
-        iapi.startServices();
+        IntegroAPI.startServices(8080);
         Spark.awaitInitialization();
     }
 

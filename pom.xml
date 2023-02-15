@@ -42,7 +42,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.adobe.campaign.tests.service.MainContainer</mainClass>
+                            <mainClass>MainContainer</mainClass>
                             <classpathPrefix>dependency-jars/</classpathPrefix>
                         </manifest>
                     </archive>
@@ -64,7 +64,7 @@
                             </descriptorRefs>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.adobe.campaign.tests.service.MainContainer</mainClass>
+                                    <mainClass>MainContainer</mainClass>
                                 </manifest>
                             </archive>
                         </configuration>
@@ -76,7 +76,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <mainClass>com.adobe.campaign.tests.service.MainContainer</mainClass>
+                    <mainClass>MainContainer</mainClass>
                 </configuration>
             </plugin>
             <plugin>

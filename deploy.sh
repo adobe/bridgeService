@@ -1,4 +1,4 @@
-imageVersion=0.0.1-TEST
+imageVersion=0.0.2-TEST
 
 # Compile project and generate jar file
 mvn --settings .mvn/settings.xml -DskipTests -U clean package

@@ -21,8 +21,8 @@ public class IntegroAPI {
     private static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
     private static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not fid the given class or method.";
 
-    protected static void
-    startServices() {
+    public static void
+    startServices(int port) {
 
         if (Boolean.parseBoolean(SSL_ACTIVE.fetchValue())) {
             File l_file = new File(SSL_KEYSTORE_PATH.fetchValue());
@@ -30,8 +30,12 @@ public class IntegroAPI {
             secure(SSL_KEYSTORE_PATH.fetchValue(), SSL_KEYSTORE_PASSWORD.fetchValue(),
                     SSL_TRUSTSTORE_PATH.fetchValue(), SSL_TRUSTSTORE_PASSWORD.fetchValue());
         }
+        else {
+            port(port);
+        }
 
         get("/test", (req, res) -> {
+            res.type("text/plain");
             return "All systems up "+TEST_CHECK.fetchValue()+"\nversion : 0.0.7";
         });
 

@@ -1,13 +1,13 @@
-package com.adobe.campaign.tests.service;
-
+import com.adobe.campaign.tests.service.ConfigValueHandler;
+import com.adobe.campaign.tests.service.IntegroAPI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class MainContainer {
     private static final Logger log = LogManager.getLogger();
+    public static final int PROD_PORT = 443;
+    public static final int TEST_PORT = 8080;
     public static void main(String[] args) {
-
-        IntegroAPI iapi = new IntegroAPI();
 
         if (args.length == 0) {
             log.info("In Prod Mode - SSL");
@@ -16,17 +16,14 @@ public class MainContainer {
             ConfigValueHandler.SSL_KEYSTORE_PATH.activate("/home/app/certificates/campaignkeystore.jks");
             ConfigValueHandler.SSL_KEYSTORE_PASSWORD.activate("#nlpass");
             ConfigValueHandler.TEST_CHECK.activate("in production");
-            iapi.startServices();
+            IntegroAPI.startServices(PROD_PORT);
         } else if (args[0].equalsIgnoreCase("test")) {
             log.info("In Test Mode");
             ConfigValueHandler.TEST_CHECK.activate("in test");
-            iapi.startServices();
+            IntegroAPI.startServices(TEST_PORT);
         } else {
             ConfigValueHandler.TEST_CHECK.activate("in test");
             log.error("You need to pass the argument 'test' for this to work, or provide the valie keystores.");
         }
-
-
-
     }
 }

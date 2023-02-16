@@ -110,7 +110,7 @@
         <dependency>
             <groupId>com.adobe.campaign.tests.integro</groupId>
             <artifactId>integro-v7</artifactId>
-            <version>0.0.16.5-UI-SNAPSHOT</version>
+            <version>0.0.16-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.adobe.campaign.tests.integro</groupId>

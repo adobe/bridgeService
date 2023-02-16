@@ -2,16 +2,28 @@
 REPO_LOCATION=docker-campaign-qe-snapshot.dr.corp.adobe.com
 
 ##AWS
-#REPO_LOCATION=docker-campaign-qe-snapshot.dr-uw2.adobeitc.com
+#REPO_LOCATION_UW2=docker-campaign-qe-snapshot.dr-uw2.adobeitc.com
 ROOT=integrobridgeservice
 
-##SSL
-IMAGE=integro-acc-bridgeservice
+##DOCKERFILES
+DOCKERFILE_SSL=DockerfileSSL
+DOCKERFILE_SIMPLE=DockerfileNoSSL
 
-##NoSSL
-#IMAGE=integro-acc-bridgeservice-nossl
 
-VERSION=0.0.7
-docker build --build-arg ARTIFACTORY_USER=$ARTIFACTORY_USER --build-arg ARTIFACTORY_API_TOKEN=$ARTIFACTORY_API_TOKEN -t $ROOT/$IMAGE:latest -t $ROOT/$IMAGE:$VERSION .
-docker tag $ROOT/$IMAGE:latest $REPO_LOCATION/$ROOT/$IMAGE:$VERSION
-docker push $REPO_LOCATION/$ROOT/$IMAGE:$VERSION
+IMAGE_NOSSL=integro-acc-bridgeservice-nossl
+IMAGE_SSL=integro-acc-bridgeservice
+
+VERSION=0.0.9
+
+mvn --settings .mvn/settings.xml -U clean package
+
+## SSL
+docker build --build-arg ARTIFACTORY_USER=$ARTIFACTORY_USER --build-arg ARTIFACTORY_API_TOKEN=$ARTIFACTORY_API_TOKEN -t $ROOT/$IMAGE_SSL:latest -t $ROOT/$IMAGE_SSL:$VERSION -f $DOCKERFILE_SSL .
+## NO SSL
+docker build --build-arg ARTIFACTORY_USER=$ARTIFACTORY_USER --build-arg ARTIFACTORY_API_TOKEN=$ARTIFACTORY_API_TOKEN -t $ROOT/$IMAGE_NOSSL:latest -t $ROOT/$IMAGE_NOSSL:$VERSION -f $DOCKERFILE_SIMPLE .
+
+docker tag $ROOT/$IMAGE_SSL:latest   $REPO_LOCATION/$ROOT/$IMAGE_SSL:$VERSION
+docker tag $ROOT/$IMAGE_NOSSL:latest $REPO_LOCATION/$ROOT/$IMAGE_IMAGE_NOSSL:$VERSION
+
+docker push $REPO_LOCATION/$ROOT/$IMAGE_IMAGE_SSL:$VERSION
+docker push $REPO_LOCATION/$ROOT/$IMAGE_IMAGE_IMAGE_NOSSL:$VERSION

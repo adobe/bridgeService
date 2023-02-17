@@ -1,7 +1,6 @@
 package com.adobe.campaign.tests.service;
 
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;

@@ -12,8 +12,6 @@ public class JavaCalls {
 
     private IntegroBridgeClassLoader localClassLoader;
 
-
-
     public JavaCalls() {
         callContent = new LinkedHashMap<>();
         environmentVariables = new HashMap<>();
@@ -74,8 +72,8 @@ public class JavaCalls {
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
             InstantiationException {
         CallContent l_setEnvironmetVars = new CallContent();
-        l_setEnvironmetVars.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
-        l_setEnvironmetVars.setMethodName("setIntegroCache");
+        l_setEnvironmetVars.setClassName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
+        l_setEnvironmetVars.setMethodName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue());
 
         //Fetch all environment variables
         Properties argumentProps = new Properties();

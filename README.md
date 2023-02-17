@@ -125,7 +125,7 @@ We now have the possibility of injecting call results from one call to the other
 In the example above "ID-2" will use the return value of the call "ID-1" as ts first argument.
 
 ## Creating a Call Context
-We sometimes need to set environment variables when making calls. This are usually idirectly related to the call you are doing.
+We sometimes need to set environment variables when making calls. This is usually indirectly related to the call you are doing.
 
 ```JSON
 {
@@ -143,6 +143,10 @@ We sometimes need to set environment variables when making calls. This are usual
 ```
 
 When making the call we first update the environment variables for the system.
+
+This call will use your internal method for setting environment variables. This method can be set by setting the following environment values, when activating the Bridge on your project:
+* IBS.ENVVARS.SETTER.CLASS
+* IBS.ENVVARS.SETTER.METHOD
 
 ## Error Management
 Currently, whenever there is an error in the underlying java call we will include the orginal error message in the error response. For example, for the call:

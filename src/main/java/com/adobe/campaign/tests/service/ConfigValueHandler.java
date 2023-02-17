@@ -20,7 +20,10 @@ public enum ConfigValueHandler {
     SSL_KEYSTORE_PASSWORD( "IBS.SSL.KEYSTORE_PWD", null, false ),
     SSL_TRUSTSTORE_PATH( "IBS.SSL.TRUSTSTORE_PATH", null, false ),
     SSL_TRUSTSTORE_PASSWORD( "IBS.SSL.STORESTORE_PWD", null, false ),
-    DEFAULT_SERVICE_PORT("IBS.SERVICE_CHECK.DEFAULT.PORT", "80", false);
+    DEFAULT_SERVICE_PORT("IBS.SERVICE_CHECK.DEFAULT.PORT", "80", false),
+    ENVIRONMENT_VARS_SETTER_CLASS("IBS.ENVVARS.SETTER.CLASS","com.adobe.campaign.tests.integro.core.SystemValueHandler", false),
+    ENVIRONMENT_VARS_SETTER_METHOD("IBS.ENVVARS.SETTER.METHOD", "setIntegroCache", false);
+
     public final String defaultValue;
     public final String systemName;
     public final boolean requiredValue;

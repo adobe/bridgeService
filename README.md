@@ -113,16 +113,18 @@ We now have the possibility of injecting call results from one call to the other
             "method": "<method name 1>",
             "args": ["argument1","argument2"]
         },
-        "<ID2->": {
+        "<ID-2>": {
            "class": "<package name 2>.<class name 2>",
            "method": "<method name 2>",
-           "args": ["ID-1","argument2"]
+           "args": ["<ID-1>","argument2"]
         }
     }
 }
 ```
 
 In the example above "ID-2" will use the return value of the call "ID-1" as ts first argument.
+
+**NOTE** : When passing a call result as an argument, it needs to be a String. In many languages such as JavaScript, the JSON keys need not be a string, however, for this to work you need to pass the ID as a string.  
 
 ## Creating a Call Context
 We sometimes need to set environment variables when making calls. This is usually indirectly related to the call you are doing.

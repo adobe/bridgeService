@@ -3,6 +3,7 @@ package com.adobe.campaign.tests.service;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +15,8 @@ public class IntegroBridgeClassLoader extends ClassLoader {
     private static final Logger log = LogManager.getLogger();
     private Map<String, Object> callResultCache;
 
+    private String[] packagePaths;
+
     /**
      * Parent ClassLoader passed to this constructor
      * will be used if this ClassLoader can not resolve a
@@ -23,6 +26,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      */
     public IntegroBridgeClassLoader() {
         super(IntegroBridgeClassLoader.class.getClassLoader());
+        setPackagePaths(ConfigValueHandler.STORE_CLASSES_FROM_PACKAGES.fetchValue());
         this.setCallResultCache(new HashMap<>());
     }
 
@@ -32,18 +36,18 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      * changed to load the class over network from some
      * other server or from the database.
      *
-     * @param name Full class name
+     * @param in_classPath Full class name
      */
-    private synchronized  Class getClass(String name)
+    private synchronized  Class getClass(String in_classPath)
             throws ClassNotFoundException {
 
         // is this class already loaded?
-        Class cls = findLoadedClass(name);
+        Class cls = findLoadedClass(in_classPath);
         if (cls != null) {
-            log.debug("class {} has been loaded.",name);
+            log.debug("class {} has been loaded.",in_classPath);
             return cls;
         } else {
-            log.debug("class {} has not been loaded. Loading now.", name);
+            log.debug("class {} has not been loaded. Loading now.", in_classPath);
         }
 
 
@@ -51,7 +55,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         // javablogging.package.ClassToLoad
         // and we have to convert it into the .class file name
         // like javablogging/package/ClassToLoad.class
-        String file = name.replace('.', '/')
+        String file = in_classPath.replace('.', '/')
                 + ".class";
         byte[] b = null;
         try {
@@ -59,7 +63,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
             b = loadClassData(file);
             // defineClass is inherited from the ClassLoader class
             // and converts the byte array into a Class
-            cls = defineClass(name, b, 0, b.length);
+            cls = defineClass(in_classPath, b, 0, b.length);
             resolveClass(cls);
             return cls;
         } catch (IOException e) {
@@ -76,19 +80,19 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      * If not, it will use the super.loadClass() method
      * which in turn will pass the request to the parent.
      *
-     * @param name
+     * @param in_classFullPath
      *            Full class name
      */
     @Override
-    public Class loadClass(String name)
+    public Class loadClass(String in_classFullPath)
             throws ClassNotFoundException {
-        log.debug("loading class {}",name);
+        log.debug("loading class {}",in_classFullPath);
 
-        if (name.startsWith("com.adobe.campaign.") || name.startsWith("utils.") || name.startsWith("testhelper.")) {
-
-            return getClass(name);
+        if (isClassAmongPackagePaths(in_classFullPath)) {
+            return getClass(in_classFullPath);
         }
-        return super.loadClass(name);
+
+        return super.loadClass(in_classFullPath);
     }
 
     /**
@@ -123,5 +127,26 @@ public class IntegroBridgeClassLoader extends ClassLoader {
 
     public void setCallResultCache(Map<String, Object> callResultCache) {
         this.callResultCache = callResultCache;
+    }
+
+    public String[] getPackagePaths() {
+        return packagePaths;
+    }
+
+    public void setPackagePaths(String[] packagePaths) {
+        this.packagePaths = packagePaths;
+    }
+
+    public void setPackagePaths(String in_packagePaths) {
+        setPackagePaths(in_packagePaths.contains(",") ? in_packagePaths.split(",") : new String[]{});
+    }
+
+    /**
+     * Lets us know if the given class path is included in the classes that are to be managed by the class loader
+     * @param in_classFullPath
+     * @return true if the given class path is among the stored package paths
+     */
+    public boolean isClassAmongPackagePaths(String in_classFullPath) {
+        return Arrays.stream(getPackagePaths()).anyMatch(z -> in_classFullPath.startsWith(z));
     }
 }

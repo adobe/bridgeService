@@ -8,8 +8,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 
 import static com.adobe.campaign.tests.service.ConfigValueHandler.*;
 import static spark.Spark.*;
@@ -37,7 +35,7 @@ public class IntegroAPI {
 
         get("/test", (req, res) -> {
             res.type("text/plain");
-            return "All systems up "+TEST_CHECK.fetchValue()+ "\nversion : " + SYSTEM_VERSION;
+            return "All systems up "+ DEPLOYMENT_MODEL.fetchValue()+ "\nversion : " + SYSTEM_VERSION;
         });
 
         post("/service-check", (req, res) -> {

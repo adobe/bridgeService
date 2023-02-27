@@ -1,6 +1,29 @@
 # integroBridgeService
 This project allows you to expose Integro ACC as a REST service. It allows you to make calls to Java code.
 
+- [Getting Started](#getting-started)
+- [Testing That all is Working](#testing-that-all-is-working)
+- [Testing That all External Dervices can be Accessed](#testing-that-all-external-dervices-can-be-accessed)
+- [Making a basic Java Call](#making-a-basic-java-call)
+- [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
+    * [Call Chaining and Call Dependencies](#call-chaining-and-call-dependencies)
+- [Creating a Call Context](#creating-a-call-context)
+- [Error Management](#error-management)
+- [Known Issues and Limitations](#known-issues-and-limitations)
+    * [Cannot call overloaded methods with the same number of arguments.](#cannot-call-overloaded-methods-with-the-same-number-of-arguments)
+    * [Only simple arguments](#only-simple-arguments)
+    * [Complex Non-Serialisable Return Objects](#complex-non-serialisable-return-objects)
+- [Building Image](#building-image)
+- [Existing Images](#existing-images)
+    * [Standard SSL](#standard-ssl)
+    * [Without SSL](#without-ssl)
+
+## Implementing The Bridge Service in Your Project
+This project can be implemented in your project by simply adding it in your dependencies.
+
+### Configuring it to Work for You
+
+
 ## Getting Started
 The best way to start this in the beginning is to simply start the program:
 
@@ -196,7 +219,6 @@ Since this is a REST call we can only correctly manage simple arguments in the p
 ### Complex Non-Serialisable Return Objects
 In many cases the object a method returns is not rerializable. If that is the case we mine the object, and extract all simple values from the object.
 
-
 ## Building Image
 In order to build an image you need to run the following command:
 ```
@@ -227,7 +249,7 @@ The current standard image expects the certificate to be available in the direct
 
 If you want to access the logs you will need to include a mapping of the logs to the host machine. This is done by adding `-v /root/ibs:/home/app/ibs_output`. In this example all logs are store in the local directory `/root/ibs/ibs`.
 
-### Without SSL : 
+### Without SSL
 The current Non-SSL version is available here at :
 ```docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl```
 

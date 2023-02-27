@@ -17,7 +17,7 @@ public class IBSClassLoaderTests {
 
     @Test
     public void testExtractPackages() {
-        ConfigValueHandler.STORE_CLASSES_FROM_PACKAGES.activate("a,b,c");
+        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("a,b,c");
 
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
         assertThat("We should have correctly extracted the package paths from STORE_CLASSES_FROM_PACKAGES", ibscl.getPackagePaths(),

@@ -31,8 +31,8 @@ public enum ConfigValueHandler {
             "When set, we use the given class to store the static execution variables."),
     ENVIRONMENT_VARS_SETTER_METHOD("IBS.ENVVARS.SETTER.METHOD", "setIntegroCache", false,
             "When set, we use the given method to store the static execution variables."),
-    STORE_CLASSES_FROM_PACKAGES("IBS.CLASSLOADER.PACKAGES", "", false,
-            "This parameter is used for flagging the packages that are to be used by the IBS class loader. When used, the static variables are not stored between java calls.");
+    STATIC_INTEGRITY_PACKAGES("IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES", "", false,
+            "This parameter is used for flagging the packages that are to to be used by the IBS class loader. When used, the static variables are not stored between java calls.");
 
     public final String defaultValue;
     public final String systemName;

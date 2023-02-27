@@ -21,12 +21,10 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      * Parent ClassLoader passed to this constructor
      * will be used if this ClassLoader can not resolve a
      * particular class.
-     *
-     * @param
      */
     public IntegroBridgeClassLoader() {
         super(IntegroBridgeClassLoader.class.getClassLoader());
-        setPackagePaths(ConfigValueHandler.STORE_CLASSES_FROM_PACKAGES.fetchValue());
+        setPackagePaths(ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.fetchValue());
         this.setCallResultCache(new HashMap<>());
     }
 

@@ -29,7 +29,7 @@ public class TestFetchCalls {
     @BeforeMethod
     public void resetBefore() {
         ConfigValueHandler.resetAllValues();
-        ConfigValueHandler.STORE_CLASSES_FROM_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
+        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
     }
     @AfterClass
     public void reset() {

@@ -15,15 +15,15 @@ public class MainContainer {
             ConfigValueHandler.SSL_ACTIVE.activate("true");
             ConfigValueHandler.SSL_KEYSTORE_PATH.activate("/home/app/certificates/campaignkeystore.jks");
             ConfigValueHandler.SSL_KEYSTORE_PASSWORD.activate("#nlpass");
-            ConfigValueHandler.TEST_CHECK.activate("in production");
+            ConfigValueHandler.DEPLOYMENT_MODEL.activate("in production");
             IntegroAPI.startServices(PROD_PORT);
         } else if (args[0].equalsIgnoreCase("test")) {
             log.info("In Test Mode");
-            ConfigValueHandler.TEST_CHECK.activate("in test");
+            ConfigValueHandler.DEPLOYMENT_MODEL.activate("in test");
             IntegroAPI.startServices(TEST_PORT);
         } else {
-            ConfigValueHandler.TEST_CHECK.activate("in test");
-            log.error("You need to pass the argument 'test' for this to work, or provide the valie keystores.");
+            ConfigValueHandler.DEPLOYMENT_MODEL.activate("in test");
+            log.error("You need to pass the argument 'test' for this to work, or provide the value keystores.");
         }
     }
 }

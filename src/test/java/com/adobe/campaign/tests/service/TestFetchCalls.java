@@ -23,12 +23,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestFetchCalls {
     @BeforeMethod
-    @AfterMethod
+    public void resetBefore() {
+        ConfigValueHandler.resetAllValues();
+        ConfigValueHandler.STORE_CLASSES_FROM_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
+    }
+    @AfterClass
     public void reset() {
         ConfigValueHandler.resetAllValues();
     }
@@ -406,9 +409,6 @@ public class TestFetchCalls {
 
         assertThat(((Map) extractedReturnObject).size(), Matchers.equalTo(0));
 
-
-
-
     }
 
     @Test
@@ -416,6 +416,7 @@ public class TestFetchCalls {
             throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
             IOException, InstantiationException {
 
+        //Store some static variables in one call
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -443,6 +444,7 @@ public class TestFetchCalls {
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("getRandomEmail").toString(), Matchers.endsWith("@boom.com"));
 
+        //Make sure that the static variables are not kept
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
         l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");

@@ -14,28 +14,48 @@ package com.adobe.campaign.tests.service;
 import java.util.Arrays;
 
 public enum ConfigValueHandler {
-    TEST_CHECK("SYSTEM_CHECK","", false),
-    SSL_ACTIVE("IBS.SSL.ACTIVE","false", false),
-    SSL_KEYSTORE_PATH( "IBS.SSL.KEYSTORE_PATH", null, false ),
-    SSL_KEYSTORE_PASSWORD( "IBS.SSL.KEYSTORE_PWD", null, false ),
-    SSL_TRUSTSTORE_PATH( "IBS.SSL.TRUSTSTORE_PATH", null, false ),
-    SSL_TRUSTSTORE_PASSWORD( "IBS.SSL.STORESTORE_PWD", null, false ),
-    DEFAULT_SERVICE_PORT("IBS.SERVICE_CHECK.DEFAULT.PORT", "80", false),
-    ENVIRONMENT_VARS_SETTER_CLASS("IBS.ENVVARS.SETTER.CLASS","com.adobe.campaign.tests.integro.core.SystemValueHandler", false),
-    ENVIRONMENT_VARS_SETTER_METHOD("IBS.ENVVARS.SETTER.METHOD", "setIntegroCache", false);
+    DEPLOYMENT_MODEL("IBS.DEPLOYMENT.MODEL", "", false, "This property is used for flagging the deplyment model."),
+    SSL_ACTIVE("IBS.SSL.ACTIVE", "false", false, "This property is used to flag if the system is in SSL mode."),
+    SSL_KEYSTORE_PATH("IBS.SSL.KEYSTORE_PATH", null, false,
+            "This property is used to flag the location of the key store."),
+    SSL_KEYSTORE_PASSWORD("IBS.SSL.KEYSTORE_PWD", null, false,
+            "This property is to be used for setting the password for the keystore"),
+    SSL_TRUSTSTORE_PATH("IBS.SSL.TRUSTSTORE_PATH", null, false,
+            "This property is used to flag the location of the trust store."),
+    SSL_TRUSTSTORE_PASSWORD("IBS.SSL.STORESTORE_PWD", null, false,
+            "This property is to be used for setting the password for the trust store"),
+    DEFAULT_SERVICE_PORT("IBS.SERVICE_CHECK.DEFAULT.PORT", "80", false,
+            "The default port to be used when doing a service check."),
+    ENVIRONMENT_VARS_SETTER_CLASS("IBS.ENVVARS.SETTER.CLASS",
+            "com.adobe.campaign.tests.integro.core.SystemValueHandler", false,
+            "When set, we use the given class to store the static execution variables."),
+    ENVIRONMENT_VARS_SETTER_METHOD("IBS.ENVVARS.SETTER.METHOD", "setIntegroCache", false,
+            "When set, we use the given method to store the static execution variables."),
+    STORE_CLASSES_FROM_PACKAGES("IBS.CLASSLOADER.PACKAGES", "", false,
+            "This parameter is used for flagging the packages that are to be used by the IBS class loader. When used, the static variables are not stored between java calls.");
 
     public final String defaultValue;
     public final String systemName;
     public final boolean requiredValue;
+    public final String description;
 
-    ConfigValueHandler(String in_propertyName, String in_defaultValue, boolean in_requiredValue) {
-        systemName =in_propertyName;
-        defaultValue=in_defaultValue;
-        requiredValue=in_requiredValue;
+    ConfigValueHandler(String in_propertyName, String in_defaultValue, boolean in_requiredValue, String in_description) {
+        systemName = in_propertyName;
+        defaultValue = in_defaultValue;
+        requiredValue = in_requiredValue;
+        description = in_description;
+    }
+
+    /**
+     * Resets all of the values
+     */
+    public static void resetAllValues() {
+        Arrays.stream(values()).forEach(ConfigValueHandler::reset);
     }
 
     /**
      * Returns the value for our config element. If not in system, we return the default value.
+     *
      * @return The string value of the given property
      */
     public String fetchValue() {
@@ -44,7 +64,8 @@ public enum ConfigValueHandler {
 
     /**
      * Sets the given value to our property
-     * @param in_value
+     *
+     * @param in_value the value to be used for setting the environment variable.
      */
     public void activate(String in_value) {
         System.setProperty(this.systemName, in_value);
@@ -58,14 +79,8 @@ public enum ConfigValueHandler {
     }
 
     /**
-     * Resets all of the values
-     */
-    public static void resetAllValues() {
-        Arrays.stream(values()).forEach(ConfigValueHandler::reset);
-    }
-
-    /**
      * Checks if this config value is set
+     *
      * @return true if the value for our config item is in the system
      */
     public boolean isSet() {
@@ -74,7 +89,8 @@ public enum ConfigValueHandler {
 
     /**
      * Compares the value using equalsIgnoreCase
-     * @param in_value
+     *
+     * @param in_value The value to compare the environment variable
      * @return true if the given value is the same as the set one.
      */
     public boolean is(String in_value) {

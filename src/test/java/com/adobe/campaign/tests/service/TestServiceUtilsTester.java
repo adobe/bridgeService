@@ -3,18 +3,37 @@ package com.adobe.campaign.tests.service;
 import com.adobe.campaign.tests.integro.tools.NetworkTools;
 import com.adobe.campaign.tests.service.utils.ServiceTools;
 import org.hamcrest.Matchers;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.ServerSocket;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestServiceUtilsTester {
-    private static final List<String> urls = Arrays.asList("acc-simulators.email.corp.adobe.com:143", "acc-simulators.smpp.corp.adobe.com");
+    
+    private static final int port1 = 1111;
+    private static final int port2 = port1+1;
+    private static final List<String> urls = Arrays.asList("localhost:"+ port2, "localhost:"+ port1);
+    ServerSocket serverSocket1 = null;
+    ServerSocket serverSocket2 = null;
 
+    @BeforeClass(alwaysRun = true)
+    public void prepare() throws IOException {
+        serverSocket1 = new ServerSocket(port1);
+        serverSocket2 = new ServerSocket(port2);
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDown() throws IOException {
+        serverSocket1.close();
+        serverSocket2.close();
+    }
     @Test
     public void testTestAvailability() throws IOException {
 

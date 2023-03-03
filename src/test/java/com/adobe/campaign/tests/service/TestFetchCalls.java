@@ -889,8 +889,6 @@ public class TestFetchCalls {
 
         Method l_hashSet = MimeMessage.class.getDeclaredMethod("getSize");
         assertThat("HashCode is NOT extractable",MetaUtils.isExtractable(l_hashSet));
-
-
     }
 
 
@@ -905,8 +903,6 @@ public class TestFetchCalls {
         assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
         JavaCallResults jcr = new JavaCallResults();
         jcr.returnValues.put("value",MetaUtils.extractValuesFromObject(x));
-
-
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 

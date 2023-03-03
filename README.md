@@ -1,36 +1,60 @@
 # integroBridgeService
 This project allows you to expose Integro ACC as a REST service. It allows you to make calls to Java code.
-
-- [Getting Started](#getting-started)
-- [Testing That all is Working](#testing-that-all-is-working)
-- [Testing That all External Dervices can be Accessed](#testing-that-all-external-dervices-can-be-accessed)
-- [Making a basic Java Call](#making-a-basic-java-call)
-- [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
+<!-- TOC -->
+* [integroBridgeService](#integrobridgeservice)
+  * [Implementing The Bridge Service in Your Project](#implementing-the-bridge-service-in-your-project)
+    * [Adding the Bridge Service to Your Project](#adding-the-bridge-service-to-your-project)
+      * [Considerations](#considerations)
+    * [Including your project in the BridgeService](#including-your-project-in-the-bridgeservice)
+  * [Testing That all is Working](#testing-that-all-is-working)
+  * [Testing That all External Dervices can be Accessed](#testing-that-all-external-dervices-can-be-accessed)
+  * [Making a basic Java Call](#making-a-basic-java-call)
+  * [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
     * [Call Chaining and Call Dependencies](#call-chaining-and-call-dependencies)
-- [Creating a Call Context](#creating-a-call-context)
-- [Error Management](#error-management)
-- [Known Issues and Limitations](#known-issues-and-limitations)
+  * [Creating a Call Context](#creating-a-call-context)
+  * [Error Management](#error-management)
+  * [Known Issues and Limitations](#known-issues-and-limitations)
     * [Cannot call overloaded methods with the same number of arguments.](#cannot-call-overloaded-methods-with-the-same-number-of-arguments)
     * [Only simple arguments](#only-simple-arguments)
     * [Complex Non-Serialisable Return Objects](#complex-non-serialisable-return-objects)
-- [Building Image](#building-image)
-- [Existing Images](#existing-images)
+  * [Building Image](#building-image)
+  * [Existing Images](#existing-images)
     * [Standard SSL](#standard-ssl)
     * [Without SSL](#without-ssl)
+<!-- TOC -->
 
 ## Implementing The Bridge Service in Your Project
-This project can be implemented in your project by simply adding it in your dependencies.
+The bridge service can be used in two ways:
+* By adding it to the project you want to expose (recommended), 
+* By including your project as a dependency to the Bridge cervice deployed.
 
-### Configuring it to Work for You
+### Adding the Bridge Service to Your Project
+We think it is simplest to the BridgeService dependency to your project. This allows you to only update your code when needed, and you do not need to create a new release/snapshot everytime your project changes.
 
+![BridgeService Injection Model](diagrams/Processes-injectionModel.drawio.png)
 
-## Getting Started
-The best way to start this in the beginning is to simply start the program:
+When starting the bridge service you need to run the following command line:
+
+```
+mvn compile exec:java -Dexec.mainClass=MainContainer -Dexec.args="test"
+```
+
+#### Considerations
+Since the BridgeService uses Jetty and java Spark, it is quite possible that there maybe conflicts in the project when you add this library. Most importantly you will need to ensure that `javax.servlet` is set to "**compile**" in your maven scope.
+
+We have found it simplest to simply add that library directly in the pom file with the scope "**compile**".
+
+### Including your project in the BridgeService
+In this model you can simply add your project as a dependency to the BridgeProject.
+
+![BridgeService Aggregator Model](diagrams/Processes-aggregatorModel.drawio.png)
+
+When starting the bridge service you need to run the following command line:
 
 ```mvn exec:java -Dexec.args="test"```
 
 This will make the service available under :
-```http://localhost:4567```
+```http://localhost:8080```
 
 We are working on implementing a universal service, but for now this is simplest way to start.
 
@@ -222,7 +246,7 @@ In many cases the object a method returns is not rerializable. If that is the ca
 ## Building Image
 In order to build an image you need to run the following command:
 ```
-docker build --build-arg ARTIFACTORY_USER --build-arg ARTIFACTORY_API_TOKEN -t integrobridgeservice .
+docker build -t integrobridgeservice .
 ```
 
 ARTIFACTORY_USER and ARTIFACTORY_API_TOKEN are locally stored credentials for connecting to your artefactory.
@@ -230,7 +254,7 @@ ARTIFACTORY_USER and ARTIFACTORY_API_TOKEN are locally stored credentials for co
 To run the image:
 
 ```
-docker run --rm -d -p 4567:4567 integrobridgeservice
+docker run --rm -d -p 8080:8080 integrobridgeservice
 ```
 
 ## Existing Images
@@ -242,7 +266,7 @@ The current standard version is available here at :
 
 You can run it with: 
 ```
-docker run --rm -d -p 443:4567 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice
+docker run --rm -d -p 443:8080 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice
 ```
 
 The current standard image expects the certificate to be available in the directory `/home/app/certificates`. We solve this by mapping the directory containing the JKS certificate to that directory.
@@ -255,7 +279,7 @@ The current Non-SSL version is available here at :
 
 You can run it with:
 ```
-docker run --rm -d -p 443:4567 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl
+docker run --rm -d -p 443:8080 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl
 ```
 
 The current standard image expects the certificate to be availavle in the directory `/home/app/certificates`. We solve this by mapping the directory containing the JKS certificate to that directory.

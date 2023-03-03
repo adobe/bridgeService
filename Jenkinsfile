@@ -56,33 +56,16 @@ pipeline {
 
             }
         }
-
-        /*
-        stage('Comment Deployment') {
-            steps {
-                //Consider parallel jobs - multiple PR
-
-                script {
-                    
-                    def String commentURL = "https://git.corp.adobe.com/api/v3/repos/${env.MY_PATH}/issues/${ghprbPullId}/comments"
-                    
-                    final String commentBody = """ 
-                                    {
-                                        "body": "New Deployment : ${snapshotVersion}"
-                                    }   
-                                """
-
-                    httpRequest httpMode: 'POST', url: commentURL, authentication: 'GIT_API_PWD', requestBody: commentBody, responseHandle: 'NONE', wrapAsMultipart: false
-                
-                }
-            }
-        }
-        */
-        
     }
     post {
-        cleanup {
+            always {
+               archiveArtifacts allowEmptyArchive: true, artifacts: "**"
+            }
 
-        }
+            cleanup {
+               cleanWs()
+            }
+
+
     }
 }

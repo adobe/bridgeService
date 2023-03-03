@@ -29,36 +29,38 @@ pipeline {
                         usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_API_TOKEN']]) {
                             
                                 sh """
-                                mvn clean test -U --settings .mvn/settings.xml \
+                                mvn clean test \
                             """
                     }
 
-                    jacoco( 
-                        execPattern: 'target/**.exec', 
-                        sourcePattern: 'src/main/java', 
-                        sourceInclusionPattern: '**/*.java', 
-                        changeBuildStatus: true, 
-                        buildOverBuild: true, 
-                        minimumBranchCoverage: '70', 
-                        deltaBranchCoverage: '0.3', 
-                        minimumClassCoverage: '95', 
-                        deltaClassCoverage: '1', 
-                        minimumMethodCoverage: '78',
-                        deltaMethodCoverage: '1', 
-                        minimumComplexityCoverage: '70', 
-                        deltaComplexityCoverage: '1', 
-                        minimumLineCoverage: '87', 
-                        deltaLineCoverage: '0.1',
-        			    deltaInstructionCoverage: '0.3'
-                    )
 
-                    step([$class: 'Publisher', reportFilenamePattern: 'target/surefire-reports/testng-results.xml'])
 
             }
         }
     }
     post {
             always {
+                    jacoco(
+                            execPattern: 'target/**.exec',
+                            sourcePattern: 'src/main/java',
+                            sourceInclusionPattern: '**/*.java',
+                            changeBuildStatus: true,
+                            buildOverBuild: true,
+                            minimumBranchCoverage: '70',
+                            deltaBranchCoverage: '0.3',
+                            minimumClassCoverage: '95',
+                            deltaClassCoverage: '1',
+                            minimumMethodCoverage: '78',
+                            deltaMethodCoverage: '1',
+                            minimumComplexityCoverage: '70',
+                            deltaComplexityCoverage: '1',
+                            minimumLineCoverage: '87',
+                            deltaLineCoverage: '0.1',
+                            deltaInstructionCoverage: '0.3'
+                        )
+
+               step([$class: 'Publisher', reportFilenamePattern: 'target/surefire-reports/testng-results.xml'])
+
                archiveArtifacts allowEmptyArchive: true, artifacts: "**"
             }
 

@@ -2,10 +2,13 @@ package com.adobe.campaign.tests.service;
 
 import com.adobe.campaign.tests.service.utils.ServiceTools;
 import org.hamcrest.Matchers;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.ServerSocket;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +17,23 @@ import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestAccessTester {
-    private static final List<String> urls = Arrays.asList("acc-simulators.email.corp.adobe.com:143", "acc-simulators.smpp.corp.adobe.com");
+    private static final int port1 = 1111;
+    private static final int port2 = port1+1;
+    private static final List<String> urls = Arrays.asList("localhost:"+ port2, "localhost:"+ port1);
+    ServerSocket serverSocket1 = null;
+    ServerSocket serverSocket2 = null;
+
+    @BeforeClass(alwaysRun = true)
+    public void prepare() throws IOException {
+         serverSocket1 = new ServerSocket(port1);
+         serverSocket2 = new ServerSocket(port2);
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDown() throws IOException {
+        serverSocket1.close();
+        serverSocket1.close();
+    }
 
     @Test
     public void testTestCall() throws IOException {
@@ -47,10 +66,12 @@ public class TestAccessTester {
 
     @Test
     public void testTestCalls() throws IOException {
+
+
         ServiceAccess ac = new ServiceAccess();
         Map<String, String> urlsMap = new HashMap<>();
-        urlsMap.put("url1", urls.get(0));
-        urlsMap.put("url2", urls.get(1));
+        urlsMap.put("url1", "localhost:"+ port2);
+        urlsMap.put("url2", "localhost:"+ port1);
         urlsMap.put("url3", "");
 
         ac.setExternalServices(urlsMap);
@@ -77,7 +98,7 @@ public class TestAccessTester {
         ServiceAccess ac = new ServiceAccess();
         Map<String, String> urlsMap = new HashMap<>();
         urlsMap.put("url1", "not really a url");
-        urlsMap.put("url2", urls.get(1));
+        urlsMap.put("url2", "localhost:"+port2);
 
         ac.setExternalServices(urlsMap);
 

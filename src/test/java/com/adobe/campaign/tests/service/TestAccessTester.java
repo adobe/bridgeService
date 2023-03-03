@@ -32,7 +32,7 @@ public class TestAccessTester {
     @AfterClass(alwaysRun = true)
     public void tearDown() throws IOException {
         serverSocket1.close();
-        serverSocket1.close();
+        serverSocket2.close();
     }
 
     @Test

@@ -7,6 +7,7 @@ import org.testng.annotations.Test;
 import spark.Spark;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,11 +15,15 @@ import static io.restassured.RestAssured.given;
 
 public class E2ETests {
     public static final String EndPointURL = "http://localhost:8080/";
+    private static final int port1 = 1111;
+    ServerSocket serverSocket1 = null;
 
     @BeforeGroups(groups = "E2E")
-    public void startUpService() {
+    public void startUpService() throws IOException {
         IntegroAPI.startServices(8080);
         Spark.awaitInitialization();
+        serverSocket1 = new ServerSocket(port1);
+
     }
 
     @Test(groups = "E2E")
@@ -134,8 +139,9 @@ public class E2ETests {
 
     }
 
-    @AfterGroups(groups = "E2E")
-    public void tearDown() {
+    @AfterGroups(groups = "E2E", alwaysRun = true)
+    public void tearDown() throws IOException {
         Spark.stop();
+        serverSocket1.close();
     }
 }

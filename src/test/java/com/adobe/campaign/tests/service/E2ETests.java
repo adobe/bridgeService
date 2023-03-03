@@ -75,7 +75,7 @@ public class E2ETests {
 
         Map<String, String> urlsMap = new HashMap<>();
         urlsMap.put("url1", "not really a url");
-        urlsMap.put("url2", "acc-simulators.email.corp.adobe.com:143");
+        urlsMap.put("url2", "localhost:"+port1);
 
         given().body(urlsMap).post(EndPointURL + "service-check").then().assertThat().statusCode(200)
                 .body("url1", Matchers.equalTo(false), "url2", Matchers.equalTo(true));

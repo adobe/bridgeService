@@ -3,6 +3,11 @@ import com.adobe.campaign.tests.service.IntegroAPI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.util.Properties;
+
+import static com.adobe.campaign.tests.service.ConfigValueHandler.PRODUCT_VERSION;
+
 public class MainContainer {
     private static final Logger log = LogManager.getLogger();
     public static final int PROD_PORT = 443;

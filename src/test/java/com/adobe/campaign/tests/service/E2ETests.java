@@ -3,6 +3,7 @@ package com.adobe.campaign.tests.service;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import spark.Spark;
 
@@ -22,13 +23,27 @@ public class E2ETests {
     public void startUpService() throws IOException {
         IntegroAPI.startServices(8080);
         Spark.awaitInitialization();
+
         serverSocket1 = new ServerSocket(port1);
 
     }
 
+    @BeforeMethod
+    public void cleanCache() {
+        ConfigValueHandler.resetAllValues();
+    }
+
     @Test(groups = "E2E")
     public void testMainHelloWorld() {
-        given().when().get(EndPointURL + "test").then().assertThat().equals("All systems up");
+        ConfigValueHandler.PRODUCT_VERSION.activate("101");
+
+        given().when().get(EndPointURL + "test").then().assertThat().body(Matchers.startsWith("All systems up"))
+                .body(Matchers.endsWith("101"));
+
+        ConfigValueHandler.PRODUCT_USER_VERSION.activate("F");
+
+        given().when().get(EndPointURL + "test").then().assertThat().body(Matchers.startsWith("All systems up"))
+                .body(Matchers.endsWith("Product user version : F")).body(Matchers.containsString("101"));
 
     }
 
@@ -59,7 +74,7 @@ public class E2ETests {
         JavaCallResults jcr = new JavaCallResults();
 
         given().body(jcr).post(EndPointURL + "call").then().statusCode(400).and().assertThat()
-                .equals(IntegroAPI.ERROR_JSON_TRANSFORMATION);
+                .body(Matchers.startsWith(IntegroAPI.ERROR_JSON_TRANSFORMATION));
     }
 
     @Test(groups = "E2E")
@@ -67,7 +82,7 @@ public class E2ETests {
         JavaCallResults jcr = new JavaCallResults();
 
         given().body(jcr).post(EndPointURL + "call").then().statusCode(400).and().assertThat()
-                .equals(IntegroAPI.ERROR_JSON_TRANSFORMATION);
+                .body(Matchers.startsWith(IntegroAPI.ERROR_JSON_TRANSFORMATION));
     }
 
     @Test(groups = "E2E")
@@ -75,7 +90,7 @@ public class E2ETests {
 
         Map<String, String> urlsMap = new HashMap<>();
         urlsMap.put("url1", "not really a url");
-        urlsMap.put("url2", "localhost:"+port1);
+        urlsMap.put("url2", "localhost:" + port1);
 
         given().body(urlsMap).post(EndPointURL + "service-check").then().assertThat().statusCode(200)
                 .body("url1", Matchers.equalTo(false), "url2", Matchers.equalTo(true));
@@ -104,8 +119,10 @@ public class E2ETests {
 
     }
 
-    @Test
-    public void testIntegrity() {
+    @Test(groups = "E2E")
+    public void testIntegrity_pathsSet() {
+
+        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.");
 
         //Call 1
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -126,21 +143,55 @@ public class E2ETests {
                 body("returnValues.call1PL", Matchers.endsWith("@boom.com"))
                 .body("returnValues.call1PL", Matchers.startsWith("bada"));
 
+        JavaCalls l_myJavaCallsB = new JavaCalls();
+        CallContent l_ccB = new CallContent();
+        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_ccB.setMethodName("getRandomEmail");
+        l_myJavaCallsB.getCallContent().put("call2PL", l_ccB);
+
+        given().body(l_myJavaCallsB).post(EndPointURL + "call").then().assertThat().statusCode(200).
+                body("returnValues.call2PL", Matchers.not(Matchers.endsWith("@boom.com")))
+                .body("returnValues.call2PL", Matchers.not(Matchers.startsWith("bada")));
+
+    }
+
+    @Test(groups = "E2E")
+    public void testIntegrity_pathsNotSet() {
+
+        //Call 1
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc.setMethodName("getRandomEmail");
+
+        Map<String, Object> l_authentication = new HashMap<>();
+        l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+
+        l_myJavaCalls.setEnvironmentVariables(l_authentication);
+
+        l_myJavaCalls.getCallContent().put("call1PL", l_cc);
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
+                body("returnValues.call1PL", Matchers.endsWith("@boom.com"))
+                .body("returnValues.call1PL", Matchers.startsWith("bada"));
 
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
         l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
         l_ccB.setMethodName("getRandomEmail");
-        l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
+        l_myJavaCallsB.getCallContent().put("call2PL", l_ccB);
 
         given().body(l_myJavaCallsB).post(EndPointURL + "call").then().assertThat().statusCode(200).
-                body("returnValues.call1PL", Matchers.not(Matchers.endsWith("@boom.com")))
-                .body("returnValues.call1PL", Matchers.not(Matchers.startsWith("bada")));
+                body("returnValues.call2PL", Matchers.endsWith("@boom.com"))
+                .body("returnValues.call2PL", Matchers.startsWith("bada"));
 
     }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {
+        ConfigValueHandler.resetAllValues();
         Spark.stop();
         serverSocket1.close();
     }

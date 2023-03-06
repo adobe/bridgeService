@@ -9,12 +9,6 @@
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <url>https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService</url>
-<!--
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-    </properties>
-    -->
     <build>
         <plugins>
             <plugin>

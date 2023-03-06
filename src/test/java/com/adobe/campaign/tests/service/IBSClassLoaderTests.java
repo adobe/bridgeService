@@ -17,6 +17,7 @@ public class IBSClassLoaderTests {
 
     @Test
     public void testExtractPackages() {
+
         ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("a,b,c");
 
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
@@ -27,6 +28,11 @@ public class IBSClassLoaderTests {
 
         assertThat("We should an empty array", ibscl.getPackagePaths(),
                 Matchers.is(new String[]{}));
+
+        ibscl.setPackagePaths("a");
+        assertThat("We should have a single entry array", ibscl.getPackagePaths(),
+                Matchers.is(new String[]{"a"}));
+
     }
 
     @Test

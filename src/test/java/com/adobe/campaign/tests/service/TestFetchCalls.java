@@ -27,10 +27,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestFetchCalls {
     @BeforeMethod
-    public void resetBefore() {
-        ConfigValueHandler.resetAllValues();
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
-    }
     @AfterClass
     public void reset() {
         ConfigValueHandler.resetAllValues();
@@ -415,6 +411,7 @@ public class TestFetchCalls {
     public void testStaticFieldIntegrityCore()
             throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
             IOException, InstantiationException {
+        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
 
         //Store some static variables in one call
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -462,8 +459,62 @@ public class TestFetchCalls {
                 Matchers.endsWith("@localhost.corp.adobe.com"));
     }
 
+    /**
+     * Since we do not set the context, the values should remain the same
+     */
     @Test
-    public void testStaticFieldIntegrityCore_framework()
+    public void testStaticFieldIntegrityCore_negative()
+            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
+            IOException, InstantiationException {
+
+        //Store some static variables in one call
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc.setMethodName("getRandomEmail");
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
+        l_cc2.setMethodName("setIntegroCache");
+        Properties l_authentication = new Properties();
+        l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_cc2.setArgs(new Object[] { l_authentication });
+
+        l_myJavaCalls.getCallContent().put("aaa", l_cc2);
+
+        l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
+
+        JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
+
+        System.out.println(BridgeServiceFactory.transformJavaCallResultsToJSON(returnedValue));
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(), Matchers.endsWith("@boom.com"));
+
+        //Make sure that the static variables are not kept
+        JavaCalls l_myJavaCallsB = new JavaCalls();
+        CallContent l_ccB = new CallContent();
+        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_ccB.setMethodName("getRandomEmail");
+        l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
+
+        JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
+        //Object b = l_ccB.call(new IntegroBridgeClassLoader());
+        //System.out.println(b);
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.endsWith("@boom.com"));
+    }
+
+    @Test
+    public void testStaticFieldIntegrityCore_framework1()
             throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
             IOException, InstantiationException {
 
@@ -512,10 +563,57 @@ public class TestFetchCalls {
                 Matchers.endsWith("@noon.com"));
     }
 
+    // Here we do not set package paths
+    @Test
+    public void testStaticFieldIntegrityCore_framework_testingPackagePaths1()
+            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
+            IOException, InstantiationException {
+
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc.setMethodName("getRandomEmail");
+
+        Map l_authentication = new HashMap();
+        l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+
+        l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
+        l_myJavaCalls.setEnvironmentVariables(l_authentication);
+
+        JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
+
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(), Matchers.endsWith("@boom.com"));
+
+        //Call 2
+        JavaCalls l_myJavaCallsB = new JavaCalls();
+        CallContent l_ccB = new CallContent();
+        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_ccB.setMethodName("getRandomEmail");
+        l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
+
+        JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
+        //Object b = l_ccB.call(new IntegroBridgeClassLoader());
+        //System.out.println(b);
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.endsWith("@boom.com"));
+    }
+
     @Test
     public void testStaticFieldIntegrityIntegroV7()
             throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
             IOException, InstantiationException {
+        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
 
         JavaCalls l_myJavaCalls1 = new JavaCalls();
 
@@ -524,10 +622,6 @@ public class TestFetchCalls {
         l_cc1A.setClassName(CampaignUtils.class.getTypeName());
         l_cc1A.setMethodName("setIntegroCache");
 
-/*
-        l_cc1A.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
-        l_cc1A.setMethodName("setIntegroCache");
-*/
         Properties l_authentication = new Properties();
         l_authentication.put("AC.UITEST.LANGUAGE", "rus");
         l_cc1A.setArgs(new Object[]{l_authentication});
@@ -707,7 +801,21 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testIssueWithNonExistantMethodException() throws ClassNotFoundException {
+    public void testIssueWithNonExistantMethodException_internal() throws ClassNotFoundException {
+        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
+        l_cc.setMethodName("fetchEmailNonExistant");
+        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
+        IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
+
+        Assert.assertThrows(NonExistantJavaObjectException.class,
+                () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
+    }
+
+
+    @Test
+    public void testIssueWithNonExistantMethodException_external() throws ClassNotFoundException {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
         l_cc.setMethodName("fetchEmailNonExistant");

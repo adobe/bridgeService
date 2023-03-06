@@ -90,7 +90,12 @@ public class IntegroBridgeClassLoader extends ClassLoader {
             return getClass(in_classFullPath);
         }
 
-        return super.loadClass(in_classFullPath);
+        try {
+            return super.loadClass(in_classFullPath);
+        } catch (ClassNotFoundException cnfe) {
+            throw new NonExistantJavaObjectException("The given class path "+in_classFullPath+" could not be found.", cnfe);
+        }
+
     }
 
     /**
@@ -136,7 +141,9 @@ public class IntegroBridgeClassLoader extends ClassLoader {
     }
 
     public void setPackagePaths(String in_packagePaths) {
-        setPackagePaths(in_packagePaths.contains(",") ? in_packagePaths.split(",") : new String[]{});
+
+        setPackagePaths(in_packagePaths.isEmpty() ? new String[]{} : in_packagePaths.split(","));
+
     }
 
     /**

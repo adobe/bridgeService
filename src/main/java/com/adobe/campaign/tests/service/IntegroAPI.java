@@ -8,8 +8,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Properties;
 
 import static com.adobe.campaign.tests.service.ConfigValueHandler.*;
 import static spark.Spark.*;
@@ -20,7 +18,6 @@ public class IntegroAPI {
     public static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
     private static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
     private static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not fid the given class or method.";
-    private static String SYSTEM_VERSION = "not set";
 
     public static void
     startServices(int port) {
@@ -40,7 +37,8 @@ public class IntegroAPI {
 
             StringBuilder sb = new StringBuilder("All systems up "+ DEPLOYMENT_MODEL.fetchValue());
             sb.append("\n");
-            sb.append("Version : " + PRODUCT_VERSION.fetchValue());
+            sb.append("Version : ");
+            sb.append(PRODUCT_VERSION.fetchValue());
             if (PRODUCT_USER_VERSION.isSet()) {
                 sb.append("\n");
                 sb.append("Product user version : ");

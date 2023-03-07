@@ -8,7 +8,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +34,7 @@ public class TestServiceUtilsTester {
         serverSocket2.close();
     }
     @Test
-    public void testTestAvailability() throws IOException {
+    public void testTestAvailability() {
 
         assertThat(urls.get(0)+" should be reachable",
                 ServiceTools.isServiceAvailable(urls.get(0)));
@@ -51,7 +50,7 @@ public class TestServiceUtilsTester {
     }
 
     @Test
-    public void testTestCall_negative() throws IOException {
+    public void testTestCall_negative() {
         assertThat("EmptyString should NOT be reachable",
                 !ServiceTools.isServiceAvailable(""));
 
@@ -61,7 +60,7 @@ public class TestServiceUtilsTester {
 
 
     @Test
-    public void testServiceParsing() throws MalformedURLException {
+    public void testServiceParsing() {
 
         assertThat("We should get the correct path", ServiceTools.getIPPath("a.b.c:123"), Matchers.equalTo("a.b.c"));
 
@@ -80,7 +79,7 @@ public class TestServiceUtilsTester {
     }
 
     @Test
-    public void testServiceParsingPort() throws MalformedURLException {
+    public void testServiceParsingPort() {
 
         assertThat("We should get the correct path", ServiceTools.getPort("a.b.c:123"), Matchers.equalTo(123));
 
@@ -121,8 +120,6 @@ public class TestServiceUtilsTester {
 
     /**
      * Hello world to see if we can fetch the correct port
-     *
-     * @throws IOException
      */
     @Test
     public void getFreePort() throws IOException {
@@ -139,10 +136,9 @@ public class TestServiceUtilsTester {
      * Negative test. Checking that an unreachables server's port doesn't cause
      * unwanted side effects
      *
-     * @throws IOException
      */
     @Test
-    public void getListeningPort_UnExistingServer() throws IOException {
+    public void getListeningPort_UnExistingServer() {
 
         assertThat("The inexisting server shouldn't return true",
                 !NetworkTools.isServerListening("RemoteUnexistingHost", 1233));

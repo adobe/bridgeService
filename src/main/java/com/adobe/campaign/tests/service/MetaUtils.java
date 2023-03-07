@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -16,7 +15,7 @@ public class MetaUtils {
 
     /**
      * Extracts a possible field name given a method name
-     * @param in_methodName
+     * @param in_methodName The name of the method we want to extract
      * @return A possible field name
      */
     public static String extractFieldName(String in_methodName) {
@@ -31,9 +30,13 @@ public class MetaUtils {
         return sb.toString();
     }
 
+    /**
+     * Used for deserializing Collections of unserializable objects.
+      * @param in_object A collection of complex objects
+     * @return A List of serialized Objects
+     */
     public static List extractValuesFromList(Collection in_object) {
-        List<Map<String,Object>> lr_list = (List<Map<String, Object>>) in_object.stream().map(MetaUtils::extractValuesFromObject).collect(Collectors.toList());
-        return lr_list;
+        return (List<Map<String, Object>>) in_object.stream().map(MetaUtils::extractValuesFromObject).collect(Collectors.toList());
     }
 
     public static boolean isExtractable(Class in_class) {
@@ -55,7 +58,7 @@ public class MetaUtils {
      * @return true if this method can be invoked in the case of extracting results
      */
     public static boolean isExtractable(Method in_method) {
-        List<Boolean> tests = new ArrayList<Boolean>();
+        List<Boolean> tests = new ArrayList<>();
 
         tests.add(in_method.getReturnType() instanceof Serializable);
         tests.add(in_method.getName().startsWith("get") || in_method.getName().startsWith("is")|| in_method.getName().startsWith("has"));
@@ -75,8 +78,7 @@ public class MetaUtils {
             return extractValuesFromList((Collection) in_object);
         }
 
-        Field[] s = in_object.getClass().getDeclaredFields();
-        for (Method lt_m : Arrays.stream(in_object.getClass().getMethods()).filter(t -> (isExtractable(t))).collect(
+        for (Method lt_m : Arrays.stream(in_object.getClass().getMethods()).filter(MetaUtils::isExtractable).collect(
                 Collectors.toSet())) {
 
               //  if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && isExtractable(lt_m.getReturnType())) {
@@ -90,9 +92,7 @@ public class MetaUtils {
                             lr_value.put(extractFieldName(lt_m.getName()),lt_returnValue);
                             log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue.toString());
                         }
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    } catch (InvocationTargetException e) {
+                    } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);
                     }
 

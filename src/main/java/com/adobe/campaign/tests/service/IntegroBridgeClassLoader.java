@@ -36,8 +36,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      *
      * @param in_classPath Full class name
      */
-    private synchronized  Class getClass(String in_classPath)
-            throws ClassNotFoundException {
+    private synchronized  Class getClass(String in_classPath) {
 
         // is this class already loaded?
         Class cls = findLoadedClass(in_classPath);
@@ -82,8 +81,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      *            Full class name
      */
     @Override
-    public Class loadClass(String in_classFullPath)
-            throws ClassNotFoundException {
+    public Class loadClass(String in_classFullPath) {
         log.debug("loading class {}",in_classFullPath);
 
         if (isClassAmongPackagePaths(in_classFullPath)) {
@@ -148,10 +146,10 @@ public class IntegroBridgeClassLoader extends ClassLoader {
 
     /**
      * Lets us know if the given class path is included in the classes that are to be managed by the class loader
-     * @param in_classFullPath
+     * @param in_classFullPath A full class path (package + Class name)
      * @return true if the given class path is among the stored package paths
      */
     public boolean isClassAmongPackagePaths(String in_classFullPath) {
-        return Arrays.stream(getPackagePaths()).anyMatch(z -> in_classFullPath.startsWith(z));
+        return Arrays.stream(getPackagePaths()).anyMatch(in_classFullPath::startsWith);
     }
 }

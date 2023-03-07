@@ -10,7 +10,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import utils.CampaignUtils;
 
 import javax.mail.Message;
@@ -18,10 +20,9 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -34,8 +35,7 @@ public class TestFetchCalls {
 
     @Test
     public void testJSONCall()
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
-            IOException, InstantiationException {
+            throws ClassNotFoundException {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -66,14 +66,13 @@ public class TestFetchCalls {
 
         String returnedCountry = (String) l_myJavaCalls.getCallContent().get("fetchEmail").call(iClassLoader);
         assertThat("We should get a good answer back from the call",
-                Arrays.asList("AT", "AU", "CA", "CH", "DE", "US", "FR", "CN", "IN", "JP", "RU", "BR", "ID", "GB", "MX")
-                        .stream().anyMatch(f -> f.equals(returnedCountry)));
+                Stream.of("AT", "AU", "CA", "CH", "DE", "US", "FR", "CN", "IN", "JP", "RU", "BR", "ID", "GB", "MX")
+                        .anyMatch(f -> f.equals(returnedCountry)));
     }
 
     @Test
     public void testJSONCallWithAruments()
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
-            IOException, InstantiationException {
+            throws ClassNotFoundException {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -100,15 +99,13 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testMakeMultipleCalls()
-            throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException,
-            IllegalAccessException, InstantiationException {
+    public void testMakeMultipleCalls() {
         //Call 1
         JavaCalls l_myJavaCalls1 = new JavaCalls();
         CallContent l_cc1 = new CallContent();
         l_cc1.setClassName(RandomManager.class.getTypeName());
         l_cc1.setMethodName("fetchRandomCountry");
-        l_cc1.setArgs(new Object[] {  });
+        l_cc1.setArgs(new Object[] {});
         l_myJavaCalls1.getCallContent().put("fetchCountry", l_cc1);
 
         CallContent l_cc2 = new CallContent();
@@ -120,18 +117,21 @@ public class TestFetchCalls {
         JavaCallResults jcr = l_myJavaCalls1.submitCalls();
         assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("fetchEmail").toString(),
                 Matchers.startsWith("A+"));
-        assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("fetchEmail").toString(), Matchers.endsWith("@B"));
+        assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("fetchEmail").toString(),
+                Matchers.endsWith("@B"));
 
         //ClassLoader should maintain the context
-        assertThat("The Classloader should maintain the cache of the results", l_myJavaCalls1.getLocalClassLoader().getCallResultCache().containsKey("fetchEmail"));
-        assertThat("The Classloader should maintain the cache of the results", l_myJavaCalls1.getLocalClassLoader().getCallResultCache().get("fetchEmail"), Matchers.instanceOf(String.class));
+        assertThat("The Classloader should maintain the cache of the results",
+                l_myJavaCalls1.getLocalClassLoader().getCallResultCache().containsKey("fetchEmail"));
+        assertThat("The Classloader should maintain the cache of the results",
+                l_myJavaCalls1.getLocalClassLoader().getCallResultCache().get("fetchEmail"),
+                Matchers.instanceOf(String.class));
 
     }
 
     @Test
     public void testJSONCallWithTwoAruments()
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
-            IOException, InstantiationException {
+            throws ClassNotFoundException {
 
         CallContent l_cc = new CallContent();
         l_cc.setClassName(RandomManager.class.getTypeName());
@@ -156,11 +156,9 @@ public class TestFetchCalls {
 
     }
 
-
     @Test
     public void testJSONCall_negativeWithBadArguments()
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
-            IOException, InstantiationException, MessagingException {
+            throws MessagingException {
 
         CallContent l_cc = new CallContent();
         l_cc.setClassName(RandomManager.class.getTypeName());
@@ -174,8 +172,7 @@ public class TestFetchCalls {
 
     @Test
     public void testJSONCall_negativeNonExistingClass()
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
-            IOException, InstantiationException, MessagingException {
+            throws MessagingException {
 
         CallContent l_cc = new CallContent();
         l_cc.setClassName("non.existant.class.NoWhereToBeFound");
@@ -208,7 +205,7 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { "", "" });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
-        Assert.assertThrows(TargetJavaMethodCallException.class, ()->l_cc.call(iClassLoader));
+        Assert.assertThrows(TargetJavaMethodCallException.class, () -> l_cc.call(iClassLoader));
     }
 
     @Test
@@ -226,27 +223,26 @@ public class TestFetchCalls {
         String mappedJSON = mapper.writeValueAsString(l_call);
         System.out.println(mappedJSON);
 
-        ObjectMapper m2 = new ObjectMapper();
         JavaCalls j2 = BridgeServiceFactory.createJavaCalls(mappedJSON);
 
-        assertThat("Both calls should be equal" , j2.getCallContent().get("call1PL"), Matchers.equalTo(myContent));
+        assertThat("Both calls should be equal", j2.getCallContent().get("call1PL"), Matchers.equalTo(myContent));
 
-        assertThat("Both calls should be equal" , j2, Matchers.equalTo(l_call));
+        assertThat("Both calls should be equal", j2, Matchers.equalTo(l_call));
 
         //Equal tests
-        assertThat("Both calls should be equal" , j2.getCallContent().get("call1PL"), Matchers.not(Matchers.equalTo(null)));
+        assertThat("Both calls should be equal", j2.getCallContent().get("call1PL"),
+                Matchers.not(Matchers.equalTo(null)));
 
-        assertThat("Both calls should be equal" , j2, Matchers.equalTo(j2));
+        assertThat("Both calls should be equal", j2, Matchers.equalTo(j2));
 
-        assertThat("Both calls should be equal" , myContent, Matchers.equalTo(myContent));
+        assertThat("Both calls should be equal", myContent, Matchers.equalTo(myContent));
 
-        assertThat("Both calls should be equal" , j2, Matchers.not(Matchers.equalTo(null)));
+        assertThat("Both calls should be equal", j2, Matchers.not(Matchers.equalTo(null)));
     }
 
     @Test
     public void testJSONTransformation()
-            throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-            IllegalAccessException, InstantiationException {
+            throws IOException, ClassNotFoundException {
         String l_jsonString =
                 "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + RandomManager.class.getTypeName() + "\",\n"
                         + "    \"method\": \"getUniqueEmail\",\n" + "    \"returnType\": \"java.lang.String\",\n"
@@ -274,9 +270,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testJSONTransformation2()
-            throws JsonProcessingException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-            IllegalAccessException, InstantiationException {
+    public void testJSONTransformation2() throws JsonProcessingException {
         String l_jsonString =
                 "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + RandomManager.class.getTypeName() + "\",\n"
                         + "    \"method\": \"getUniqueEmail\",\n" + "    \"returnType\": \"java.lang.String\",\n"
@@ -302,9 +296,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testJSONTransformation_deserialize()
-            throws JsonProcessingException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-            IllegalAccessException, InstantiationException {
+    public void testJSONTransformation_deserialize() throws JsonProcessingException {
         String l_jsonString =
                 "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + RandomManager.class.getTypeName() + "\",\n"
                         + "    \"method\": \"getUniqueEmail\",\n" + "    \"returnType\": \"java.lang.String\",\n"
@@ -337,14 +329,13 @@ public class TestFetchCalls {
 
     @Test
     public void testDeserializer()
-            throws MessagingException, UnsupportedEncodingException, InvocationTargetException, IllegalAccessException,
-            JsonProcessingException {
+            throws MessagingException {
         String l_suffix = "one";
         Message l_message = MimeMessageFactory.getMessage(l_suffix);
 
-       // ObjectMapper mapper = new ObjectMapper();
-       // mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-      //  System.out.println(mapper.writeValueAsString(l_message));
+        // ObjectMapper mapper = new ObjectMapper();
+        // mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        //  System.out.println(mapper.writeValueAsString(l_message));
 
         //List<Message> = ArrayList
         assertThat("This class should not be serializable", !(l_message instanceof Serializable));
@@ -367,10 +358,9 @@ public class TestFetchCalls {
 
     @Test
     public void testDeserializer_collection()
-            throws MessagingException, UnsupportedEncodingException, InvocationTargetException, IllegalAccessException {
+            throws MessagingException {
         String l_suffix = "two";
-        List<Message> l_messages = Arrays.asList(MimeMessageFactory.getMessage(l_suffix));
-        Object ananymized = l_messages;
+        List<Message> l_messages = Collections.singletonList(MimeMessageFactory.getMessage(l_suffix));
 
         List l_resultList = (List) MetaUtils.extractValuesFromList(l_messages);
 
@@ -391,10 +381,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testDeserializerNull()
-            throws MessagingException, UnsupportedEncodingException, InvocationTargetException, IllegalAccessException,
-            JsonProcessingException {
-        JavaCallResults lr_resultObject = new JavaCallResults();
+    public void testDeserializerNull() {
         String l_returnObject = null;
 
         //List<Message> = ArrayList
@@ -408,9 +395,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testStaticFieldIntegrityCore()
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
-            IOException, InstantiationException {
+    public void testStaticFieldIntegrityCore() throws IOException {
         ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
 
         //Store some static variables in one call
@@ -463,9 +448,7 @@ public class TestFetchCalls {
      * Since we do not set the context, the values should remain the same
      */
     @Test
-    public void testStaticFieldIntegrityCore_negative()
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
-            IOException, InstantiationException {
+    public void testStaticFieldIntegrityCore_negative() throws IOException {
 
         //Store some static variables in one call
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -514,9 +497,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testStaticFieldIntegrityCore_framework1()
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
-            IOException, InstantiationException {
+    public void testStaticFieldIntegrityCore_framework1() {
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -532,7 +513,6 @@ public class TestFetchCalls {
         l_myJavaCalls.setEnvironmentVariables(l_authentication);
 
         JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
-
 
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("getRandomEmail").toString(),
@@ -565,9 +545,7 @@ public class TestFetchCalls {
 
     // Here we do not set package paths
     @Test
-    public void testStaticFieldIntegrityCore_framework_testingPackagePaths1()
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
-            IOException, InstantiationException {
+    public void testStaticFieldIntegrityCore_framework_testingPackagePaths1() {
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -583,7 +561,6 @@ public class TestFetchCalls {
         l_myJavaCalls.setEnvironmentVariables(l_authentication);
 
         JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
-
 
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("getRandomEmail").toString(),
@@ -610,9 +587,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testStaticFieldIntegrityIntegroV7()
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
-            IOException, InstantiationException {
+    public void testStaticFieldIntegrityIntegroV7() {
         ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
 
         JavaCalls l_myJavaCalls1 = new JavaCalls();
@@ -624,7 +599,7 @@ public class TestFetchCalls {
 
         Properties l_authentication = new Properties();
         l_authentication.put("AC.UITEST.LANGUAGE", "rus");
-        l_cc1A.setArgs(new Object[]{l_authentication});
+        l_cc1A.setArgs(new Object[] { l_authentication });
         l_myJavaCalls1.getCallContent().put("putProperties", l_cc1A);
 
         //l_cc1A.call(l_myJavaCalls1.localClassLoader);
@@ -632,7 +607,7 @@ public class TestFetchCalls {
         CallContent l_cc1B = new CallContent();
         l_cc1B.setClassName(CampaignUtils.class.getTypeName());
         l_cc1B.setMethodName("testParam");
-        l_cc1B.setArgs(new Object[]{"AC.UITEST.LANGUAGE"});
+        l_cc1B.setArgs(new Object[] { "AC.UITEST.LANGUAGE" });
         l_myJavaCalls1.getCallContent().put("fetchProperties", l_cc1B);
 
         JavaCallResults returnedValue = l_myJavaCalls1.submitCalls();
@@ -647,7 +622,7 @@ public class TestFetchCalls {
         CallContent l_cc2A = new CallContent();
         l_cc2A.setClassName(CampaignUtils.class.getTypeName());
         l_cc2A.setMethodName("testParam");
-        l_cc2A.setArgs(new Object[]{"AC.UITEST.LANGUAGE"});
+        l_cc2A.setArgs(new Object[] { "AC.UITEST.LANGUAGE" });
         l_myJavaCalls2.getCallContent().put("labelValueB", l_cc2A);
 
         Map l_authenticationB = new HashMap();
@@ -655,8 +630,7 @@ public class TestFetchCalls {
         l_myJavaCalls1.setEnvironmentVariables(l_authenticationB);
 
         JavaCallResults returnedValueB = l_myJavaCalls2.submitCalls();
-        Object b = l_cc2A.call(new IntegroBridgeClassLoader());
-        //System.out.println(b);
+
         assertThat("We should get a good answer back from the call",
                 returnedValueB.getReturnValues().get("labelValueB").toString(),
                 Matchers.not(Matchers.equalTo("rus")));
@@ -667,16 +641,14 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testStaticFieldIntegrityV7_framework()
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
-            IOException, InstantiationException {
+    public void testStaticFieldIntegrityV7_framework() {
 
         JavaCalls l_myJavaCalls1 = new JavaCalls();
 
         CallContent l_cc1A = new CallContent();
         l_cc1A.setClassName(CampaignUtils.class.getTypeName());
         l_cc1A.setMethodName("testParam");
-        l_cc1A.setArgs(new Object[]{"AC.UITEST.MAILING.PREFIX"});
+        l_cc1A.setArgs(new Object[] { "AC.UITEST.MAILING.PREFIX" });
         l_myJavaCalls1.getCallContent().put("fetchProperties", l_cc1A);
 
         CallContent l_cc1B = new CallContent();
@@ -684,14 +656,12 @@ public class TestFetchCalls {
         l_cc1B.setMethodName("getRandomEmail");
         l_myJavaCalls1.getCallContent().put("getRandomEmail", l_cc1B);
 
-
         Map l_envVars1 = new HashMap();
         l_envVars1.put("AC.UITEST.MAILING.PREFIX", "bada");
         l_envVars1.put("AC.INTEGRO.MAILING.BASE", "boom.com");
         l_myJavaCalls1.setEnvironmentVariables(l_envVars1);
 
         JavaCallResults returnedValue = l_myJavaCalls1.submitCalls();
-
 
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("fetchProperties").toString(),
@@ -711,7 +681,7 @@ public class TestFetchCalls {
         CallContent l_cc2B = new CallContent();
         l_cc2B.setClassName(CampaignUtils.class.getTypeName());
         l_cc2B.setMethodName("testParam");
-        l_cc2B.setArgs(new Object[]{"AC.UITEST.MAILING.PREFIX"});
+        l_cc2B.setArgs(new Object[] { "AC.UITEST.MAILING.PREFIX" });
         l_myJavaCalls2.getCallContent().put("fetchProperties", l_cc2B);
 
         Map l_envVarsB = new HashMap();
@@ -733,13 +703,10 @@ public class TestFetchCalls {
                 returnedValue2.getReturnValues().get("fetchProperties").toString(),
                 Matchers.equalTo("nana"));
 
-
     }
 
     @Test
-    public void testSeparationOfStaticFields_json()
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
-            IOException, InstantiationException {
+    public void testSeparationOfStaticFields_json() throws IOException {
 
         String l_jsonString =
                 "{\n"
@@ -774,7 +741,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testIssueWithAmbiguousCallException() throws ClassNotFoundException {
+    public void testIssueWithAmbiguousCallException() {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
         l_cc.setMethodName("fetchEmail");
@@ -788,7 +755,7 @@ public class TestFetchCalls {
     }
 
     @Test(enabled = false)
-    public void testIssueWithAmbiguousCall() throws ClassNotFoundException {
+    public void testIssueWithAmbiguousCall() {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
         l_cc.setMethodName("fetchEmail");
@@ -801,7 +768,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testIssueWithNonExistantMethodException_internalMethod() throws ClassNotFoundException {
+    public void testIssueWithNonExistantMethodException_internalMethod() {
         ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
@@ -814,7 +781,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testIssueWithNonExistantMethodException_internalClass() throws ClassNotFoundException {
+    public void testIssueWithNonExistantMethodException_internalClass() {
         ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientToolsNonExistant");
@@ -826,9 +793,8 @@ public class TestFetchCalls {
                 () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
     }
 
-
     @Test
-    public void testIssueWithNonExistantMethodException_externalMethod() throws ClassNotFoundException {
+    public void testIssueWithNonExistantMethodException_externalMethod() {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
         l_cc.setMethodName("fetchEmailNonExistant");
@@ -840,7 +806,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testIssueWithNonExistantClassException_externalClass() throws ClassNotFoundException {
+    public void testIssueWithNonExistantClassException_externalClass() {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailNonExistantTools");
         l_cc.setMethodName("fetchEmail");
@@ -852,7 +818,7 @@ public class TestFetchCalls {
     }
 
     @Test(enabled = false)
-    public void testIssueWithAmbiguousCall_Apache() throws ClassNotFoundException {
+    public void testIssueWithAmbiguousCall_Apache() {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
         l_cc.setMethodName("fetchEmail");
@@ -865,32 +831,33 @@ public class TestFetchCalls {
     }
 
     /**
-     * Related to issue #3: Where we want a clear message + the original error whenever there is an invocation target exception
-     * @throws ClassNotFoundException
+     * Related to issue #3: Where we want a clear message + the original error whenever there is an invocation target
+     * exception
      */
     @Test
-    public void testIssueWithBetterMessageOnInvocationTarget() throws ClassNotFoundException {
+    public void testIssueWithBetterMessageOnInvocationTarget() {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
         l_cc.setMethodName("getRandomNumber");
-        l_cc.setArgs(new Object[] { 3,3 });
+        l_cc.setArgs(new Object[] { 3, 3 });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
         try {
             l_cc.call(ibcl);
             assertThat("We should not get here", false);
-        } catch(Exception e) {
-            assertThat("The error should be of the type TargetJavaMethodCallException", e, Matchers.instanceOf(TargetJavaMethodCallException.class));
-            assertThat("We should have correct static messages ", e.getMessage(), Matchers.startsWith("We experienced an exception when calling the provided method com.adobe.campaign.tests.integro.tools.RandomManager.getRandomNumber."));
-            assertThat("The message should contain the target message as well", e.getMessage(), Matchers.endsWith("Provided error message : java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number."));
+        } catch (Exception e) {
+            assertThat("The error should be of the type TargetJavaMethodCallException", e,
+                    Matchers.instanceOf(TargetJavaMethodCallException.class));
+            assertThat("We should have correct static messages ", e.getMessage(), Matchers.startsWith(
+                    "We experienced an exception when calling the provided method com.adobe.campaign.tests.integro.tools.RandomManager.getRandomNumber."));
+            assertThat("The message should contain the target message as well", e.getMessage(), Matchers.endsWith(
+                    "Provided error message : java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number."));
         }
 
     }
 
     /***** #2 Variable replacement ******/
     @Test(description = "Issue #2 : Allowing for passing values between calls")
-    public void testValuePassing()
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
-            InstantiationException {
+    public void testValuePassing() {
         JavaCalls l_myJavaCalls1 = new JavaCalls();
 
         CallContent l_cc1A = new CallContent();
@@ -906,8 +873,9 @@ public class TestFetchCalls {
 
         JavaCallResults x = l_myJavaCalls1.submitCalls();
 
-        assertThat("We should have fetched the value from the first call", x.getReturnValues().get("fetchMail").toString(), Matchers.startsWith(
-                x.getReturnValues().get("fetchFirstName").toString()));
+        assertThat("We should have fetched the value from the first call",
+                x.getReturnValues().get("fetchMail").toString(), Matchers.startsWith(
+                        x.getReturnValues().get("fetchFirstName").toString()));
     }
 
     @Test
@@ -938,8 +906,10 @@ public class TestFetchCalls {
 
         Object[] result = l_cc1B.expandArgs(icl);
         assertThat("We should have replaced the value correctly", result.length, Matchers.equalTo(2));
-        assertThat("We should have replaced the value correctly", result[0], Matchers.instanceOf(LanguageEncodings.class));
-        assertThat("We should have replaced the value correctly", result[0], Matchers.equalTo(LanguageEncodings.CHINESE));
+        assertThat("We should have replaced the value correctly", result[0],
+                Matchers.instanceOf(LanguageEncodings.class));
+        assertThat("We should have replaced the value correctly", result[0],
+                Matchers.equalTo(LanguageEncodings.CHINESE));
     }
 
     @Test
@@ -947,83 +917,78 @@ public class TestFetchCalls {
 
         Class<?> l_myClass = MimeMessage.class;
 
+        assertThat("MimeMessage is not serializable", Message.class instanceof Serializable);
 
-        assertThat("MimeMessage is not serializable",Message.class instanceof Serializable);
-
-        assertThat("MimeMessage is not serializable",!MetaUtils.isExtractable(l_myClass));
+        assertThat("MimeMessage is not serializable", !MetaUtils.isExtractable(l_myClass));
 
         Class<?> l_String = String.class;
 
-        assertThat("String is serializable",MetaUtils.isExtractable(l_String));
+        assertThat("String is serializable", MetaUtils.isExtractable(l_String));
 
         Class<?> l_int = int.class;
 
-        assertThat("int is extractable",MetaUtils.isExtractable(l_int));
+        assertThat("int is extractable", MetaUtils.isExtractable(l_int));
 
         Class<?> l_list = List.class;
 
-
-        assertThat("list is extractable",MetaUtils.isExtractable(l_list));
+        assertThat("list is extractable", MetaUtils.isExtractable(l_list));
     }
 
     @Test
     public void testExtractableMethod() throws NoSuchMethodException {
         Method l_simpleGetter = MimeMessage.class.getDeclaredMethod("getFileName");
 
-        assertThat("getFileName is extractable",MetaUtils.isExtractable(l_simpleGetter));
+        assertThat("getFileName is extractable", MetaUtils.isExtractable(l_simpleGetter));
 
         Method l_simpleSetter = MimeMessage.class.getDeclaredMethod("setFrom");
 
-        assertThat("setSender is should not be extractable",!MetaUtils.isExtractable(l_simpleSetter));
+        assertThat("setSender is should not be extractable", !MetaUtils.isExtractable(l_simpleSetter));
 
         Method l_simpleIs = String.class.getDeclaredMethod("isEmpty");
 
-        assertThat("isEmpty is extractable",MetaUtils.isExtractable(l_simpleIs));
+        assertThat("isEmpty is extractable", MetaUtils.isExtractable(l_simpleIs));
 
         Method l_hashSet = MimeMessage.class.getDeclaredMethod("getSize");
-        assertThat("HashCode is NOT extractable",MetaUtils.isExtractable(l_hashSet));
-
+        assertThat("HashCode is NOT extractable", MetaUtils.isExtractable(l_hashSet));
 
     }
-
 
     @Test
     public void testExtract() throws NoSuchMethodException {
 
         String l_simpleString = "testValue";
 
-        assertThat("getFileName is extractable",MetaUtils.extractValuesFromObject(l_simpleString), Matchers.equalTo(l_simpleString));
+        assertThat("getFileName is extractable", MetaUtils.extractValuesFromObject(l_simpleString),
+                Matchers.equalTo(l_simpleString));
 
         //List<String>
-        Object l_simpleList = Arrays.asList(l_simpleString);
-        Class t = l_simpleList.getClass();
+        Object l_simpleList = Collections.singletonList(l_simpleString);
 
         assertThat("sss", l_simpleList instanceof Collection);
 
         Method l_simpleSetter = MimeMessage.class.getDeclaredMethod("setFrom");
 
-        assertThat("setSender is should not be extractable",!MetaUtils.isExtractable(l_simpleSetter));
+        assertThat("setSender is should not be extractable", !MetaUtils.isExtractable(l_simpleSetter));
 
         Method l_simpleIs = String.class.getDeclaredMethod("isEmpty");
 
-        assertThat("isEmpty is extractable",MetaUtils.isExtractable(l_simpleIs));
+        assertThat("isEmpty is extractable", MetaUtils.isExtractable(l_simpleIs));
 
         Method l_hashSet = MimeMessage.class.getDeclaredMethod("getSize");
-        assertThat("HashCode is NOT extractable",MetaUtils.isExtractable(l_hashSet));
+        assertThat("HashCode is NOT extractable", MetaUtils.isExtractable(l_hashSet));
     }
-
 
     @Test
     public void prepareExtractMimeMessage()
-            throws MessagingException, UnsupportedEncodingException, JsonProcessingException {
+            throws MessagingException, JsonProcessingException {
         Message m1 = MimeMessageFactory.getMessage("five");
         Message m2 = MimeMessageFactory.getMessage("six");
-        List<Message> messages = Arrays.asList(m1,m2);
+        List<Message> messages = Arrays.asList(m1, m2);
         Object x = messages;
 
         assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
         JavaCallResults jcr = new JavaCallResults();
-        jcr.returnValues.put("value",MetaUtils.extractValuesFromObject(x));
+        jcr.returnValues.put("value", MetaUtils.extractValuesFromObject(x));
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
@@ -1031,20 +996,17 @@ public class TestFetchCalls {
 
     }
 
-
     @Test
     public void prepareExtractSimpleString()
-            throws MessagingException, UnsupportedEncodingException, JsonProcessingException {
+            throws JsonProcessingException {
         String m1 = "five";
         String m2 = "six";
-        List<String> messages = Arrays.asList(m1,m2);
+        List<String> messages = Arrays.asList(m1, m2);
         Object x = messages;
 
         assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
         JavaCallResults jcr = new JavaCallResults();
-        jcr.returnValues.put("value",MetaUtils.extractValuesFromObject(x));
-
-
+        jcr.returnValues.put("value", MetaUtils.extractValuesFromObject(x));
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
@@ -1054,15 +1016,15 @@ public class TestFetchCalls {
 
     @Test
     public void prepareExtractSimpleInt()
-            throws MessagingException, UnsupportedEncodingException, JsonProcessingException {
+            throws JsonProcessingException {
         int m1 = 5;
         int m2 = 6;
-        List messages = Arrays.asList(m1,m2);
+        List messages = Arrays.asList(m1, m2);
         Object x = messages;
 
         assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
         JavaCallResults jcr = new JavaCallResults();
-        jcr.returnValues.put("value",MetaUtils.extractValuesFromObject(x));
+        jcr.returnValues.put("value", MetaUtils.extractValuesFromObject(x));
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 

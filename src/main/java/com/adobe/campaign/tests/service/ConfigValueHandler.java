@@ -11,9 +11,7 @@
  */
 package com.adobe.campaign.tests.service;
 
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.Properties;
 
 public enum ConfigValueHandler {
     DEPLOYMENT_MODEL("IBS.DEPLOYMENT.MODEL", " - in test", false, "This property is used for flagging the deplyment model."),

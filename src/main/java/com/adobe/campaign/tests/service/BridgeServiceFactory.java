@@ -18,9 +18,9 @@ public class BridgeServiceFactory {
 
     /**
      * Transforms the results of the JavaCall to a JSON
-     * @param in_callResults
-     * @return
-     * @throws JsonProcessingException
+     * @param in_callResults A JavaCallResults object to be transformed
+     * @return The JSON representation of the Call result
+     * @throws JsonProcessingException when failing to parse the JavaCallResults object
      */
     public static String transformJavaCallResultsToJSON(JavaCallResults in_callResults) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
@@ -42,9 +42,9 @@ public class BridgeServiceFactory {
 
     /**
      * Transforms the results of the ServiceCheck to a JSON
-     * @param in_callResults
-     * @return
-     * @throws JsonProcessingException
+     * @param in_callResults The results of the service check
+     * @return A string representation of the results
+     * @throws JsonProcessingException thrown when the service call results could not be parsed
      */
     public static String transformServiceAccessResult(Map<String, Boolean> in_callResults)
             throws JsonProcessingException {

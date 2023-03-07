@@ -54,7 +54,7 @@ public class E2ETests {
     }
 
     @Test(groups = "E2E")
-    public void testMainHelloWorldCall() throws IOException {
+    public void testMainHelloWorldCall() {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
@@ -86,7 +86,7 @@ public class E2ETests {
     }
 
     @Test(groups = "E2E")
-    public void testCheckConnectivity() throws IOException {
+    public void testCheckConnectivity() {
 
         Map<String, String> urlsMap = new HashMap<>();
         urlsMap.put("url1", "not really a url");
@@ -99,11 +99,9 @@ public class E2ETests {
 
     /**
      * Testing that we provide the correct error messages whenever the target method throws an error
-     *
-     * @throws IOException
      */
     @Test(groups = "E2E")
-    public void testMainEror_Case1InvocationError() throws IOException {
+    public void testMainEror_Case1InvocationError() {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();

@@ -58,12 +58,24 @@ This will make the service available under :
 
 We are working on implementing a universal service, but for now this is simplest way to start.
 
+## Setting information about your environment
+The users accessing bridge service will encounter two different technologies:
+* The Bridge Service
+* The Host Project
+
+In order to make provide context information the Bridge Service will always let you know which version it is. However, we need to let the users know about the version of the host project. Ths version number can be set by setting the environment property `IBS.PRODUCT.USER.VERSION`.
+
 ## Testing That all is Working
 All you need to do is to call :
 ```/test```
 
 If all is good you should get:
-```All systems up```
+```
+All systems up - in production
+Version : 2.0.0
+Product user version : 7.0
+```
+
 
 ## Testing That all External Dervices can be Accessed
 One of the added values of this service is to create a single point of access for external dependencies. However, this needs to be checked, before using this service. In order to do this you need to the following POST call:

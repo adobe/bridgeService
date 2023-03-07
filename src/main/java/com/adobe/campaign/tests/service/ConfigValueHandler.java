@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.Properties;
 
 public enum ConfigValueHandler {
-    DEPLOYMENT_MODEL("IBS.DEPLOYMENT.MODEL", "", false, "This property is used for flagging the deplyment model."),
+    DEPLOYMENT_MODEL("IBS.DEPLOYMENT.MODEL", " - in test", false, "This property is used for flagging the deplyment model."),
     SSL_ACTIVE("IBS.SSL.ACTIVE", "false", false, "This property is used to flag if the system is in SSL mode."),
     SSL_KEYSTORE_PATH("IBS.SSL.KEYSTORE_PATH", null, false,
             "This property is used to flag the location of the key store."),

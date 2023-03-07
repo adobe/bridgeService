@@ -42,6 +42,7 @@ public class IntegroAPI {
             sb.append("\n");
             sb.append("Version : " + PRODUCT_VERSION.fetchValue());
             if (PRODUCT_USER_VERSION.isSet()) {
+                sb.append("\n");
                 sb.append("Product user version : ");
                 sb.append(PRODUCT_USER_VERSION.fetchValue());
             }

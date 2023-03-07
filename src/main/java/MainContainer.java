@@ -17,15 +17,16 @@ public class MainContainer {
         if (args.length == 0) {
             log.info("In Prod Mode - SSL");
             System.setProperty("https.protocols", "TLSv1.2");
-            
+
+            ConfigValueHandler.DEPLOYMENT_MODEL.activate(" - in production");
             IntegroAPI.startServices(PROD_PORT);
         } else if (args[0].equalsIgnoreCase("test")) {
             log.info("In Test Mode");
-            ConfigValueHandler.DEPLOYMENT_MODEL.activate("in test");
+
             IntegroAPI.startServices(TEST_PORT);
         } else {
-            ConfigValueHandler.DEPLOYMENT_MODEL.activate("in test");
-            log.error("You need to pass the argument 'test' for this to work, or provide the value keystores.");
+
+            log.error("You need to pass the argument 'test' for this to work, or provide the key store values.");
         }
     }
 }

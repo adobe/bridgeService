@@ -26,20 +26,16 @@ public enum ConfigValueHandler {
             "This property is to be used for setting the password for the trust store"),
     DEFAULT_SERVICE_PORT("IBS.SERVICE_CHECK.DEFAULT.PORT", "80", false,
             "The default port to be used when doing a service check."),
+    //Make required
     ENVIRONMENT_VARS_SETTER_CLASS("IBS.ENVVARS.SETTER.CLASS",
             "com.adobe.campaign.tests.integro.core.SystemValueHandler", false,
             "When set, we use the given class to store the static execution variables."),
+    //Make required
     ENVIRONMENT_VARS_SETTER_METHOD("IBS.ENVVARS.SETTER.METHOD", "setIntegroCache", false,
             "When set, we use the given method to store the static execution variables."),
     STATIC_INTEGRITY_PACKAGES("IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES", "", false,
             "This parameter is used for flagging the packages that are to to be used by the IBS class loader. When used, the static variables are not stored between java calls."),
-    PRODUCT_VERSION("IBS.PRODUCT.VERSION","not found", false, "The version of the BridgeService, which is used to identify the version that is accessed."){
-        @Override
-        public String fetchValue() {
-
-            return isSet() ? super.fetchValue() : this.getClass().getPackage().getImplementationVersion();
-        }
-    },
+    PRODUCT_VERSION("IBS.PRODUCT.VERSION","not found", false, "The version of the BridgeService, which is used to identify the version that is accessed."),
     PRODUCT_USER_VERSION("IBS.PRODUCT.USER.VERSION","not set", false, "The version of the BridgeService, which is used to identify the version that is accessed.");;
 
     public final String defaultValue;

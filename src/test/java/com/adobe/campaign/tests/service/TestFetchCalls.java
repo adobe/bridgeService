@@ -801,7 +801,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testIssueWithNonExistantMethodException_internal() throws ClassNotFoundException {
+    public void testIssueWithNonExistantMethodException_internalMethod() throws ClassNotFoundException {
         ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
@@ -813,9 +813,22 @@ public class TestFetchCalls {
                 () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
     }
 
+    @Test
+    public void testIssueWithNonExistantMethodException_internalClass() throws ClassNotFoundException {
+        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientToolsNonExistant");
+        l_cc.setMethodName("fetchEmailNonExistant");
+        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
+        IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
+
+        Assert.assertThrows(NonExistantJavaObjectException.class,
+                () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
+    }
+
 
     @Test
-    public void testIssueWithNonExistantMethodException_external() throws ClassNotFoundException {
+    public void testIssueWithNonExistantMethodException_externalMethod() throws ClassNotFoundException {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
         l_cc.setMethodName("fetchEmailNonExistant");
@@ -827,7 +840,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testIssueWithNonExistantClassException() throws ClassNotFoundException {
+    public void testIssueWithNonExistantClassException_externalClass() throws ClassNotFoundException {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailNonExistantTools");
         l_cc.setMethodName("fetchEmail");

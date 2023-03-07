@@ -37,7 +37,7 @@ public class IntegroAPI {
 
             StringBuilder sb = new StringBuilder("All systems up "+ DEPLOYMENT_MODEL.fetchValue());
             sb.append("\n");
-            sb.append("Version : ");
+            sb.append("Bridge Service Version : ");
             sb.append(PRODUCT_VERSION.fetchValue());
             if (PRODUCT_USER_VERSION.isSet()) {
                 sb.append("\n");

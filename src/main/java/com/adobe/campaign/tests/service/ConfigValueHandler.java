@@ -33,7 +33,13 @@ public enum ConfigValueHandler {
             "When set, we use the given method to store the static execution variables."),
     STATIC_INTEGRITY_PACKAGES("IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES", "", false,
             "This parameter is used for flagging the packages that are to to be used by the IBS class loader. When used, the static variables are not stored between java calls."),
-    PRODUCT_VERSION("IBS.PRODUCT.VERSION","not found", false, "The version of the BridgeService, which is used to identify the version that is accessed."),
+    PRODUCT_VERSION("IBS.PRODUCT.VERSION","not found", false, "The version of the BridgeService, which is used to identify the version that is accessed."){
+        @Override
+        public String fetchValue() {
+
+            return isSet() ? super.fetchValue() : this.getClass().getPackage().getImplementationVersion();
+        }
+    },
     PRODUCT_USER_VERSION("IBS.PRODUCT.USER.VERSION","not set", false, "The version of the BridgeService, which is used to identify the version that is accessed.");;
 
     public final String defaultValue;

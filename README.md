@@ -1,27 +1,8 @@
 # integroBridgeService
 This project allows you to expose Integro ACC as a REST service. It allows you to make calls to Java code.
-<!-- TOC -->
-* [integroBridgeService](#integrobridgeservice)
-  * [Implementing The Bridge Service in Your Project](#implementing-the-bridge-service-in-your-project)
-    * [Adding the Bridge Service to Your Project](#adding-the-bridge-service-to-your-project)
-      * [Considerations](#considerations)
-    * [Including your project in the BridgeService](#including-your-project-in-the-bridgeservice)
-  * [Testing That all is Working](#testing-that-all-is-working)
-  * [Testing That all External Dervices can be Accessed](#testing-that-all-external-dervices-can-be-accessed)
-  * [Making a basic Java Call](#making-a-basic-java-call)
-  * [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
-    * [Call Chaining and Call Dependencies](#call-chaining-and-call-dependencies)
-  * [Creating a Call Context](#creating-a-call-context)
-  * [Error Management](#error-management)
-  * [Known Issues and Limitations](#known-issues-and-limitations)
-    * [Cannot call overloaded methods with the same number of arguments.](#cannot-call-overloaded-methods-with-the-same-number-of-arguments)
-    * [Only simple arguments](#only-simple-arguments)
-    * [Complex Non-Serialisable Return Objects](#complex-non-serialisable-return-objects)
-  * [Building Image](#building-image)
-  * [Existing Images](#existing-images)
-    * [Standard SSL](#standard-ssl)
-    * [Without SSL](#without-ssl)
-<!-- TOC -->
+
+## Release Notes
+The release notes can be found [here](ReleaseNotes.md).
 
 ## Implementing The Bridge Service in Your Project
 The bridge service can be used in two ways:
@@ -37,6 +18,17 @@ When starting the bridge service you need to run the following command line:
 
 ```
 mvn compile exec:java -Dexec.mainClass=MainContainer -Dexec.args="test"
+```
+
+##### Installation
+The following dependency needs to be added to your pom file:
+
+```
+ <dependency>
+    <groupId>com.adobe.campaign.tests.service</groupId>
+    <artifactId>integroBridgeService</artifactId>
+    <version>2.0.0</version>
+</dependency>
 ```
 
 #### Considerations
@@ -56,7 +48,7 @@ When starting the bridge service you need to run the following command line:
 This will make the service available under :
 ```http://localhost:8080```
 
-We are working on implementing a universal service, but for now this is simplest way to start.
+This is a legacy mode of use, and is not that scalable.
 
 ## Setting information about your environment
 The users accessing bridge service will encounter two different technologies:

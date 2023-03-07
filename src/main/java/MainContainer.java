@@ -17,10 +17,7 @@ public class MainContainer {
         if (args.length == 0) {
             log.info("In Prod Mode - SSL");
             System.setProperty("https.protocols", "TLSv1.2");
-            ConfigValueHandler.SSL_ACTIVE.activate("true");
-            ConfigValueHandler.SSL_KEYSTORE_PATH.activate("/home/app/certificates/campaignkeystore.jks");
-            ConfigValueHandler.SSL_KEYSTORE_PASSWORD.activate("#nlpass");
-            ConfigValueHandler.DEPLOYMENT_MODEL.activate("in production");
+            
             IntegroAPI.startServices(PROD_PORT);
         } else if (args[0].equalsIgnoreCase("test")) {
             log.info("In Test Mode");

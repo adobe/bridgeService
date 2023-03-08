@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -76,10 +75,8 @@ public class CallContent {
     }
 
     public List<Method> fetchMethodCandidates(Class in_class) {
-        List<Method> lr_method = new ArrayList<>();
 
-        //ourClass = iClassLoader.loadClass(getClassName());
-        lr_method = Arrays.stream(in_class.getMethods())
+        List<Method> lr_method = lr_method = Arrays.stream(in_class.getMethods())
                 .filter(f -> f.getName().equals(this.getMethodName()))
                 .filter(fp -> fp.getParameterCount() == this.getArgs().length).collect(
                         Collectors.toList());
@@ -164,12 +161,11 @@ public class CallContent {
      * This method returns an enriched array of parameters based on the current args. I.e. if we have stored the value
      * in the classloader context we replace the value
      *
-     * @param in_currentClassLoader
+     * @param in_currentClassLoader The used class loader
      * @return an array with values enriched with the previous results
      */
     public Object[] expandArgs(IntegroBridgeClassLoader in_currentClassLoader) {
-        return Arrays.stream(getArgs()).map(arg -> in_currentClassLoader.getCallResultCache()
-                .containsKey(arg) ? in_currentClassLoader.getCallResultCache().get(
-                arg) : arg).toArray();
+        return Arrays.stream(getArgs()).map(arg -> in_currentClassLoader.getCallResultCache().getOrDefault(
+                arg, arg)).toArray();
     }
 }

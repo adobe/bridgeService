@@ -3,20 +3,38 @@ package com.adobe.campaign.tests.service;
 import com.adobe.campaign.tests.integro.tools.NetworkTools;
 import com.adobe.campaign.tests.service.utils.ServiceTools;
 import org.hamcrest.Matchers;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.ServerSocket;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestServiceUtilsTester {
-    private static final List<String> urls = Arrays.asList("acc-simulators.email.corp.adobe.com:143", "acc-simulators.smpp.corp.adobe.com");
+    
+    private static final int port1 = 1111;
+    private static final int port2 = port1+1;
+    private static final List<String> urls = Arrays.asList("localhost:"+ port2, "localhost:"+ port1);
+    ServerSocket serverSocket1 = null;
+    ServerSocket serverSocket2 = null;
 
+    @BeforeClass(alwaysRun = true)
+    public void prepare() throws IOException {
+        serverSocket1 = new ServerSocket(port1);
+        serverSocket2 = new ServerSocket(port2);
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDown() throws IOException {
+        serverSocket1.close();
+        serverSocket2.close();
+    }
     @Test
-    public void testTestAvailability() throws IOException {
+    public void testTestAvailability() {
 
         assertThat(urls.get(0)+" should be reachable",
                 ServiceTools.isServiceAvailable(urls.get(0)));
@@ -32,7 +50,7 @@ public class TestServiceUtilsTester {
     }
 
     @Test
-    public void testTestCall_negative() throws IOException {
+    public void testTestCall_negative() {
         assertThat("EmptyString should NOT be reachable",
                 !ServiceTools.isServiceAvailable(""));
 
@@ -42,7 +60,7 @@ public class TestServiceUtilsTester {
 
 
     @Test
-    public void testServiceParsing() throws MalformedURLException {
+    public void testServiceParsing() {
 
         assertThat("We should get the correct path", ServiceTools.getIPPath("a.b.c:123"), Matchers.equalTo("a.b.c"));
 
@@ -61,7 +79,7 @@ public class TestServiceUtilsTester {
     }
 
     @Test
-    public void testServiceParsingPort() throws MalformedURLException {
+    public void testServiceParsingPort() {
 
         assertThat("We should get the correct path", ServiceTools.getPort("a.b.c:123"), Matchers.equalTo(123));
 
@@ -102,8 +120,6 @@ public class TestServiceUtilsTester {
 
     /**
      * Hello world to see if we can fetch the correct port
-     *
-     * @throws IOException
      */
     @Test
     public void getFreePort() throws IOException {
@@ -120,10 +136,9 @@ public class TestServiceUtilsTester {
      * Negative test. Checking that an unreachables server's port doesn't cause
      * unwanted side effects
      *
-     * @throws IOException
      */
     @Test
-    public void getListeningPort_UnExistingServer() throws IOException {
+    public void getListeningPort_UnExistingServer() {
 
         assertThat("The inexisting server shouldn't return true",
                 !NetworkTools.isServerListening("RemoteUnexistingHost", 1233));

@@ -2,21 +2,12 @@ package com.adobe.campaign.tests.integration;
 
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.adobe.campaign.tests.service.CallContent;
-import com.adobe.campaign.tests.service.IntegroAPI;
 import com.adobe.campaign.tests.service.JavaCallResults;
 import com.adobe.campaign.tests.service.JavaCalls;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
-import org.testng.annotations.AfterGroups;
-import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
-import spark.Spark;
-import utils.CampaignUtils;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -29,12 +20,11 @@ public class IntegrationTests {
     //Test to make sure that we can do two integro calls
 
     @Test(groups = "Integration")
-    public void testMainHelloWorldCall() throws IOException {
+    public void testMainHelloWorldCall() throws JsonProcessingException {
         String l_recipientID1 = "";
         String l_recipientID2 = "";
         String randomEmailCall1 = RandomManager.getRandomEmail();
         String randomEmailCall2 = RandomManager.getRandomEmail();
-
 
         //CALL1 accintg-dev134
         String l_systemURL1 = "";

@@ -1,22 +1,73 @@
 # integroBridgeService
 This project allows you to expose Integro ACC as a REST service. It allows you to make calls to Java code.
 
-## Getting Started
-The best way to start this in the beginning is to simply start the program:
+## Release Notes
+The release notes can be found [here](ReleaseNotes.md).
+
+## Implementing The Bridge Service in Your Project
+The bridge service can be used in two ways:
+* By adding it to the project you want to expose (recommended), 
+* By including your project as a dependency to the Bridge cervice deployed.
+
+### Adding the Bridge Service to Your Project
+We think it is simplest to the BridgeService dependency to your project. This allows you to only update your code when needed, and you do not need to create a new release/snapshot everytime your project changes.
+
+![BridgeService Injection Model](diagrams/Processes-injectionModel.drawio.png)
+
+When starting the bridge service you need to run the following command line:
+
+```
+mvn compile exec:java -Dexec.mainClass=MainContainer -Dexec.args="test"
+```
+
+##### Installation
+The following dependency needs to be added to your pom file:
+
+```
+ <dependency>
+    <groupId>com.adobe.campaign.tests.service</groupId>
+    <artifactId>integroBridgeService</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
+
+#### Considerations
+Since the BridgeService uses Jetty and java Spark, it is quite possible that there maybe conflicts in the project when you add this library. Most importantly you will need to ensure that `javax.servlet` is set to "**compile**" in your maven scope.
+
+We have found it simplest to simply add that library directly in the pom file with the scope "**compile**".
+
+### Including your project in the BridgeService
+In this model you can simply add your project as a dependency to the BridgeProject.
+
+![BridgeService Aggregator Model](diagrams/Processes-aggregatorModel.drawio.png)
+
+When starting the bridge service you need to run the following command line:
 
 ```mvn exec:java -Dexec.args="test"```
 
 This will make the service available under :
-```http://localhost:4567```
+```http://localhost:8080```
 
-We are working on implementing a universal service, but for now this is simplest way to start.
+This is a legacy mode of use, and is not that scalable.
+
+## Setting information about your environment
+The users accessing bridge service will encounter two different technologies:
+* The Bridge Service
+* The Host Project
+
+In order to make provide context information the Bridge Service will always let you know which version it is. However, we need to let the users know about the version of the host project. Ths version number can be set by setting the environment property `IBS.PRODUCT.USER.VERSION`.
 
 ## Testing That all is Working
 All you need to do is to call :
 ```/test```
 
 If all is good you should get:
-```All systems up```
+```
+All systems up - in production
+Version : 2.0.0
+Product user version : 7.0
+```
+
 
 ## Testing That all External Dervices can be Accessed
 One of the added values of this service is to create a single point of access for external dependencies. However, this needs to be checked, before using this service. In order to do this you need to the following POST call:
@@ -113,10 +164,10 @@ We now have the possibility of injecting call results from one call to the other
             "method": "<method name 1>",
             "args": ["argument1","argument2"]
         },
-        "<ID2->": {
+        "<ID-2>": {
            "class": "<package name 2>.<class name 2>",
            "method": "<method name 2>",
-           "args": ["ID-1","argument2"]
+           "args": ["<ID-1>","argument2"]
         }
     }
 }
@@ -124,8 +175,10 @@ We now have the possibility of injecting call results from one call to the other
 
 In the example above "ID-2" will use the return value of the call "ID-1" as ts first argument.
 
+**NOTE** : When passing a call result as an argument, it needs to be a String. In many languages such as JavaScript, the JSON keys need not be a string, however, for this to work you need to pass the ID as a string.  
+
 ## Creating a Call Context
-We sometimes need to set environment variables when making calls. This are usually idirectly related to the call you are doing.
+We sometimes need to set environment variables when making calls. This is usually indirectly related to the call you are doing.
 
 ```JSON
 {
@@ -143,6 +196,10 @@ We sometimes need to set environment variables when making calls. This are usual
 ```
 
 When making the call we first update the environment variables for the system.
+
+This call will use your internal method for setting environment variables. This method can be set by setting the following environment values, when activating the Bridge on your project:
+* IBS.ENVVARS.SETTER.CLASS
+* IBS.ENVVARS.SETTER.METHOD
 
 ## Error Management
 Currently, whenever there is an error in the underlying java call we will include the orginal error message in the error response. For example, for the call:
@@ -190,11 +247,10 @@ Since this is a REST call we can only correctly manage simple arguments in the p
 ### Complex Non-Serialisable Return Objects
 In many cases the object a method returns is not rerializable. If that is the case we mine the object, and extract all simple values from the object.
 
-
 ## Building Image
 In order to build an image you need to run the following command:
 ```
-docker build --build-arg ARTIFACTORY_USER --build-arg ARTIFACTORY_API_TOKEN -t integrobridgeservice .
+docker build -t integrobridgeservice .
 ```
 
 ARTIFACTORY_USER and ARTIFACTORY_API_TOKEN are locally stored credentials for connecting to your artefactory.
@@ -202,7 +258,7 @@ ARTIFACTORY_USER and ARTIFACTORY_API_TOKEN are locally stored credentials for co
 To run the image:
 
 ```
-docker run --rm -d -p 4567:4567 integrobridgeservice
+docker run --rm -d -p 8080:8080 integrobridgeservice
 ```
 
 ## Existing Images
@@ -214,20 +270,20 @@ The current standard version is available here at :
 
 You can run it with: 
 ```
-docker run --rm -d -p 443:4567 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice
+docker run --rm -d -p 443:8080 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice
 ```
 
 The current standard image expects the certificate to be available in the directory `/home/app/certificates`. We solve this by mapping the directory containing the JKS certificate to that directory.
 
 If you want to access the logs you will need to include a mapping of the logs to the host machine. This is done by adding `-v /root/ibs:/home/app/ibs_output`. In this example all logs are store in the local directory `/root/ibs/ibs`.
 
-### Without SSL : 
+### Without SSL
 The current Non-SSL version is available here at :
 ```docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl```
 
 You can run it with:
 ```
-docker run --rm -d -p 443:4567 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl
+docker run --rm -d -p 443:8080 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl
 ```
 
 The current standard image expects the certificate to be availavle in the directory `/home/app/certificates`. We solve this by mapping the directory containing the JKS certificate to that directory.

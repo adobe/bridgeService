@@ -1,6 +1,5 @@
 package com.adobe.campaign.tests.service;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class JavaCalls {
@@ -12,14 +11,11 @@ public class JavaCalls {
 
     private IntegroBridgeClassLoader localClassLoader;
 
-
-
     public JavaCalls() {
         callContent = new LinkedHashMap<>();
         environmentVariables = new HashMap<>();
         setLocalClassLoader(new IntegroBridgeClassLoader());
     }
-
 
     public Map<String, CallContent> getCallContent() {
         return callContent;
@@ -34,9 +30,7 @@ public class JavaCalls {
      * @param in_key the key for identifying the java call
      * @return A map of the results
      */
-    public Object call(String in_key)
-            throws IllegalAccessException,
-            InstantiationException {
+    public Object call(String in_key) {
         if (!this.callContent.containsKey(in_key)) {
             throw new CallDefinitionNotFoundException("Could not find a call definition with the given key "+in_key);
         }
@@ -48,9 +42,7 @@ public class JavaCalls {
      *
      * @return a map with the key whoch is the same as the call keys
      */
-    public JavaCallResults submitCalls()
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException,
-            InstantiationException {
+    public JavaCallResults submitCalls() {
 
         if (!getEnvironmentVariables().isEmpty()) {
             updateEnvironmentVariables();
@@ -70,16 +62,14 @@ public class JavaCalls {
         return lr_returnObject;
     }
 
-    private void updateEnvironmentVariables()
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException,
-            InstantiationException {
+    private void updateEnvironmentVariables() {
         CallContent l_setEnvironmetVars = new CallContent();
-        l_setEnvironmetVars.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
-        l_setEnvironmetVars.setMethodName("setIntegroCache");
+        l_setEnvironmetVars.setClassName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
+        l_setEnvironmetVars.setMethodName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue());
 
         //Fetch all environment variables
         Properties argumentProps = new Properties();
-        environmentVariables.keySet().stream().forEach(k -> argumentProps.put(k, environmentVariables.get(k)));
+        environmentVariables.keySet().forEach(k -> argumentProps.put(k, environmentVariables.get(k)));
         l_setEnvironmetVars.setArgs(new Object[] { argumentProps });
         l_setEnvironmetVars.call(this.getLocalClassLoader());
     }

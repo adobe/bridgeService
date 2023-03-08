@@ -33,7 +33,7 @@ public class ServiceAccess {
     public Map<String, Boolean> checkAccessibilityOfExternalResources() {
         Map<String, Boolean> lr_availabilityMap = new HashMap<>();
 
-        getExternalServices().keySet().stream().forEach(k -> lr_availabilityMap.put(k, ServiceTools.isServiceAvailable(
+        getExternalServices().keySet().forEach(k -> lr_availabilityMap.put(k, ServiceTools.isServiceAvailable(
                 externalServices.get(k))));
 
         return lr_availabilityMap;

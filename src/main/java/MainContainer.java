@@ -3,27 +3,40 @@ import com.adobe.campaign.tests.service.IntegroAPI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.util.Properties;
+
 public class MainContainer {
     private static final Logger log = LogManager.getLogger();
     public static final int PROD_PORT = 443;
     public static final int TEST_PORT = 8080;
     public static void main(String[] args) {
 
+        /*
+        Properties properties = new Properties();
+        try {
+            //properties.load(MainContainer.class.getClassLoader().getResourceAsStream("ibs.properties"));
+            //ConfigValueHandler.PRODUCT_VERSION.activate(properties.getProperty(ConfigValueHandler.PRODUCT_VERSION.systemName));
+            //ConfigValueHandler.PRODUCT_VERSION.activate(MainContainer.class.getPackage().getImplementationVersion());
+        } catch (IOException e) {
+            log.error("error");
+            throw new RuntimeException(e);
+        }
+        */
+
         if (args.length == 0) {
             log.info("In Prod Mode - SSL");
             System.setProperty("https.protocols", "TLSv1.2");
-            ConfigValueHandler.SSL_ACTIVE.activate("true");
-            ConfigValueHandler.SSL_KEYSTORE_PATH.activate("/home/app/certificates/campaignkeystore.jks");
-            ConfigValueHandler.SSL_KEYSTORE_PASSWORD.activate("#nlpass");
-            ConfigValueHandler.TEST_CHECK.activate("in production");
+
+            ConfigValueHandler.DEPLOYMENT_MODEL.activate(" - in production");
             IntegroAPI.startServices(PROD_PORT);
         } else if (args[0].equalsIgnoreCase("test")) {
             log.info("In Test Mode");
-            ConfigValueHandler.TEST_CHECK.activate("in test");
+
             IntegroAPI.startServices(TEST_PORT);
         } else {
-            ConfigValueHandler.TEST_CHECK.activate("in test");
-            log.error("You need to pass the argument 'test' for this to work, or provide the valie keystores.");
+
+            log.error("You need to pass the argument 'test' for this to work, or provide the key store values.");
         }
     }
 }

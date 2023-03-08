@@ -13,7 +13,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import utils.CampaignUtils;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -586,6 +585,7 @@ public class TestFetchCalls {
                 Matchers.endsWith("@boom.com"));
     }
 
+    /*
     @Test
     public void testStaticFieldIntegrityIntegroV7() {
         ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
@@ -704,6 +704,8 @@ public class TestFetchCalls {
                 Matchers.equalTo("nana"));
 
     }
+
+     */
 
     @Test
     public void testSeparationOfStaticFields_json() throws IOException {

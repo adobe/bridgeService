@@ -67,25 +67,23 @@ public class JavaCalls {
     }
 
     private void updateEnvironmentVariables() {
-        CallContent l_setEnvironmetVars = new CallContent();
-        l_setEnvironmetVars.setClassName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
-        l_setEnvironmetVars.setMethodName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue());
-        Collection x = getEnvironmentVariables().values();
+        CallContent l_setEnvironmentVars = new CallContent();
+        l_setEnvironmentVars.setClassName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
+        l_setEnvironmentVars.setMethodName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue());
 
+        List<Object> badVariables = getEnvironmentVariables().keySet().stream().filter(k -> getEnvironmentVariables().getProperty((String) k)==null).collect(
+                Collectors.toList());
 
-        if (getEnvironmentVariables().keySet().stream().anyMatch(k -> getEnvironmentVariables().getProperty((String) k)==null)) {
-            List<Object> badVariables = getEnvironmentVariables().keySet().stream().filter(k -> getEnvironmentVariables().getProperty((String) k)==null).collect(
-                    Collectors.toList());
-
+        if (badVariables.size()>0) {
             throw new IBSRunTimeException("The given environment variables should only contain strings.\n"+badVariables);
         }
 
         //Fetch all environment variables
-        l_setEnvironmetVars.setArgs(new Object[] { environmentVariables });
+        l_setEnvironmentVars.setArgs(new Object[] { environmentVariables });
         try {
-            l_setEnvironmetVars.call(this.getLocalClassLoader());
-        } catch (NonExistantJavaObjectException nono) {
-            throw new IBSConfigurationException("The given environment value handler "+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+ "."+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue()+ " could not be found.", nono);
+            l_setEnvironmentVars.call(this.getLocalClassLoader());
+        } catch (NonExistantJavaObjectException nejoe) {
+            throw new IBSConfigurationException("The given environment value handler "+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+ "."+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue()+ " could not be found.", nejoe);
         }
     }
 

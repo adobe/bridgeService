@@ -1,6 +1,6 @@
 # Integro Bridge Service - RELEASE NOTES
 
-## 2.0.2
+## 2.0.4
 * #44 [Environment variables are always strings](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/44). Facing issues with integegers in environment variables not being picked up, we decided to force all environment variables as Strings.
   * We now include two new Exceptions:
     * IBSConfigurationException : thrown whenever the configuration we set (currently only for the setting of the environment variables) does not match an existing class/method.

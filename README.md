@@ -27,7 +27,7 @@ The following dependency needs to be added to your pom file:
  <dependency>
     <groupId>com.adobe.campaign.tests.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.2</version>
 </dependency>
 ```
 
@@ -178,7 +178,7 @@ In the example above "ID-2" will use the return value of the call "ID-1" as ts f
 **NOTE** : When passing a call result as an argument, it needs to be a String. In many languages such as JavaScript, the JSON keys need not be a string, however, for this to work you need to pass the ID as a string.  
 
 ## Creating a Call Context
-We sometimes need to set environment variables when making calls. This is usually indirectly related to the call you are doing.
+We sometimes need to set environment variables when making calls. This is usually indirectly related to the call you are doing. These variable mirror the values of a property file, so they are always treated as strings.
 
 ```JSON
 {

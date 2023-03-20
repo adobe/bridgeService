@@ -1,5 +1,11 @@
 # Integro Bridge Service - RELEASE NOTES
 
+## 2.0.4
+* #44 [Environment variables are always strings](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/44). Facing issues with integegers in environment variables not being picked up, we decided to force all environment variables as Strings.
+  * We now include two new Exceptions:
+    * IBSConfigurationException : thrown whenever the configuration we set (currently only for the setting of the environment variables) does not match an existing class/method.
+    * IBSRunTimeException : When for some reason the payload has issues non-related to JSON.
+
 ## 2.0.0
 * Implementation of the Injection model. IntegroBridgeService is added as a dependency in projects and can now be spawned in any environment.
   * #6 [Move from an aggregator model to an insertion model. From now on IBS is put in the libraries that we want to interface.](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/6)

@@ -1,15 +1,13 @@
 package com.adobe.campaign.tests.service;
 
-import com.adobe.campaign.tests.service.exceptions.AmbiguousMethodException;
-import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
-import com.adobe.campaign.tests.service.exceptions.TargetJavaMethodCallException;
+import com.adobe.campaign.tests.service.exceptions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 
-import static com.adobe.campaign.tests.service.ConfigValueHandler.*;
+import com.adobe.campaign.tests.service.ConfigValueHandler;
 import static spark.Spark.*;
 
 public class IntegroAPI {
@@ -17,16 +15,18 @@ public class IntegroAPI {
 
     public static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
     private static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
-    private static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not fid the given class or method.";
+    private static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
+    private static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
+    private static final String ERROR_IBS_RUNTIME = "Problems with payload. Check the passed environment variables";
 
     public static void
     startServices(int port) {
 
-        if (Boolean.parseBoolean(SSL_ACTIVE.fetchValue())) {
-            File l_file = new File(SSL_KEYSTORE_PATH.fetchValue());
+        if (Boolean.parseBoolean(ConfigValueHandler.SSL_ACTIVE.fetchValue())) {
+            File l_file = new File(ConfigValueHandler.SSL_KEYSTORE_PATH.fetchValue());
             log.info("Keystore file was found? {}", l_file.exists());
-            secure(SSL_KEYSTORE_PATH.fetchValue(), SSL_KEYSTORE_PASSWORD.fetchValue(),
-                    SSL_TRUSTSTORE_PATH.fetchValue(), SSL_TRUSTSTORE_PASSWORD.fetchValue());
+            secure(ConfigValueHandler.SSL_KEYSTORE_PATH.fetchValue(), ConfigValueHandler.SSL_KEYSTORE_PASSWORD.fetchValue(),
+                    ConfigValueHandler.SSL_TRUSTSTORE_PATH.fetchValue(), ConfigValueHandler.SSL_TRUSTSTORE_PASSWORD.fetchValue());
         }
         else {
             port(port);
@@ -35,14 +35,14 @@ public class IntegroAPI {
         get("/test", (req, res) -> {
             res.type("text/plain");
 
-            StringBuilder sb = new StringBuilder("All systems up "+ DEPLOYMENT_MODEL.fetchValue());
+            StringBuilder sb = new StringBuilder("All systems up "+ ConfigValueHandler.DEPLOYMENT_MODEL.fetchValue());
             sb.append("\n");
             sb.append("Bridge Service Version : ");
-            sb.append(PRODUCT_VERSION.fetchValue());
-            if (PRODUCT_USER_VERSION.isSet()) {
+            sb.append(ConfigValueHandler.PRODUCT_VERSION.fetchValue());
+            if (ConfigValueHandler.PRODUCT_USER_VERSION.isSet()) {
                 sb.append("\n");
                 sb.append("Product user version : ");
-                sb.append(PRODUCT_USER_VERSION.fetchValue());
+                sb.append(ConfigValueHandler.PRODUCT_USER_VERSION.fetchValue());
             }
             return sb.toString();
         });
@@ -74,6 +74,24 @@ public class IntegroAPI {
         exception( AmbiguousMethodException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();
             response.append(ERROR_JSON_TRANSFORMATION);
+            response.append("\n");
+            response.append(e.getMessage());
+            res.status(400);
+            res.body(response.toString());
+        });
+
+        exception( IBSConfigurationException.class, (e, req, res) -> {
+            StringBuilder response = new StringBuilder();
+            response.append(ERROR_IBS_CONFIG);
+            response.append("\n");
+            response.append(e.getMessage());
+            res.status(400);
+            res.body(response.toString());
+        });
+
+        exception( IBSRunTimeException.class, (e, req, res) -> {
+            StringBuilder response = new StringBuilder();
+            response.append(ERROR_IBS_RUNTIME);
             response.append("\n");
             response.append(e.getMessage());
             res.status(400);

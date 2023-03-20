@@ -3,9 +3,8 @@ package com.adobe.campaign.tests.service;
 import com.adobe.campaign.tests.integro.tools.DateAndTimeTools;
 import com.adobe.campaign.tests.integro.tools.LanguageEncodings;
 import com.adobe.campaign.tests.integro.tools.RandomManager;
-import com.adobe.campaign.tests.service.exceptions.AmbiguousMethodException;
-import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
-import com.adobe.campaign.tests.service.exceptions.TargetJavaMethodCallException;
+import com.adobe.campaign.tests.service.data.MyPropertiesHandler;
+import com.adobe.campaign.tests.service.exceptions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
@@ -30,6 +29,7 @@ public class TestFetchCalls {
     @AfterClass
     public void reset() {
         ConfigValueHandler.resetAllValues();
+        MyPropertiesHandler.resetAll();
     }
 
     @Test
@@ -504,7 +504,7 @@ public class TestFetchCalls {
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
         l_cc.setMethodName("getRandomEmail");
 
-        Map l_authentication = new HashMap();
+        Properties l_authentication = new Properties();
         l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
         l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
 
@@ -526,7 +526,7 @@ public class TestFetchCalls {
         l_ccB.setMethodName("getRandomEmail");
         l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
 
-        Map l_authenticationB = new HashMap();
+        Properties l_authenticationB = new Properties();
         l_authenticationB.put("AC.UITEST.MAILING.PREFIX", "nana");
         l_authenticationB.put("AC.INTEGRO.MAILING.BASE", "noon.com");
         l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
@@ -552,7 +552,8 @@ public class TestFetchCalls {
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
         l_cc.setMethodName("getRandomEmail");
 
-        Map l_authentication = new HashMap();
+        Properties l_authentication = new Properties();
+
         l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
         l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
 
@@ -1031,6 +1032,86 @@ public class TestFetchCalls {
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
         System.out.println(value);
+    }
+
+    @Test
+    public void testEnvironmentVariablesBadConfigValuesForTargetA() {
+
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUpNonExisting");
+
+        JavaCalls jc = new JavaCalls();
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.SMS.PORT", "234");
+
+        jc.setEnvironmentVariables(l_envVars);
+
+        Assert.assertThrows(IBSConfigurationException.class, () -> jc.submitCalls());
+    }
+
+    @Test
+    public void testEnvironmentVariablesBadConfigValuesForTargetB() {
+
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate("stucutto");
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUpNonExisting");
+
+        JavaCalls jc = new JavaCalls();
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.SMS.PORT", "234");
+
+        jc.setEnvironmentVariables(l_envVars);
+
+        Assert.assertThrows(IBSConfigurationException.class, () -> jc.submitCalls());
+    }
+
+    //Related to issue 44
+    @Test
+    public void testSEnvironmentVariablesBadConfigValues() {
+
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUp");
+
+        JavaCalls jc = new JavaCalls();
+
+        Properties x = new Properties();
+        String myKey = "ABC";
+        x.setProperty(myKey, "456");
+
+        jc.setEnvironmentVariables(x);
+
+        jc.submitCalls();
+
+        assertThat("System value handler should have the value",
+                MyPropertiesHandler.myProps.containsKey(myKey));
+
+        Assert.assertNotNull(MyPropertiesHandler.myProps.getProperty(myKey),"MyProperties should have been stored");
+
+        Assert.assertTrue(MyPropertiesHandler.myProps.getProperty(myKey) instanceof String);
+
+        Assert.assertEquals(MyPropertiesHandler.myProps.getProperty(myKey),
+                "456","My properties should have the value stored");
+
+    }
+
+    @Test
+    public void testSEnvironmentVariablesBadConfigValuesNegative() {
+
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUp");
+
+        JavaCalls jc = new JavaCalls();
+
+        Properties x = new Properties();
+        String myKey = "ABC";
+        x.put(myKey, 456);
+        x.put("EFG", "567");
+
+        jc.setEnvironmentVariables(x);
+
+        Assert.assertThrows(IBSRunTimeException.class, () -> jc.submitCalls());
+
 
     }
 

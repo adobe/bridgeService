@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import static io.restassured.RestAssured.given;
 
@@ -129,7 +130,7 @@ public class E2ETests {
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
         l_cc.setMethodName("getRandomEmail");
 
-        Map<String, Object> l_authentication = new HashMap<>();
+        Properties l_authentication = new Properties();
         l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
         l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
 
@@ -163,7 +164,7 @@ public class E2ETests {
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
         l_cc.setMethodName("getRandomEmail");
 
-        Map<String, Object> l_authentication = new HashMap<>();
+        Properties l_authentication = new Properties();
         l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
         l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
 
@@ -185,6 +186,28 @@ public class E2ETests {
                 body("returnValues.call2PL", Matchers.endsWith("@boom.com"))
                 .body("returnValues.call2PL", Matchers.startsWith("bada"));
 
+    }
+
+
+    @Test(groups = "E2E")
+    public void testEnvironmentVars() {
+
+        //Call 1
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
+        l_cc.setMethodName("fetchExecutionProperty");
+        l_cc.setArgs(new Object[]{"ABC"});
+
+        Properties l_authentication = new Properties();
+        l_authentication.put("ABC", 123);
+        l_myJavaCalls.setEnvironmentVariables(l_authentication);
+
+        l_myJavaCalls.getCallContent().put("call1PL", l_cc);
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
+                body("returnValues.call1PL", Matchers.equalTo("123"));
     }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)

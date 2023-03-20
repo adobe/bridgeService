@@ -1,19 +1,23 @@
 package com.adobe.campaign.tests.service;
 
+import com.adobe.campaign.tests.service.exceptions.IBSConfigurationException;
+import com.adobe.campaign.tests.service.exceptions.IBSRunTimeException;
+import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class JavaCalls {
 
     private Map<String, CallContent> callContent;
 
-   // private Map<String,String> environmentVariables;
-   private Map<String,Object> environmentVariables;
+    private Properties environmentVariables;
 
     private IntegroBridgeClassLoader localClassLoader;
 
     public JavaCalls() {
         callContent = new LinkedHashMap<>();
-        environmentVariables = new HashMap<>();
+        environmentVariables = new Properties();
         setLocalClassLoader(new IntegroBridgeClassLoader());
     }
 
@@ -66,19 +70,30 @@ public class JavaCalls {
         CallContent l_setEnvironmetVars = new CallContent();
         l_setEnvironmetVars.setClassName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
         l_setEnvironmetVars.setMethodName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue());
+        Collection x = getEnvironmentVariables().values();
+
+
+        if (getEnvironmentVariables().keySet().stream().anyMatch(k -> getEnvironmentVariables().getProperty((String) k)==null)) {
+            List<Object> badVariables = getEnvironmentVariables().keySet().stream().filter(k -> getEnvironmentVariables().getProperty((String) k)==null).collect(
+                    Collectors.toList());
+
+            throw new IBSRunTimeException("The given environment variables should only contain strings.\n"+badVariables);
+        }
 
         //Fetch all environment variables
-        Properties argumentProps = new Properties();
-        environmentVariables.keySet().forEach(k -> argumentProps.put(k, environmentVariables.get(k)));
-        l_setEnvironmetVars.setArgs(new Object[] { argumentProps });
-        l_setEnvironmetVars.call(this.getLocalClassLoader());
+        l_setEnvironmetVars.setArgs(new Object[] { environmentVariables });
+        try {
+            l_setEnvironmetVars.call(this.getLocalClassLoader());
+        } catch (NonExistantJavaObjectException nono) {
+            throw new IBSConfigurationException("The given environment value handler "+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+ "."+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue()+ " could not be found.", nono);
+        }
     }
 
-    public Map<String, Object> getEnvironmentVariables() {
+    public Properties getEnvironmentVariables() {
         return environmentVariables;
     }
 
-    public void setEnvironmentVariables(Map<String, Object> environmentVariables) {
+    public void setEnvironmentVariables(Properties environmentVariables) {
         this.environmentVariables = environmentVariables;
     }
 

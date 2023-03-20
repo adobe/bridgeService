@@ -15,7 +15,7 @@ public class IntegroAPI {
 
     public static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
     private static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
-    private static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not fid the given class or method.";
+    private static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
     private static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
     private static final String ERROR_IBS_RUNTIME = "Problems with payload. Check the passed environment variables";
 

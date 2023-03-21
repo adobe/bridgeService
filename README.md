@@ -64,7 +64,7 @@ All you need to do is to call :
 If all is good you should get:
 ```
 All systems up - in production
-Version : 2.0.0
+Version : 2.0.4
 Product user version : 7.0
 ```
 

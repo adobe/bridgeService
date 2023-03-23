@@ -1,7 +1,7 @@
 package com.adobe.campaign.tests.service;
 
 import com.adobe.campaign.tests.service.exceptions.AmbiguousMethodException;
-import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
+import com.adobe.campaign.tests.service.exceptions.NonExistentJavaObjectException;
 import com.adobe.campaign.tests.service.exceptions.TargetJavaMethodCallException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -82,7 +82,7 @@ public class CallContent {
                         Collectors.toList());
 
         if (lr_method.size() == 0) {
-            throw new NonExistantJavaObjectException(
+            throw new NonExistentJavaObjectException(
                     "Method " + this.getClassName() + "." + this.getMethodName() + "   with " + this.getArgs().length
                             + " arguments could not be found.");
         }
@@ -116,7 +116,7 @@ public class CallContent {
             Object ourInstance = ourClass.getDeclaredConstructor().newInstance();
             lr_object = l_method.invoke(ourInstance, expandArgs(iClassLoader));
         } catch (IllegalArgumentException e) {
-            throw new NonExistantJavaObjectException(
+            throw new NonExistentJavaObjectException(
                     "The given method " + this.getFullName() + " could not accept the given arguments..");
 
         } catch (IllegalAccessException e) {
@@ -127,12 +127,12 @@ public class CallContent {
                     "We experienced an exception when calling the provided method " + this.getFullName()
                             + ".\nProvided error message : " + e.getTargetException().toString(), e);
         } catch (ClassNotFoundException e) {
-            throw new NonExistantJavaObjectException("The given class " + this.getClassName() + "could not be found.");
+            throw new NonExistentJavaObjectException("The given class " + this.getClassName() + "could not be found.");
         } catch (InstantiationException e) {
-            throw new NonExistantJavaObjectException(
+            throw new NonExistentJavaObjectException(
                     "Could not instantiate class. The given class " + this.getClassName() + "could not be found.");
         } catch (NoSuchMethodException e) {
-            throw new NonExistantJavaObjectException(
+            throw new NonExistentJavaObjectException(
                     "Could not find the method " + this.getFullName() + ".");
         }
 

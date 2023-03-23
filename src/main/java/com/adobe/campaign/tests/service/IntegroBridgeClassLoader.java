@@ -5,8 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-import com.adobe.campaign.tests.service.exceptions.IBSConfigurationException;
-import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
+import com.adobe.campaign.tests.service.exceptions.NonExistentJavaObjectException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -90,7 +89,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         try {
             return super.loadClass(in_classFullPath);
         } catch (ClassNotFoundException cnfe) {
-            throw new NonExistantJavaObjectException("The given class path "+in_classFullPath+" could not be found.", cnfe);
+            throw new NonExistentJavaObjectException("The given class path "+in_classFullPath+" could not be found.", cnfe);
         }
 
     }
@@ -110,7 +109,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         InputStream stream = getClass().getClassLoader()
                 .getResourceAsStream(name);
         if (stream==null) {
-            throw new NonExistantJavaObjectException("The given class path "+name+" could not be found.");
+            throw new NonExistentJavaObjectException("The given class path "+name+" could not be found.");
         }
         int size = stream.available();
         byte buff[] = new byte[size];

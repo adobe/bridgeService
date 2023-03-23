@@ -2,7 +2,7 @@ package com.adobe.campaign.tests.service;
 
 import com.adobe.campaign.tests.service.exceptions.IBSConfigurationException;
 import com.adobe.campaign.tests.service.exceptions.IBSRunTimeException;
-import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
+import com.adobe.campaign.tests.service.exceptions.NonExistentJavaObjectException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -82,7 +82,7 @@ public class JavaCalls {
         l_setEnvironmentVars.setArgs(new Object[] { environmentVariables });
         try {
             l_setEnvironmentVars.call(this.getLocalClassLoader());
-        } catch (NonExistantJavaObjectException nejoe) {
+        } catch (NonExistentJavaObjectException nejoe) {
             throw new IBSConfigurationException("The given environment value handler "+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+ "."+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue()+ " could not be found.", nejoe);
         }
     }

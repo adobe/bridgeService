@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 
-import com.adobe.campaign.tests.service.ConfigValueHandler;
 import static spark.Spark.*;
 
 public class IntegroAPI {
@@ -108,7 +107,7 @@ public class IntegroAPI {
             res.body(response.toString());
         });
 
-        exception( NonExistantJavaObjectException.class, (e, req, res) -> {
+        exception( NonExistentJavaObjectException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();
             response.append(ERROR_JAVA_OBJECT_NOT_FOUND);
             response.append("\n");

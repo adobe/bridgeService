@@ -170,7 +170,7 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { MimeMessageFactory.getMessage("ab") });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
-        Assert.assertThrows(NonExistantJavaObjectException.class, () -> l_cc.call(iClassLoader));
+        Assert.assertThrows(NonExistentJavaObjectException.class, () -> l_cc.call(iClassLoader));
     }
 
     @Test
@@ -184,7 +184,7 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { MimeMessageFactory.getMessage("ab") });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
-        Assert.assertThrows(NonExistantJavaObjectException.class, () -> l_cc.call(iClassLoader));
+        Assert.assertThrows(NonExistentJavaObjectException.class, () -> l_cc.call(iClassLoader));
     }
 
     @Test
@@ -195,7 +195,7 @@ public class TestFetchCalls {
         l_cc.setMethodName("getNonExistingRandomString");
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
-        Assert.assertThrows(NonExistantJavaObjectException.class, () -> l_cc.call(iClassLoader));
+        Assert.assertThrows(NonExistentJavaObjectException.class, () -> l_cc.call(iClassLoader));
     }
 
     @Test
@@ -984,7 +984,7 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
-        Assert.assertThrows(NonExistantJavaObjectException.class,
+        Assert.assertThrows(NonExistentJavaObjectException.class,
                 () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
     }
 
@@ -997,7 +997,7 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
-        Assert.assertThrows(NonExistantJavaObjectException.class,
+        Assert.assertThrows(NonExistentJavaObjectException.class,
                 () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
     }
 
@@ -1009,7 +1009,7 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
-        Assert.assertThrows(NonExistantJavaObjectException.class,
+        Assert.assertThrows(NonExistentJavaObjectException.class,
                 () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
     }
 
@@ -1021,7 +1021,7 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
-        Assert.assertThrows(NonExistantJavaObjectException.class,
+        Assert.assertThrows(NonExistentJavaObjectException.class,
                 () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
     }
 

@@ -28,7 +28,6 @@ public class E2ETests {
         Spark.awaitInitialization();
 
         serverSocket1 = new ServerSocket(port1);
-
     }
 
     @BeforeMethod
@@ -49,7 +48,7 @@ public class E2ETests {
                 .body(Matchers.endsWith("Product user version : F")).body(Matchers.containsString("101"));
 
     }
-    
+
 
     @Test(groups = "E2E")
     public void testMainHelloWorld_negative() {

@@ -53,7 +53,6 @@ public class E2ETests {
     @Test(groups = "E2E")
     public void testMainHelloWorld_negative() {
         given().when().get(EndPointURL + "hello").then().assertThat().statusCode(404);
-
     }
 
     @Test(groups = "E2E")

@@ -24,7 +24,7 @@ public class IBSClassLoaderTests {
 
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
         assertThat("We should have correctly extracted the package paths from STORE_CLASSES_FROM_PACKAGES", ibscl.getPackagePaths(),
-                Matchers.contains("a", "b", "c", SystemValueHandler.class.getPackage().getName()));
+                Matchers.contains("a", "b", "c"));
 
         ibscl.setPackagePaths("");
 
@@ -43,7 +43,7 @@ public class IBSClassLoaderTests {
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
 
         assertThat("We should have an array containing only the systemvaluehandler", ibscl.getPackagePaths(),
-                Matchers.contains(SystemValueHandler.class.getPackage().getName()));
+                Matchers.not(Matchers.contains(SystemValueHandler.class.getPackage().getName())));
 
         ibscl.setPackagePaths("bau,cel,sab");
 
@@ -53,12 +53,6 @@ public class IBSClassLoaderTests {
         assertThat("The given package should be found", !ibscl.isClassAmongPackagePaths("crow"));
     }
 
-    @Test
-    public void testExtractClassPath() {
-        IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
-
-
-    }
 
     @Test
     public void testIncludeEnvironmentVarClassPath() {
@@ -68,7 +62,7 @@ public class IBSClassLoaderTests {
 
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
         assertThat("We should have correctly extracted the package paths from STORE_CLASSES_FROM_PACKAGES", ibscl.getPackagePaths(),
-                Matchers.containsInAnyOrder("a", "b", "c", "com.adobe.campaign.tests.service.data"));
+                Matchers.containsInAnyOrder("a", "b", "c"));
 
         ibscl.setPackagePaths("");
 

@@ -201,6 +201,21 @@ This call will use your internal method for setting environment variables. This 
 * IBS.ENVVARS.SETTER.CLASS
 * IBS.ENVVARS.SETTER.METHOD
 
+### Static Variable Scopes
+One of our main concerns has been the management of static variables. For the sake of conversation we need to identify scopes:
+* **Session Scope** : Access to the variables in the same call to the Bridge Service
+* **Product Scope** : Access to the variables between two different calls
+
+#### Session Scopes
+For now our approach is that two distinct calls to the same Bridge Service node, should share little or no variables. Another way of defining this is that two calls should not interfere with one another. In a Session Context we have two use cases:
+
+We have covered all the use cases in the document [Managing Contexts and Static Variables](docs/ReleaseNotes.md).
+
+#### Product Scope
+Although we do not, yet, provide tools for managing variables that are valid for all calls to the IBS, we can define a series or local environment variables are deployment of the service. This can be done in two ways:
+* Managing a properties for in your deployment
+* Injecting Runtime properties at the commandline
+
 ## Error Management
 Currently, whenever there is an error in the underlying java call we will include the orginal error message in the error response. For example, for the call:
 

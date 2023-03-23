@@ -155,6 +155,20 @@ public class E2ETests {
 
     }
 
+    /**
+     * Issues:
+     * <ul>
+     *     <li>
+     *         <a href="https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/41">#41 -  Make sure that the path for the systemvalue handler is included in the paths searched by the classloader</a>
+     *     </li>
+     *     <li>
+     *         <a href="https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/47">#47 - Issue with Server=null when calling PushNotifications with IBS</a>
+     *     </li>
+     *     <li>
+     *         <a href="https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48">#48 - Dynamic management of IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES</a>
+     *     </li>
+     * </ul>
+     */
     @Test(groups = "E2E")
     public void testIntegrity_case2_pathsNotSet() {
 
@@ -178,6 +192,7 @@ public class E2ETests {
                 body("returnValues.call1PL", Matchers.endsWith("@boom.com"))
                 .body("returnValues.call1PL", Matchers.startsWith("bada"));
 
+        //call 2 -- independant call. No access to the set environment variables
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
         l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
@@ -185,8 +200,8 @@ public class E2ETests {
         l_myJavaCallsB.getCallContent().put("call2PL", l_ccB);
 
         given().body(l_myJavaCallsB).post(EndPointURL + "call").then().assertThat().statusCode(200).
-                body("returnValues.call2PL", Matchers.endsWith("@boom.com"))
-                .body("returnValues.call2PL", Matchers.startsWith("bada"));
+                body("returnValues.call2PL", Matchers.endsWith("localhost.corp.adobe.com"))
+                .body("returnValues.call2PL", Matchers.startsWith("testqa+"));
 
     }
 

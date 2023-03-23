@@ -23,14 +23,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      */
     public IntegroBridgeClassLoader() {
         super(IntegroBridgeClassLoader.class.getClassLoader());
-        Class ourClass;
-        try {
-            ourClass = Class.forName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
-        } catch (ClassNotFoundException e) {
-            throw new IBSConfigurationException("The stored class "+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+" cannot be found.", e);
-        }
         setPackagePaths(ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.fetchValue());
-        getPackagePaths().add(ourClass.getPackage().getName());
         this.setCallResultCache(new HashMap<>());
     }
 

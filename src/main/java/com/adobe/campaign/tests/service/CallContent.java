@@ -103,6 +103,12 @@ public class CallContent {
 
         Object lr_object = null;
         try {
+            //Add our package to the classLoader integrity paths
+            if (ConfigValueHandler.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.is("true")) {
+                iClassLoader.getPackagePaths()
+                        .add(this.getClassName().substring(0, this.getClassName().lastIndexOf('.')));
+            }
+
             Class ourClass = Class.forName(getClassName(), true, iClassLoader);
 
             Method l_method = fetchMethod(ourClass);

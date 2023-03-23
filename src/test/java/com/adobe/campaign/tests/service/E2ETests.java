@@ -1,6 +1,8 @@
 package com.adobe.campaign.tests.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.hamcrest.Matchers;
+import org.testng.Assert;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
@@ -10,7 +12,6 @@ import spark.Spark;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 
@@ -48,6 +49,7 @@ public class E2ETests {
                 .body(Matchers.endsWith("Product user version : F")).body(Matchers.containsString("101"));
 
     }
+    
 
     @Test(groups = "E2E")
     public void testMainHelloWorld_negative() {
@@ -119,6 +121,81 @@ public class E2ETests {
 
     }
 
+    /**
+     * Testing that we provide the correct error messages whenever the target method throws an error
+     */
+    @Test(groups = "E2E")
+    public void testMainEror_Case2AmbiguousMethodException() {
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        myContent.setMethodName("fetchRandomFileName");
+        myContent.setReturnType("java.lang.String");
+        myContent.setArgs(
+                new Object[] { "plop" });
+        l_call.getCallContent().put("call1PL", myContent);
+
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+                Matchers.containsString(IntegroAPI.ERROR_JSON_TRANSFORMATION));
+    }
+
+    /**
+     * Testing that we provide the correct error messages whenever the target method throws an error
+     */
+    @Test(groups = "E2E")
+    public void testMainEror_Case3IBSConfigurationException1() {
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        myContent.setMethodName("fetchRandomFileName");
+        myContent.setReturnType("java.lang.String");
+        myContent.setArgs(
+                new Object[] { "plop" });
+        l_call.getCallContent().put("call1PL", myContent);
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+
+        l_call.setEnvironmentVariables(l_envVars);
+
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+                Matchers.containsString(IntegroAPI.ERROR_IBS_CONFIG));
+
+    }
+
+    /**
+     * Testing that we provide the correct error messages whenever the target method throws an error
+     */
+    @Test(groups = "E2E")
+    public void testMainEror_passiingNull() throws JsonProcessingException {
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
+
+        String l_jsonString =
+                "{\n"
+                        + "    \"callContent\": {\n"
+                        + "        \"call1\": {\n"
+                        + "            \"class\": \"com.adobe.campaign.tests.integro.tools.RandomManager\",\n"
+                        + "            \"method\": \"getRandomEmail\",\n"
+                        + "            \"returnType\": \"java.lang.String\",\n"
+                        + "            \"args\": []\n"
+                        + "        }\n"
+                        + "    },\n"
+                        + "    \"environmentVariables\": {\n"
+                        + "        \"AC.UITEST.MAILING.PREFIX\": \"tyrone\",\n"
+                        + "        \"AC.INTEGRO.MAILING.BASE\" : null"
+                        + "    }\n"
+                        + "}";
+
+
+           given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+                Matchers.containsString(IntegroAPI.ERROR_JSON_TRANSFORMATION));
+
+    }
+
     @Test(groups = "E2E")
     public void testIntegrity_pathsSet() {
 
@@ -131,11 +208,11 @@ public class E2ETests {
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
         l_cc.setMethodName("getRandomEmail");
 
-        Properties l_authentication = new Properties();
-        l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
 
-        l_myJavaCalls.setEnvironmentVariables(l_authentication);
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
 
         l_myJavaCalls.getCallContent().put("call1PL", l_cc);
 

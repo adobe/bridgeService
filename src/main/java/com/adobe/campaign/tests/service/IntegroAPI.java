@@ -12,16 +12,16 @@ import static spark.Spark.*;
 public class IntegroAPI {
     private static final Logger log = LogManager.getLogger();
 
-    public static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
-    private static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
-    private static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
-    private static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
-    private static final String ERROR_IBS_RUNTIME = "Problems with payload. Check the passed environment variables";
+    protected static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
+    protected static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
+    protected static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
+    protected static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
+    protected static final String ERROR_IBS_RUNTIME = "Problems with payload. Check the passed environment variables";
 
     public static void
     startServices(int port) {
 
-        if (Boolean.parseBoolean(ConfigValueHandler.SSL_ACTIVE.fetchValue())) {
+        if (ConfigValueHandler.SSL_ACTIVE.is("true")) {
             File l_file = new File(ConfigValueHandler.SSL_KEYSTORE_PATH.fetchValue());
             log.info("Keystore file was found? {}", l_file.exists());
             secure(ConfigValueHandler.SSL_KEYSTORE_PATH.fetchValue(), ConfigValueHandler.SSL_KEYSTORE_PASSWORD.fetchValue(),
@@ -87,7 +87,7 @@ public class IntegroAPI {
             res.status(400);
             res.body(response.toString());
         });
-
+        /* Not currently possible
         exception( IBSRunTimeException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();
             response.append(ERROR_IBS_RUNTIME);
@@ -96,7 +96,7 @@ public class IntegroAPI {
             res.status(400);
             res.body(response.toString());
         });
-
+        */
         exception( TargetJavaMethodCallException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();
             response.append(ERROR_CALLING_JAVA_METHOD);
@@ -106,15 +106,5 @@ public class IntegroAPI {
             response.append(e.getMessage()).append("\n");
             res.body(response.toString());
         });
-
-        exception( NonExistentJavaObjectException.class, (e, req, res) -> {
-            StringBuilder response = new StringBuilder();
-            response.append(ERROR_JAVA_OBJECT_NOT_FOUND);
-            response.append("\n");
-            response.append(e.getMessage());
-            res.status(400);
-            res.body(response.toString());
-        });
-
     }
 }

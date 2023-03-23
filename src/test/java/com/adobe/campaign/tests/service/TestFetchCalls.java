@@ -1255,6 +1255,22 @@ public class TestFetchCalls {
         Assert.assertThrows(IBSConfigurationException.class, () -> jc.submitCalls());
     }
 
+    @Test
+    public void testEnvironmentVariablesBadConfigValuesForTargetB() {
+
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate("ClassThatDoesntExist");
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUpNonExisting");
+
+        JavaCalls jc = new JavaCalls();
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.SMS.PORT", "234");
+
+        jc.setEnvironmentVariables(l_envVars);
+
+        Assert.assertThrows(IBSConfigurationException.class, () -> jc.submitCalls());
+    }
+
 
     //Related to issue 44
     //Class is not loaded if it is not in the

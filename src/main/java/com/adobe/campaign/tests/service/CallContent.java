@@ -105,8 +105,10 @@ public class CallContent {
         try {
             //Add our package to the classLoader integrity paths
             if (ConfigValueHandler.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.is("true")) {
+
                 iClassLoader.getPackagePaths()
-                        .add(this.getClassName().substring(0, this.getClassName().lastIndexOf('.')));
+                        .add(this.getClassName().contains(".") ? this.getClassName()
+                                .substring(0, this.getClassName().lastIndexOf('.')) : this.getClassName());
             }
 
             Class ourClass = Class.forName(getClassName(), true, iClassLoader);

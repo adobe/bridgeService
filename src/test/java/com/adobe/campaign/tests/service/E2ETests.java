@@ -68,7 +68,6 @@ public class E2ETests {
         given().body(l_call).post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
                 Matchers.containsInAnyOrder("AT", "AU", "CA", "CH", "DE", "US", "FR", "CN", "IN", "JP", "RU", "BR",
                         "ID", "GB", "MX"));
-
     }
 
     @Test(groups = "E2E")

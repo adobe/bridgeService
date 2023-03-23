@@ -1,5 +1,7 @@
 package com.adobe.campaign.tests.service;
 
+import com.adobe.campaign.tests.integro.core.SystemValueHandler;
+import com.adobe.campaign.tests.service.data.MyPropertiesHandler;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
@@ -22,16 +24,16 @@ public class IBSClassLoaderTests {
 
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
         assertThat("We should have correctly extracted the package paths from STORE_CLASSES_FROM_PACKAGES", ibscl.getPackagePaths(),
-                Matchers.is(new String[]{"a", "b", "c"}));
+                Matchers.contains("a", "b", "c", SystemValueHandler.class.getPackage().getName()));
 
         ibscl.setPackagePaths("");
 
         assertThat("We should an empty array", ibscl.getPackagePaths(),
-                Matchers.is(new String[]{}));
+                Matchers.empty());
 
         ibscl.setPackagePaths("a");
         assertThat("We should have a single entry array", ibscl.getPackagePaths(),
-                Matchers.is(new String[]{"a"}));
+                Matchers.contains("a"));
 
     }
 
@@ -40,8 +42,8 @@ public class IBSClassLoaderTests {
 
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
 
-        assertThat("We should an empty array", ibscl.getPackagePaths(),
-                Matchers.is(new String[]{}));
+        assertThat("We should have an array containing only the systemvaluehandler", ibscl.getPackagePaths(),
+                Matchers.contains(SystemValueHandler.class.getPackage().getName()));
 
         ibscl.setPackagePaths("bau,cel,sab");
 
@@ -49,5 +51,33 @@ public class IBSClassLoaderTests {
         assertThat("The given package should be found", ibscl.isClassAmongPackagePaths("celeste"));
         assertThat("The given package should be found", ibscl.isClassAmongPackagePaths("sabine"));
         assertThat("The given package should be found", !ibscl.isClassAmongPackagePaths("crow"));
+    }
+
+    @Test
+    public void testExtractClassPath() {
+        IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
+
+
+    }
+
+    @Test
+    public void testIncludeEnvironmentVarClassPath() {
+
+        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("a,b,c");
+        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
+
+        IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
+        assertThat("We should have correctly extracted the package paths from STORE_CLASSES_FROM_PACKAGES", ibscl.getPackagePaths(),
+                Matchers.containsInAnyOrder("a", "b", "c", "com.adobe.campaign.tests.service.data"));
+
+        ibscl.setPackagePaths("");
+
+        assertThat("We should an empty array", ibscl.getPackagePaths(),
+                Matchers.empty());
+
+        ibscl.setPackagePaths("a");
+        assertThat("We should have a single entry array", ibscl.getPackagePaths(),
+                Matchers.contains("a"));
+
     }
 }

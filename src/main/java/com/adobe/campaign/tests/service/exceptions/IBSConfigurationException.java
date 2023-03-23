@@ -7,7 +7,7 @@ package com.adobe.campaign.tests.service.exceptions;
  */
 public class IBSConfigurationException extends RuntimeException {
 
-    public IBSConfigurationException(String message, NonExistantJavaObjectException nono) {
+    public IBSConfigurationException(String message, Exception nono) {
         super(message,nono);
     }
 }

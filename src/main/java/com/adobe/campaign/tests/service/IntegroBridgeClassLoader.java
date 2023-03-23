@@ -3,10 +3,9 @@ package com.adobe.campaign.tests.service;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
+import com.adobe.campaign.tests.service.exceptions.IBSConfigurationException;
 import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,7 +14,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
     private static final Logger log = LogManager.getLogger();
     private Map<String, Object> callResultCache;
 
-    private String[] packagePaths;
+    private Set<String> packagePaths;
 
     /**
      * Parent ClassLoader passed to this constructor
@@ -24,7 +23,14 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      */
     public IntegroBridgeClassLoader() {
         super(IntegroBridgeClassLoader.class.getClassLoader());
+        Class ourClass;
+        try {
+            ourClass = Class.forName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
+        } catch (ClassNotFoundException e) {
+            throw new IBSConfigurationException("The stored class "+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+" cannot be found.", e);
+        }
         setPackagePaths(ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.fetchValue());
+        getPackagePaths().add(ourClass.getPackage().getName());
         this.setCallResultCache(new HashMap<>());
     }
 
@@ -41,10 +47,10 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         // is this class already loaded?
         Class cls = findLoadedClass(in_classPath);
         if (cls != null) {
-            log.debug("class {} has been loaded.",in_classPath);
+            log.debug("Class {} has already been loaded.",in_classPath);
             return cls;
         } else {
-            log.debug("class {} has not been loaded. Loading now.", in_classPath);
+            log.debug("Class {} has not been loaded. Loading now.", in_classPath);
         }
 
 
@@ -82,7 +88,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      */
     @Override
     public Class loadClass(String in_classFullPath) {
-        log.debug("loading class {}",in_classFullPath);
+        log.debug("Preparing class {}",in_classFullPath);
 
         if (isClassAmongPackagePaths(in_classFullPath)) {
             return getClass(in_classFullPath);
@@ -130,17 +136,17 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         this.callResultCache = callResultCache;
     }
 
-    public String[] getPackagePaths() {
+    public Set<String> getPackagePaths() {
         return packagePaths;
     }
 
-    public void setPackagePaths(String[] packagePaths) {
+    public void setPackagePaths(Set<String> packagePaths) {
         this.packagePaths = packagePaths;
     }
 
     public void setPackagePaths(String in_packagePaths) {
 
-        setPackagePaths(in_packagePaths.isEmpty() ? new String[]{} : in_packagePaths.split(","));
+        setPackagePaths(in_packagePaths.isEmpty() ? new HashSet<>() : new HashSet<String>(Arrays.asList(in_packagePaths.split(","))));
 
     }
 
@@ -150,6 +156,6 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      * @return true if the given class path is among the stored package paths
      */
     public boolean isClassAmongPackagePaths(String in_classFullPath) {
-        return Arrays.stream(getPackagePaths()).anyMatch(in_classFullPath::startsWith);
+        return getPackagePaths().stream().anyMatch(in_classFullPath::startsWith);
     }
 }

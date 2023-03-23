@@ -18,10 +18,12 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestFetchCalls {
@@ -495,8 +497,14 @@ public class TestFetchCalls {
                 Matchers.endsWith("@boom.com"));
     }
 
+    /**
+     * Integrity Tests - Here all calls and env vars are in the package path. Inthis case each call has its own env vars
+     * In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 1
+     * The envvars of calls do not interfere with the others
+     */
     @Test
-    public void testStaticFieldIntegrityCore_framework1() {
+    public void testIntegrityEnvVars_case1A_allPathsSet() {
+        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.tools.");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -504,12 +512,12 @@ public class TestFetchCalls {
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
         l_cc.setMethodName("getRandomEmail");
 
-        Properties l_authentication = new Properties();
-        l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
 
         l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
-        l_myJavaCalls.setEnvironmentVariables(l_authentication);
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
 
         JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
 
@@ -532,8 +540,7 @@ public class TestFetchCalls {
         l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
 
         JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
-        //Object b = l_ccB.call(new IntegroBridgeClassLoader());
-        //System.out.println(b);
+
         assertThat("We should get a good answer back from the call",
                 returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
                 Matchers.startsWith("nana+"));
@@ -542,9 +549,14 @@ public class TestFetchCalls {
                 Matchers.endsWith("@noon.com"));
     }
 
-    // Here we do not set package paths
+    /**
+     * Integrity Tests - Here all calls and env vars are in the package path. In this case call2 doesn't have its own env var
+     * In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 1
+     * The envvars of calls do not interfere with the others
+     */
     @Test
-    public void testStaticFieldIntegrityCore_framework_testingPackagePaths1() {
+    public void testIntegrityEnvVars_case1B_allPathsSet() {
+        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.tools.");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -552,13 +564,12 @@ public class TestFetchCalls {
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
         l_cc.setMethodName("getRandomEmail");
 
-        Properties l_authentication = new Properties();
-
-        l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
 
         l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
-        l_myJavaCalls.setEnvironmentVariables(l_authentication);
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
 
         JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
 
@@ -576,8 +587,178 @@ public class TestFetchCalls {
         l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
 
         JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
-        //Object b = l_ccB.call(new IntegroBridgeClassLoader());
-        //System.out.println(b);
+
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.not(Matchers.startsWith("bada+")));
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.not(Matchers.endsWith("@boom.com")));
+    }
+
+    /**
+     * Integrity Tests - Here the envvars are not in the context, but our calls are. In this casee we use the same method as is used
+     * In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 3
+     * The envvars of calls do not interfere with the others
+     */
+    @Test
+    public void testIntegrityEnvVars_case3_envNotInPathCallInPath() {
+
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc.setMethodName("getRandomEmail");
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+
+        l_myJavaCalls.getCallContent().put("call1", l_cc);
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
+
+        //Remove the integrity paths
+        l_myJavaCalls.getLocalClassLoader().setPackagePaths(new HashSet<>());
+        //set call path to integrity path
+        l_myJavaCalls.getLocalClassLoader().getPackagePaths().add("com.adobe.campaign.tests.integro.tools.");
+
+        JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("call1").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("call1").toString(),
+                Matchers.endsWith("@boom.com"));
+
+        //Call 2 - in this case our second call cannot access the values of the first
+        JavaCalls l_myJavaCallsB = new JavaCalls();
+        CallContent l_ccB = new CallContent();
+        l_ccB.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
+        l_ccB.setMethodName("fetchExecutionProperty");
+        l_ccB.setArgs(new Object[]{"AC.UITEST.MAILING.PREFIX"});
+        l_myJavaCallsB.getCallContent().put("getProperty", l_ccB);
+
+        //Remove the integrity paths
+        l_myJavaCalls.getLocalClassLoader().setPackagePaths(new HashSet<>());
+        //set call path to integrity path
+        l_myJavaCalls.getLocalClassLoader().getPackagePaths().add("com.adobe.campaign.tests.integro.core.");
+
+        JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getProperty").toString(),
+                Matchers.not(Matchers.startsWith("nana+")));
+    }
+
+    /**
+     * Integrity Tests - Here the envvars are not in the context, but our calls are.
+     * In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 3
+     * The envvars of calls do not interfere with the others
+     */
+    @Test
+    public void testIntegrityEnvVars_case3B_allPathsSet() {
+        //ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.tools.");
+
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc.setMethodName("getRandomEmail");
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+
+        l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
+
+        //Remove the integrity paths
+        l_myJavaCalls.getLocalClassLoader().setPackagePaths(new HashSet<>());
+        //set call path to integrity path
+        l_myJavaCalls.getLocalClassLoader().getPackagePaths().add("com.adobe.campaign.tests.integro.tools.");
+
+        JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(),
+                Matchers.endsWith("@boom.com"));
+
+        //Call 2
+        JavaCalls l_myJavaCallsB = new JavaCalls();
+
+        l_myJavaCallsB.getCallContent().put("getProperty", l_cc);
+
+        Properties l_authenticationB = new Properties();
+        l_authenticationB.put("AC.UITEST.MAILING.PREFIX", "nana");
+        l_authenticationB.put("AC.INTEGRO.MAILING.BASE", "noon.com");
+        l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
+
+        //Remove the integrity paths
+        l_myJavaCallsB.getLocalClassLoader().setPackagePaths(new HashSet<>());
+        //set call path to integrity path
+        l_myJavaCallsB.getLocalClassLoader().getPackagePaths().add("com.adobe.campaign.tests.integro.tools.");
+
+
+        JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getProperty").toString(),
+                Matchers.startsWith("nana+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getProperty").toString(),
+                Matchers.endsWith("@noon.com"));
+    }
+
+    /**
+     * Here we do not set package paths
+     * In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is case 4
+     * Both Env vars and classes are not part of the integrity paths therefore the effects of the env vars
+     * is dispatched to all consecutive calls including the class call itself
+     */
+    @Test
+    public void testIntegrityEnvVars_case4_testingPackagePaths1() {
+
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc.setMethodName("getRandomEmail");
+
+        Properties l_authentication = new Properties();
+
+        l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+
+        l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
+        l_myJavaCalls.setEnvironmentVariables(l_authentication);
+
+        //Remove the integrity paths
+        l_myJavaCalls.getLocalClassLoader().setPackagePaths(new HashSet<>());
+
+        JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(), Matchers.endsWith("@boom.com"));
+
+        //Call 2    -- In this case the Environment
+        JavaCalls l_myJavaCallsB = new JavaCalls();
+        CallContent l_ccB = new CallContent();
+        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_ccB.setMethodName("getRandomEmail");
+        l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
+
+        //Remove the integrity paths
+        l_myJavaCalls.getLocalClassLoader().setPackagePaths(new HashSet<>());
+
+        JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
+
         assertThat("We should get a good answer back from the call",
                 returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
                 Matchers.startsWith("bada+"));
@@ -586,127 +767,43 @@ public class TestFetchCalls {
                 Matchers.endsWith("@boom.com"));
     }
 
-    /*
-    @Test
-    public void testStaticFieldIntegrityIntegroV7() {
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
-
-        JavaCalls l_myJavaCalls1 = new JavaCalls();
-
-        CallContent l_cc1A = new CallContent();
-
-        l_cc1A.setClassName(CampaignUtils.class.getTypeName());
-        l_cc1A.setMethodName("setIntegroCache");
-
-        Properties l_authentication = new Properties();
-        l_authentication.put("AC.UITEST.LANGUAGE", "rus");
-        l_cc1A.setArgs(new Object[] { l_authentication });
-        l_myJavaCalls1.getCallContent().put("putProperties", l_cc1A);
-
-        //l_cc1A.call(l_myJavaCalls1.localClassLoader);
-
-        CallContent l_cc1B = new CallContent();
-        l_cc1B.setClassName(CampaignUtils.class.getTypeName());
-        l_cc1B.setMethodName("testParam");
-        l_cc1B.setArgs(new Object[] { "AC.UITEST.LANGUAGE" });
-        l_myJavaCalls1.getCallContent().put("fetchProperties", l_cc1B);
-
-        JavaCallResults returnedValue = l_myJavaCalls1.submitCalls();
-        assertThat("We should get a good answer back from the call",
-                returnedValue.getReturnValues().get("fetchProperties").toString(),
-                Matchers.equalTo("rus"));
-
-        //Call 2
-        JavaCalls l_myJavaCalls2 = new JavaCalls();
-
-        assertThat(l_myJavaCalls2, Matchers.not(Matchers.equalTo(l_myJavaCalls1)));
-        CallContent l_cc2A = new CallContent();
-        l_cc2A.setClassName(CampaignUtils.class.getTypeName());
-        l_cc2A.setMethodName("testParam");
-        l_cc2A.setArgs(new Object[] { "AC.UITEST.LANGUAGE" });
-        l_myJavaCalls2.getCallContent().put("labelValueB", l_cc2A);
-
-        Map l_authenticationB = new HashMap();
-        l_authenticationB.put("AC.UITEST.LANGUAGE", "deu");
-        l_myJavaCalls1.setEnvironmentVariables(l_authenticationB);
-
-        JavaCallResults returnedValueB = l_myJavaCalls2.submitCalls();
-
-        assertThat("We should get a good answer back from the call",
-                returnedValueB.getReturnValues().get("labelValueB").toString(),
-                Matchers.not(Matchers.equalTo("rus")));
-
-        assertThat("We should get a good answer back from the call",
-                returnedValueB.getReturnValues().get("labelValueB").toString(),
-                Matchers.not(Matchers.equalTo("rus")));
-    }
-
-    @Test
-    public void testStaticFieldIntegrityV7_framework() {
-
-        JavaCalls l_myJavaCalls1 = new JavaCalls();
-
-        CallContent l_cc1A = new CallContent();
-        l_cc1A.setClassName(CampaignUtils.class.getTypeName());
-        l_cc1A.setMethodName("testParam");
-        l_cc1A.setArgs(new Object[] { "AC.UITEST.MAILING.PREFIX" });
-        l_myJavaCalls1.getCallContent().put("fetchProperties", l_cc1A);
-
-        CallContent l_cc1B = new CallContent();
-        l_cc1B.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc1B.setMethodName("getRandomEmail");
-        l_myJavaCalls1.getCallContent().put("getRandomEmail", l_cc1B);
-
-        Map l_envVars1 = new HashMap();
-        l_envVars1.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars1.put("AC.INTEGRO.MAILING.BASE", "boom.com");
-        l_myJavaCalls1.setEnvironmentVariables(l_envVars1);
-
-        JavaCallResults returnedValue = l_myJavaCalls1.submitCalls();
-
-        assertThat("We should get a good answer back from the call",
-                returnedValue.getReturnValues().get("fetchProperties").toString(),
-                Matchers.equalTo("bada"));
-
-        assertThat("We should get a good answer back from the call",
-                returnedValue.getReturnValues().get("getRandomEmail").toString(),
-                Matchers.startsWith("bada"));
-
-        //Call 2
-        JavaCalls l_myJavaCalls2 = new JavaCalls();
-        CallContent l_cc2A = new CallContent();
-        l_cc2A.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc2A.setMethodName("getRandomEmail");
-        l_myJavaCalls2.getCallContent().put("getRandomEmailB", l_cc2A);
-
-        CallContent l_cc2B = new CallContent();
-        l_cc2B.setClassName(CampaignUtils.class.getTypeName());
-        l_cc2B.setMethodName("testParam");
-        l_cc2B.setArgs(new Object[] { "AC.UITEST.MAILING.PREFIX" });
-        l_myJavaCalls2.getCallContent().put("fetchProperties", l_cc2B);
-
-        Map l_envVarsB = new HashMap();
-        l_envVarsB.put("AC.UITEST.MAILING.PREFIX", "nana");
-        l_envVarsB.put("AC.INTEGRO.MAILING.BASE", "noon.com");
-        l_myJavaCalls2.setEnvironmentVariables(l_envVarsB);
-
-        JavaCallResults returnedValue2 = l_myJavaCalls2.submitCalls();
-        //Object b = l_ccB.call(new IntegroBridgeClassLoader());
-        //System.out.println(b);
-        assertThat("We should get a good answer back from the call",
-                returnedValue2.getReturnValues().get("getRandomEmailB").toString(),
-                Matchers.startsWith("nana+"));
-        assertThat("We should get a good answer back from the call",
-                returnedValue2.getReturnValues().get("getRandomEmailB").toString(),
-                Matchers.endsWith("@noon.com"));
-
-        assertThat("We should get a good answer back from the call",
-                returnedValue2.getReturnValues().get("fetchProperties").toString(),
-                Matchers.equalTo("nana"));
-
-    }
-
+    /**
+     * In this case the packages of the SystemValueHandler are added at the constructor time of Java calls. However, we
+     * do not include the package path of the java call itself
+     * In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is case 2
      */
+    @Test
+    public void testIntegrityEnvVars_case2_withEnvVarPathsIncludedButNotCallPath() {
+
+        //Call 1
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc.setMethodName("getRandomEmail");
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
+        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
+
+        l_myJavaCalls.getCallContent().put("call1PL", l_cc);
+        assertThat("We should have the envvars integrity path set",
+                l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
+                        .anyMatch(x -> ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+
+        JavaCallResults returnedValueA = l_myJavaCalls.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValueA.getReturnValues().get("call1PL").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValueA.getReturnValues().get("call1PL").toString(),
+                Matchers.endsWith("@boom.com"));
+
+    }
+
 
     @Test
     public void testSeparationOfStaticFields_json() throws IOException {
@@ -1056,42 +1153,51 @@ public class TestFetchCalls {
         ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate("stucutto");
         ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUpNonExisting");
 
-        JavaCalls jc = new JavaCalls();
+        Assert.assertThrows(IBSConfigurationException.class, () -> new JavaCalls());
 
-        Properties l_envVars = new Properties();
-        l_envVars.put("AC.UITEST.SMS.PORT", "234");
-
-        jc.setEnvironmentVariables(l_envVars);
-
-        Assert.assertThrows(IBSConfigurationException.class, () -> jc.submitCalls());
     }
 
     //Related to issue 44
+    //Class is not loaded if it is not in the
+    // If we use the same class loader we will be able to fetch the results
     @Test
-    public void testSEnvironmentVariablesBadConfigValues() {
+    public void testSEnvironmentVariablesBadConfigValues()
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
         ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
         ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUp");
 
         JavaCalls jc = new JavaCalls();
 
-        Properties x = new Properties();
+        Properties props = new Properties();
         String myKey = "ABC";
-        x.setProperty(myKey, "456");
+        props.setProperty(myKey, "456");
 
-        jc.setEnvironmentVariables(x);
+        jc.setEnvironmentVariables(props);
+
+        assertThat("We should have the envvars integrity path set",
+                jc.getLocalClassLoader().getPackagePaths().stream()
+                        .anyMatch(x -> ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
 
         jc.submitCalls();
 
         assertThat("System value handler should have the value",
-                MyPropertiesHandler.myProps.containsKey(myKey));
+                !MyPropertiesHandler.myProps.containsKey(myKey));
 
-        Assert.assertNotNull(MyPropertiesHandler.myProps.getProperty(myKey),"MyProperties should have been stored");
+        //Use same class loader as before
+        JavaCalls jc2 = new JavaCalls();
+        jc2.setLocalClassLoader(jc.getLocalClassLoader());
 
-        Assert.assertTrue(MyPropertiesHandler.myProps.getProperty(myKey) instanceof String);
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(MyPropertiesHandler.class.getTypeName());
+        l_cc2.setMethodName("getMyProp");
+        l_cc2.setArgs(new Object[]{myKey});
 
-        Assert.assertEquals(MyPropertiesHandler.myProps.getProperty(myKey),
-                "456","My properties should have the value stored");
+        jc2.getCallContent().put("call2", l_cc2);
+        JavaCallResults jcr = jc2.submitCalls();
+
+        assertThat("We should have a result", jcr.getReturnValues().get("call2"), Matchers.notNullValue());
+        assertThat("We should have a result", jcr.getReturnValues().get("call2").toString(), Matchers.equalTo("456"));
 
     }
 

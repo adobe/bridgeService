@@ -10,6 +10,7 @@ import spark.Spark;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 
@@ -155,10 +156,11 @@ public class E2ETests {
     }
 
     @Test(groups = "E2E")
-    public void testIntegrity_pathsNotSet() {
+    public void testIntegrity_case2_pathsNotSet() {
 
         //Call 1
         JavaCalls l_myJavaCalls = new JavaCalls();
+        //l_myJavaCalls.getLocalClassLoader().setPackagePaths(new HashSet<>());
 
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
@@ -186,31 +188,6 @@ public class E2ETests {
                 body("returnValues.call2PL", Matchers.endsWith("@boom.com"))
                 .body("returnValues.call2PL", Matchers.startsWith("bada"));
 
-    }
-
-    @Test(groups = "E2E")
-    public void testIntegrity_withPackagePathsCoveringPartOfTheCalls() {
-
-        //Call 1
-        JavaCalls l_myJavaCalls = new JavaCalls();
-
-        CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
-
-        Properties l_authentication = new Properties();
-        l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
-
-        l_myJavaCalls.setEnvironmentVariables(l_authentication);
-
-        l_myJavaCalls.getCallContent().put("call1PL", l_cc);
-
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.core");
-
-        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
-                body("returnValues.call1PL", Matchers.endsWith("@boom.com"))
-                .body("returnValues.call1PL", Matchers.startsWith("bada"));
     }
 
 

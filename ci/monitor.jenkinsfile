@@ -4,7 +4,7 @@ pipeline {
         maven 'Maven3'
     }
     triggers {
-      cron '*/30 * * * *'
+      cron '5 */2 * * *'
     }
     environment {
         IBS_DEPLOYMENT_URL = 'https://acc-simulators-ibs.rd.campaign.adobe.com/'

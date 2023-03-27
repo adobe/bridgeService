@@ -17,7 +17,7 @@ pipeline {
                         usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_API_TOKEN']]) {
                             
                                 sh """
-                                mvn clean test -Dgroups=monitoring -DIBS.DEPLOYMENT.URL=https://acc-simulators-ibs.rd.campaign.adobe.com/test -Dsurefire.suiteXmlFiles=src/test/resources/testngIntegration.xml \
+                                mvn clean test -Dgroups=monitoring -DIBS.DEPLOYMENT.URL=https://acc-simulators-ibs.rd.campaign.adobe.com/ -Dsurefire.suiteXmlFiles=src/test/resources/testngIntegration.xml \
                             """
                     }
 

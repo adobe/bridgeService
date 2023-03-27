@@ -154,7 +154,7 @@ public class IntegrationTests {
 
     @Test(groups = "monitoring")
     public void testMainHelloWorld() {
-        System.out.println("ddddddd "+EndPointURL + "test");
+        System.out.println("calling :  "+EndPointURL + "test");
         given().when().get(EndPointURL + "test").then().assertThat().body(Matchers.startsWith("All systems up  -")).body(Matchers.containsString("Bridge Service Version"));
     }
 }

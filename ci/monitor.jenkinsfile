@@ -41,7 +41,7 @@ pipeline {
                       subject: "IBS ITCORP DOWN",
                       body: """<p>FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
                         <p>Check console output at &QUOT;<a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a>&QUOT;</p>
-                        <p>Unable to connect to &QUOT;<a href='${IBS.DEPLOYMENT.URL}/test'>IBS for ITCloud</a>&QUOT; </p>""",
+                        <p>Unable to connect to &QUOT;<a href='${IBS_DEPLOYMENT_URL}/test'>IBS for ITCloud</a>&QUOT; </p>""",
                       to: 'gandomi'
                     )
                 }

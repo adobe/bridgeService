@@ -37,7 +37,7 @@ public enum ConfigValueHandler {
             "This parameter is used for flagging the packages that are to to be used by the IBS class loader. When used, the static variables are not stored between java calls."),
     PRODUCT_VERSION("IBS.PRODUCT.VERSION","not found", false, "The version of the BridgeService, which is used to identify the version that is accessed."),
     PRODUCT_USER_VERSION("IBS.PRODUCT.USER.VERSION","not set", false, "The version of the BridgeService, which is used to identify the version that is accessed."),
-    PRODUCT_DEPLOYMENT_URL("IBS.DEPLOYMENT.URL","https://simulators.rd.campaign.adobe.com/", false, "The URL of the deployment of IBS.");
+    PRODUCT_DEPLOYMENT_URL("IBS.DEPLOYMENT.URL","https://acc-simulators-ibs.rd.campaign.adobe.com/", false, "The URL of the deployment of IBS.");
 
     public final String defaultValue;
     public final String systemName;

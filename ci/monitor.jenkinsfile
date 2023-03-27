@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        maven 'MAVEN-Jenkins'
+        maven 'Maven3'
     }
     triggers {
       cron '*/30 * * * *'

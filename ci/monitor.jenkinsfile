@@ -6,6 +6,9 @@ pipeline {
     triggers {
       cron '*/30 * * * *'
     }
+    environment {
+        IBS.DEPLOYMENT.URL = 'https://acc-simulators-ibs.rd.campaign.adobe.com/'
+    }
     stages {
 
         stage('Run Tests') {
@@ -17,14 +20,10 @@ pipeline {
                         usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_API_TOKEN']]) {
                             
                                 sh """
-                                mvn clean test -Dgroups=monitoring -DIBS.DEPLOYMENT.URL=https://acc-simulators-ibs.rd.campaign.adobe.com/ -Dsurefire.suiteXmlFiles=src/test/resources/testngIntegration.xml \
+                                mvn clean test -Dgroups=monitoring -DIBS.DEPLOYMENT.URL=${IBS.DEPLOYMENT.URL} -Dsurefire.suiteXmlFiles=src/test/resources/testngIntegration.xml \
                             """
 
                     }
-
-
-
-
 
             }
         }
@@ -33,6 +32,19 @@ pipeline {
             always {
                archiveArtifacts allowEmptyArchive: true, artifacts: "**"
             }
+
+            failure {
+                  //slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+
+
+                  emailext (
+                      subject: "IBS ITCORP DOWN",
+                      body: """<p>FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
+                        <p>Check console output at &QUOT;<a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a>&QUOT;</p>
+                        <p>Unable to connect to &QUOT;<a href='${IBS.DEPLOYMENT.URL}/test'>IBS for ITCloud</a>&QUOT; </p>""",
+                      to: 'gandomi'
+                    )
+                }
 
             cleanup {
                cleanWs()

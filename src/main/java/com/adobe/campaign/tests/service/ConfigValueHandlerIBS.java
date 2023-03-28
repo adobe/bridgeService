@@ -13,7 +13,7 @@ package com.adobe.campaign.tests.service;
 
 import java.util.Arrays;
 
-public enum ConfigValueHandler {
+public enum ConfigValueHandlerIBS {
     DEPLOYMENT_MODEL("IBS.DEPLOYMENT.MODEL", " - in test", false, "This property is used for flagging the deplyment model."),
     SSL_ACTIVE("IBS.SSL.ACTIVE", "false", false, "This property is used to flag if the system is in SSL mode."),
     SSL_KEYSTORE_PATH("IBS.SSL.KEYSTORE_PATH", null, false,
@@ -36,14 +36,16 @@ public enum ConfigValueHandler {
     STATIC_INTEGRITY_PACKAGES("IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES", "", false,
             "This parameter is used for flagging the packages that are to to be used by the IBS class loader. When used, the static variables are not stored between java calls."),
     PRODUCT_VERSION("IBS.PRODUCT.VERSION","not found", false, "The version of the BridgeService, which is used to identify the version that is accessed."),
-    PRODUCT_USER_VERSION("IBS.PRODUCT.USER.VERSION","not set", false, "The version of the BridgeService, which is used to identify the version that is accessed.");;
+    PRODUCT_USER_VERSION("IBS.PRODUCT.USER.VERSION","not set", false, "The version of the BridgeService, which is used to identify the version that is accessed."),
+    AUTOMATIC_INTEGRITY_PACKAGE_INJECTION(
+            "IBS.CLASSLOADER.AUTOMATIC.INTEGRITY.INJECTION", "true", false, "When true, we include the called class package in the path. This allows for maintaining static variables in the call.");;
 
     public final String defaultValue;
     public final String systemName;
     public final boolean requiredValue;
     public final String description;
 
-    ConfigValueHandler(String in_propertyName, String in_defaultValue, boolean in_requiredValue, String in_description) {
+    ConfigValueHandlerIBS(String in_propertyName, String in_defaultValue, boolean in_requiredValue, String in_description) {
         systemName = in_propertyName;
         defaultValue = in_defaultValue;
         requiredValue = in_requiredValue;
@@ -54,7 +56,7 @@ public enum ConfigValueHandler {
      * Resets all of the values
      */
     public static void resetAllValues() {
-        Arrays.stream(values()).forEach(ConfigValueHandler::reset);
+        Arrays.stream(values()).forEach(ConfigValueHandlerIBS::reset);
     }
 
     /**

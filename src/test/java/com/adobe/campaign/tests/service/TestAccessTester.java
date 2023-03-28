@@ -139,13 +139,13 @@ public class TestAccessTester {
         assertThat("We should get the correct path", ServiceTools.getPort("a.b.c:123/d/e/f"), Matchers.equalTo(123));
 
         assertThat("We should get the correct path", ServiceTools.getPort("a.b.c"),
-                Matchers.equalTo(Integer.parseInt(ConfigValueHandler.DEFAULT_SERVICE_PORT.fetchValue())));
+                Matchers.equalTo(Integer.parseInt(ConfigValueHandlerIBS.DEFAULT_SERVICE_PORT.fetchValue())));
 
         assertThat("We should get the correct path", ServiceTools.getPort("http://a.b.c:123/d/e/f"),
                 Matchers.equalTo(123));
 
         assertThat("We should get the correct path", ServiceTools.getPort("a.b.c/d/c/e"),
-                Matchers.equalTo(Integer.parseInt(ConfigValueHandler.DEFAULT_SERVICE_PORT.fetchValue())));
+                Matchers.equalTo(Integer.parseInt(ConfigValueHandlerIBS.DEFAULT_SERVICE_PORT.fetchValue())));
 
         assertThat("We should get the correct path", ServiceTools.getPort(""), Matchers.nullValue());
 

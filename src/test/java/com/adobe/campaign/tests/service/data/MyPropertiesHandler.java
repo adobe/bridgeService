@@ -13,6 +13,10 @@ public class MyPropertiesHandler {
         return myProps;
     }
 
+    public String getMyProp(String s) {
+        return myProps.getProperty(s);
+    }
+
     public static void resetAll() {
         myProps=new Properties();
     }

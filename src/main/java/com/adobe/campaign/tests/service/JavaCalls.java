@@ -2,7 +2,7 @@ package com.adobe.campaign.tests.service;
 
 import com.adobe.campaign.tests.service.exceptions.IBSConfigurationException;
 import com.adobe.campaign.tests.service.exceptions.IBSRunTimeException;
-import com.adobe.campaign.tests.service.exceptions.NonExistantJavaObjectException;
+import com.adobe.campaign.tests.service.exceptions.NonExistentJavaObjectException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -68,8 +68,8 @@ public class JavaCalls {
 
     private void updateEnvironmentVariables() {
         CallContent l_setEnvironmentVars = new CallContent();
-        l_setEnvironmentVars.setClassName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
-        l_setEnvironmentVars.setMethodName(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue());
+        l_setEnvironmentVars.setClassName(ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
+        l_setEnvironmentVars.setMethodName(ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue());
 
         List<Object> badVariables = getEnvironmentVariables().keySet().stream().filter(k -> getEnvironmentVariables().getProperty((String) k)==null).collect(
                 Collectors.toList());
@@ -82,8 +82,8 @@ public class JavaCalls {
         l_setEnvironmentVars.setArgs(new Object[] { environmentVariables });
         try {
             l_setEnvironmentVars.call(this.getLocalClassLoader());
-        } catch (NonExistantJavaObjectException nejoe) {
-            throw new IBSConfigurationException("The given environment value handler "+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+ "."+ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue()+ " could not be found.", nejoe);
+        } catch (NonExistentJavaObjectException nejoe) {
+            throw new IBSConfigurationException("The given environment value handler "+ ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+ "."+ ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.fetchValue()+ " could not be found.", nejoe);
         }
     }
 

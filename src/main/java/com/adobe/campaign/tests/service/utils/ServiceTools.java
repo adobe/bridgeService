@@ -1,6 +1,6 @@
 package com.adobe.campaign.tests.service.utils;
 
-import com.adobe.campaign.tests.service.ConfigValueHandler;
+import com.adobe.campaign.tests.service.ConfigValueHandlerIBS;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -54,7 +54,7 @@ public class ServiceTools {
             return null;
         }
         String l_pathWithoutProtocol = stripProtocol(in_url);
-        String l_pathWithoutDNS = l_pathWithoutProtocol.indexOf(':')>=0 ? l_pathWithoutProtocol.substring(l_pathWithoutProtocol.indexOf(':')+1) : ConfigValueHandler.DEFAULT_SERVICE_PORT.fetchValue();
+        String l_pathWithoutDNS = l_pathWithoutProtocol.indexOf(':')>=0 ? l_pathWithoutProtocol.substring(l_pathWithoutProtocol.indexOf(':')+1) : ConfigValueHandlerIBS.DEFAULT_SERVICE_PORT.fetchValue();
         return Integer.parseInt(l_pathWithoutDNS.indexOf('/')>=0?l_pathWithoutDNS.substring(0, l_pathWithoutDNS.indexOf('/')) : l_pathWithoutDNS);
     }
 

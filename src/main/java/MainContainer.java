@@ -1,10 +1,7 @@
-import com.adobe.campaign.tests.service.ConfigValueHandler;
+import com.adobe.campaign.tests.service.ConfigValueHandlerIBS;
 import com.adobe.campaign.tests.service.IntegroAPI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.io.IOException;
-import java.util.Properties;
 
 public class MainContainer {
     private static final Logger log = LogManager.getLogger();
@@ -17,7 +14,7 @@ public class MainContainer {
             log.info("In Prod Mode - SSL");
             System.setProperty("https.protocols", "TLSv1.2");
 
-            ConfigValueHandler.DEPLOYMENT_MODEL.activate(" - in production");
+            ConfigValueHandlerIBS.DEPLOYMENT_MODEL.activate(" - in production");
             IntegroAPI.startServices(PROD_PORT);
         } else if (args[0].equalsIgnoreCase("test")) {
             log.info("In Test Mode");

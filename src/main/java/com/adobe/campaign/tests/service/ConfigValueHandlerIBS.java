@@ -13,7 +13,7 @@ package com.adobe.campaign.tests.service;
 
 import java.util.Arrays;
 
-public enum ConfigValueHandler {
+public enum ConfigValueHandlerIBS {
     DEPLOYMENT_MODEL("IBS.DEPLOYMENT.MODEL", " - in test", false, "This property is used for flagging the deplyment model."),
     SSL_ACTIVE("IBS.SSL.ACTIVE", "false", false, "This property is used to flag if the system is in SSL mode."),
     SSL_KEYSTORE_PATH("IBS.SSL.KEYSTORE_PATH", null, false,
@@ -45,7 +45,7 @@ public enum ConfigValueHandler {
     public final boolean requiredValue;
     public final String description;
 
-    ConfigValueHandler(String in_propertyName, String in_defaultValue, boolean in_requiredValue, String in_description) {
+    ConfigValueHandlerIBS(String in_propertyName, String in_defaultValue, boolean in_requiredValue, String in_description) {
         systemName = in_propertyName;
         defaultValue = in_defaultValue;
         requiredValue = in_requiredValue;
@@ -56,7 +56,7 @@ public enum ConfigValueHandler {
      * Resets all of the values
      */
     public static void resetAllValues() {
-        Arrays.stream(values()).forEach(ConfigValueHandler::reset);
+        Arrays.stream(values()).forEach(ConfigValueHandlerIBS::reset);
     }
 
     /**

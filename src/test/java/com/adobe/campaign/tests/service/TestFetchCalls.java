@@ -31,7 +31,7 @@ public class TestFetchCalls {
     @BeforeMethod
     @AfterClass
     public void reset() {
-        ConfigValueHandler.resetAllValues();
+        ConfigValueHandlerIBS.resetAllValues();
         MyPropertiesHandler.resetAll();
         SystemValueHandler.setIntegroCache(new Properties());
     }
@@ -454,8 +454,9 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case1_allPathsSet_rawMode() {
-        ConfigValueHandler.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+",com.adobe.campaign.tests.integro.tools.");
+        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
+                ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+",com.adobe.campaign.tests.integro.tools.");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -602,7 +603,7 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case3B_allPathsSet_injectionMode() {
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.tools.");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.tools.");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -664,8 +665,8 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case3B_allPathsSet_rawMode() {
-        ConfigValueHandler.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.tools.");
+        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.tools.");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -767,7 +768,7 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case4_noPackagesInIntegrityPath_rawMode() {
-        ConfigValueHandler.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -839,7 +840,7 @@ public class TestFetchCalls {
 
         assertThat("We should not have the env vars integrity path set",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
-                        .noneMatch(x -> ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+                        .noneMatch(x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
 
         assertThat("Our class package should not yet be in the integrity path",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
@@ -853,7 +854,7 @@ public class TestFetchCalls {
 
         assertThat("We should not have the envvars integrity path set",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
-                        .anyMatch(x -> ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+                        .anyMatch(x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
 
         assertThat("We should get a good answer back from the call",
                 returnedValueA.getReturnValues().get("call1PL").toString(),
@@ -873,8 +874,8 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case2_withEnvVarPathsIncludedButNotCallPath_rawMode() {
-        ConfigValueHandler.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
+        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
 
 
         //Call 1
@@ -890,7 +891,7 @@ public class TestFetchCalls {
 
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
 
-        l_myJavaCalls.getLocalClassLoader().getPackagePaths().add(ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
+        l_myJavaCalls.getLocalClassLoader().getPackagePaths().add(ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
 
         l_myJavaCalls.getCallContent().put("call1PL", l_cc);
         assertThat("We should not have had the envvars integrity path set",
@@ -977,7 +978,7 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantMethodException_internalMethod() {
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
         l_cc.setMethodName("fetchEmailNonExistant");
@@ -990,7 +991,7 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantMethodException_internalClass() {
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientToolsNonExistant");
         l_cc.setMethodName("fetchEmailNonExistant");
@@ -1242,8 +1243,8 @@ public class TestFetchCalls {
     @Test
     public void testEnvironmentVariablesBadConfigValuesForTargetA() {
 
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUpNonExisting");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUpNonExisting");
 
         JavaCalls jc = new JavaCalls();
 
@@ -1258,8 +1259,8 @@ public class TestFetchCalls {
     @Test
     public void testEnvironmentVariablesBadConfigValuesForTargetB() {
 
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate("ClassThatDoesntExist");
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUpNonExisting");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate("ClassThatDoesntExist");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUpNonExisting");
 
         JavaCalls jc = new JavaCalls();
 
@@ -1279,8 +1280,8 @@ public class TestFetchCalls {
     public void testSEnvironmentVariablesBadConfigValues()
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUp");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUp");
 
         JavaCalls jc = new JavaCalls();
 
@@ -1292,13 +1293,13 @@ public class TestFetchCalls {
 
         assertThat("We should not have the envvars integrity path set before execute",
                 jc.getLocalClassLoader().getPackagePaths().stream()
-                        .noneMatch(x -> ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+                        .noneMatch(x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
 
         jc.submitCalls();
 
         assertThat("We should not have the envvars integrity path set before execute",
                 jc.getLocalClassLoader().getPackagePaths().stream()
-                        .anyMatch(x -> ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+                        .anyMatch(x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
 
         assertThat("System value handler should have the value",
                 !MyPropertiesHandler.myProps.containsKey(myKey));
@@ -1323,8 +1324,8 @@ public class TestFetchCalls {
     @Test
     public void testSEnvironmentVariablesBadConfigValuesNegative() {
 
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUp");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUp");
 
         JavaCalls jc = new JavaCalls();
 

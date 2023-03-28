@@ -13,14 +13,14 @@ public class IBSClassLoaderTests {
     @BeforeMethod
     @AfterClass
     public void reset() {
-        ConfigValueHandler.resetAllValues();
+        ConfigValueHandlerIBS.resetAllValues();
     }
 
 
     @Test
     public void testExtractPackages() {
 
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("a,b,c");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("a,b,c");
 
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
         assertThat("We should have correctly extracted the package paths from STORE_CLASSES_FROM_PACKAGES", ibscl.getPackagePaths(),
@@ -57,8 +57,8 @@ public class IBSClassLoaderTests {
     @Test
     public void testIncludeEnvironmentVarClassPath() {
 
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("a,b,c");
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("a,b,c");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
 
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
         assertThat("We should have correctly extracted the package paths from STORE_CLASSES_FROM_PACKAGES", ibscl.getPackagePaths(),

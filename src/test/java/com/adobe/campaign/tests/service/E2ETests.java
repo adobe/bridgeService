@@ -2,7 +2,6 @@ package com.adobe.campaign.tests.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.hamcrest.Matchers;
-import org.testng.Assert;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
@@ -32,17 +31,17 @@ public class E2ETests {
 
     @BeforeMethod
     public void cleanCache() {
-        ConfigValueHandler.resetAllValues();
+        ConfigValueHandlerIBS.resetAllValues();
     }
 
     @Test(groups = "E2E")
     public void testMainHelloWorld() {
-        ConfigValueHandler.PRODUCT_VERSION.activate("101");
+        ConfigValueHandlerIBS.PRODUCT_VERSION.activate("101");
 
         given().when().get(EndPointURL + "test").then().assertThat().body(Matchers.startsWith("All systems up"))
                 .body(Matchers.endsWith("101"));
 
-        ConfigValueHandler.PRODUCT_USER_VERSION.activate("F");
+        ConfigValueHandlerIBS.PRODUCT_USER_VERSION.activate("F");
 
         given().when().get(EndPointURL + "test").then().assertThat().body(Matchers.startsWith("All systems up"))
                 .body(Matchers.endsWith("Product user version : F")).body(Matchers.containsString("101"));
@@ -142,7 +141,7 @@ public class E2ETests {
      */
     @Test(groups = "E2E")
     public void testMainEror_Case3IBSConfigurationException1() {
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
@@ -203,7 +202,7 @@ public class E2ETests {
      */
     @Test(groups = "E2E")
     public void testMainEror_passiingNull() throws JsonProcessingException {
-        ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
 
         String l_jsonString =
                 "{\n"
@@ -230,7 +229,7 @@ public class E2ETests {
     @Test(groups = "E2E")
     public void testIntegrity_pathsSet() {
 
-        ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.");
 
         //Call 1
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -337,7 +336,7 @@ public class E2ETests {
 
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {
-        ConfigValueHandler.resetAllValues();
+        ConfigValueHandlerIBS.resetAllValues();
         Spark.stop();
         serverSocket1.close();
     }

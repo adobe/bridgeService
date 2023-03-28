@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 
-import com.adobe.campaign.tests.service.ConfigValueHandler;
 import static spark.Spark.*;
 
 public class IntegroAPI {
@@ -22,11 +21,11 @@ public class IntegroAPI {
     public static void
     startServices(int port) {
 
-        if (Boolean.parseBoolean(ConfigValueHandler.SSL_ACTIVE.fetchValue())) {
-            File l_file = new File(ConfigValueHandler.SSL_KEYSTORE_PATH.fetchValue());
+        if (Boolean.parseBoolean(ConfigValueHandlerIBS.SSL_ACTIVE.fetchValue())) {
+            File l_file = new File(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue());
             log.info("Keystore file was found? {}", l_file.exists());
-            secure(ConfigValueHandler.SSL_KEYSTORE_PATH.fetchValue(), ConfigValueHandler.SSL_KEYSTORE_PASSWORD.fetchValue(),
-                    ConfigValueHandler.SSL_TRUSTSTORE_PATH.fetchValue(), ConfigValueHandler.SSL_TRUSTSTORE_PASSWORD.fetchValue());
+            secure(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue(), ConfigValueHandlerIBS.SSL_KEYSTORE_PASSWORD.fetchValue(),
+                    ConfigValueHandlerIBS.SSL_TRUSTSTORE_PATH.fetchValue(), ConfigValueHandlerIBS.SSL_TRUSTSTORE_PASSWORD.fetchValue());
         }
         else {
             port(port);
@@ -35,14 +34,14 @@ public class IntegroAPI {
         get("/test", (req, res) -> {
             res.type("text/plain");
 
-            StringBuilder sb = new StringBuilder("All systems up "+ ConfigValueHandler.DEPLOYMENT_MODEL.fetchValue());
+            StringBuilder sb = new StringBuilder("All systems up "+ ConfigValueHandlerIBS.DEPLOYMENT_MODEL.fetchValue());
             sb.append("\n");
             sb.append("Bridge Service Version : ");
-            sb.append(ConfigValueHandler.PRODUCT_VERSION.fetchValue());
-            if (ConfigValueHandler.PRODUCT_USER_VERSION.isSet()) {
+            sb.append(ConfigValueHandlerIBS.PRODUCT_VERSION.fetchValue());
+            if (ConfigValueHandlerIBS.PRODUCT_USER_VERSION.isSet()) {
                 sb.append("\n");
                 sb.append("Product user version : ");
-                sb.append(ConfigValueHandler.PRODUCT_USER_VERSION.fetchValue());
+                sb.append(ConfigValueHandlerIBS.PRODUCT_USER_VERSION.fetchValue());
             }
             return sb.toString();
         });
@@ -88,7 +87,7 @@ public class IntegroAPI {
             res.status(400);
             res.body(response.toString());
         });
-        
+
         /* Not currently possible
         exception( IBSRunTimeException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();

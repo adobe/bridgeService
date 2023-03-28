@@ -22,7 +22,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      */
     public IntegroBridgeClassLoader() {
         super(IntegroBridgeClassLoader.class.getClassLoader());
-        setPackagePaths(ConfigValueHandler.STATIC_INTEGRITY_PACKAGES.fetchValue());
+        setPackagePaths(ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.fetchValue());
         this.setCallResultCache(new HashMap<>());
     }
 

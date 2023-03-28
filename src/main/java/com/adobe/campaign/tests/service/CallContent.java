@@ -104,7 +104,7 @@ public class CallContent {
         Object lr_object = null;
         try {
             //Add our package to the classLoader integrity paths
-            if (ConfigValueHandler.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.is("true")) {
+            if (ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.is("true")) {
 
                 iClassLoader.getPackagePaths()
                         .add(this.getClassName().contains(".") ? this.getClassName()

@@ -38,7 +38,8 @@ public enum ConfigValueHandlerIBS {
     PRODUCT_VERSION("IBS.PRODUCT.VERSION","not found", false, "The version of the BridgeService, which is used to identify the version that is accessed."),
     PRODUCT_USER_VERSION("IBS.PRODUCT.USER.VERSION","not set", false, "The version of the BridgeService, which is used to identify the version that is accessed."),
     AUTOMATIC_INTEGRITY_PACKAGE_INJECTION(
-            "IBS.CLASSLOADER.AUTOMATIC.INTEGRITY.INJECTION", "true", false, "When true, we include the called class package in the path. This allows for maintaining static variables in the call.");;
+            "IBS.CLASSLOADER.AUTOMATIC.INTEGRITY.INJECTION", "true", false, "When true, we include the called class package in the path. This allows for maintaining static variables in the call."),
+    PRODUCT_DEPLOYMENT_URL("IBS.DEPLOYMENT.URL","https://acc-simulators-ibs.rd.campaign.adobe.com/", false, "The URL of the deployment of IBS.");
 
     public final String defaultValue;
     public final String systemName;

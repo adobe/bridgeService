@@ -249,6 +249,13 @@ Provided error message :
 java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number.
 ```
 
+## Code Management
+The project is under continuous integration using Jenkins. Each PR is tested and checked for coverage with the following job [integroBridgeService](https://campaign-test-dev-sj.ci.corp.adobe.com/job/integroBridgeService/).
+
+General Rules are:
+* Line Coverage 87%
+* Branch Coverage 85%
+* No significant decrease in coverage should be detected.
 
 ## Known Issues and Limitations
 As this is a new project there are a few limitations to our solution:

@@ -2,18 +2,25 @@ package com.adobe.campaign.tests.integration;
 
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.adobe.campaign.tests.service.CallContent;
+import com.adobe.campaign.tests.service.ConfigValueHandlerIBS;
 import com.adobe.campaign.tests.service.JavaCallResults;
 import com.adobe.campaign.tests.service.JavaCalls;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class IntegrationTests {
-    public static final String EndPointURL = "https://acc-simulators.rd.campaign.adobe.com/";
+    static String EndPointURL;
+
+    @BeforeClass(alwaysRun = true)
+    public static void prepareEnvironment() {
+         EndPointURL = ConfigValueHandlerIBS.PRODUCT_DEPLOYMENT_URL.fetchValue();
+    }
 
 
 
@@ -145,4 +152,9 @@ public class IntegrationTests {
 
     }
 
+    @Test(groups = "monitoring")
+    public void testMainHelloWorld() {
+        System.out.println("calling :  "+EndPointURL + "test");
+        given().when().get(EndPointURL + "test").then().assertThat().body(Matchers.startsWith("All systems up  -")).body(Matchers.containsString("Bridge Service Version"));
+    }
 }

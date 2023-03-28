@@ -2,7 +2,7 @@ package com.adobe.campaign.tests.integration;
 
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.adobe.campaign.tests.service.CallContent;
-import com.adobe.campaign.tests.service.ConfigValueHandler;
+import com.adobe.campaign.tests.service.ConfigValueHandlerIBS;
 import com.adobe.campaign.tests.service.JavaCallResults;
 import com.adobe.campaign.tests.service.JavaCalls;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,7 +19,7 @@ public class IntegrationTests {
 
     @BeforeClass(alwaysRun = true)
     public static void prepareEnvironment() {
-         EndPointURL = ConfigValueHandler.PRODUCT_DEPLOYMENT_URL.fetchValue();
+         EndPointURL = ConfigValueHandlerIBS.PRODUCT_DEPLOYMENT_URL.fetchValue();
     }
 
 

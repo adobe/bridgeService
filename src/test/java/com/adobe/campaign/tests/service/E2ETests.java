@@ -168,6 +168,40 @@ public class E2ETests {
      * Testing that we provide the correct error messages whenever the target method throws an error
      */
     @Test(groups = "E2E")
+    public void testMainEror_Case4A_NonExistantJavaException() {
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.integro.tools.NonExistingRandomManager");
+        myContent.setMethodName("getRandomNumber");
+        myContent.setReturnType("java.lang.String");
+        l_call.getCallContent().put("call1PL", myContent);
+
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+                Matchers.containsString(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND));
+    }
+
+    /**
+     * Testing that we provide the correct error messages whenever the target method throws an error
+     */
+    @Test(groups = "E2E")
+    public void testMainEror_Case4B_NonExistantJavaException() {
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        myContent.setMethodName("getRandomNumberNonExisting");
+        myContent.setReturnType("java.lang.String");
+        l_call.getCallContent().put("call1PL", myContent);
+
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+                Matchers.containsString(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND));
+    }
+
+    /**
+     * Testing that we provide the correct error messages whenever the target method throws an error
+     */
+    @Test(groups = "E2E")
     public void testMainEror_passiingNull() throws JsonProcessingException {
         ConfigValueHandler.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
 

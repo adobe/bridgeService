@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 
+import com.adobe.campaign.tests.service.ConfigValueHandler;
 import static spark.Spark.*;
 
 public class IntegroAPI {
@@ -21,7 +22,7 @@ public class IntegroAPI {
     public static void
     startServices(int port) {
 
-        if (ConfigValueHandler.SSL_ACTIVE.is("true")) {
+        if (Boolean.parseBoolean(ConfigValueHandler.SSL_ACTIVE.fetchValue())) {
             File l_file = new File(ConfigValueHandler.SSL_KEYSTORE_PATH.fetchValue());
             log.info("Keystore file was found? {}", l_file.exists());
             secure(ConfigValueHandler.SSL_KEYSTORE_PATH.fetchValue(), ConfigValueHandler.SSL_KEYSTORE_PASSWORD.fetchValue(),
@@ -87,7 +88,7 @@ public class IntegroAPI {
             res.status(400);
             res.body(response.toString());
         });
-        /* Not currently possible
+
         exception( IBSRunTimeException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();
             response.append(ERROR_IBS_RUNTIME);
@@ -96,7 +97,7 @@ public class IntegroAPI {
             res.status(400);
             res.body(response.toString());
         });
-        */
+
         exception( TargetJavaMethodCallException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();
             response.append(ERROR_CALLING_JAVA_METHOD);
@@ -106,5 +107,15 @@ public class IntegroAPI {
             response.append(e.getMessage()).append("\n");
             res.body(response.toString());
         });
+
+        exception( NonExistentJavaObjectException.class, (e, req, res) -> {
+            StringBuilder response = new StringBuilder();
+            response.append(ERROR_JAVA_OBJECT_NOT_FOUND);
+            response.append("\n");
+            response.append(e.getMessage());
+            res.status(400);
+            res.body(response.toString());
+        });
+
     }
 }

@@ -88,7 +88,8 @@ public class IntegroAPI {
             res.status(400);
             res.body(response.toString());
         });
-
+        
+        /* Not currently possible
         exception( IBSRunTimeException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();
             response.append(ERROR_IBS_RUNTIME);
@@ -97,6 +98,7 @@ public class IntegroAPI {
             res.status(400);
             res.body(response.toString());
         });
+        */
 
         exception( TargetJavaMethodCallException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();

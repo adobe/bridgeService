@@ -27,7 +27,7 @@ The following dependency needs to be added to your pom file:
  <dependency>
     <groupId>com.adobe.campaign.tests.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <version>2.0.4</version>
+    <version>2.11.5</version>
 </dependency>
 ```
 
@@ -64,7 +64,7 @@ All you need to do is to call :
 If all is good you should get:
 ```
 All systems up - in production
-Version : 2.0.4
+Version : 2.11.5
 Product user version : 7.0
 ```
 

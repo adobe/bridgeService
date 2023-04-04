@@ -2,6 +2,7 @@ pipeline {
     agent any
     tools {
         maven 'MAVEN-Jenkins'
+        jdk 'OpenJDK 11'
     }
     environment {
 

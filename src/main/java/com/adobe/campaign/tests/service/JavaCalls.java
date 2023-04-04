@@ -3,6 +3,7 @@ package com.adobe.campaign.tests.service;
 import com.adobe.campaign.tests.service.exceptions.IBSConfigurationException;
 import com.adobe.campaign.tests.service.exceptions.IBSRunTimeException;
 import com.adobe.campaign.tests.service.exceptions.NonExistentJavaObjectException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ public class JavaCalls {
 
     private Properties environmentVariables;
 
+    @JsonIgnore
     private IntegroBridgeClassLoader localClassLoader;
 
     public JavaCalls() {

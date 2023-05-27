@@ -1337,8 +1337,8 @@ public class TestFetchCalls {
         jc.setEnvironmentVariables(x);
 
         Assert.assertThrows(IBSRunTimeException.class, () -> jc.submitCalls());
-
-
     }
+
+
 
 }

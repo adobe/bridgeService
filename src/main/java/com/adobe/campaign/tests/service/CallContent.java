@@ -6,6 +6,7 @@ import com.adobe.campaign.tests.service.exceptions.TargetJavaMethodCallException
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -89,9 +90,9 @@ public class CallContent {
         return lr_method;
     }
 
-    public Method fetchMethod() throws ClassNotFoundException {
+    public <T extends Executable> T fetchMethod() throws ClassNotFoundException {
 
-        return fetchMethod(Class.forName(getClassName(), true, new IntegroBridgeClassLoader()));
+        return (T) fetchMethod(Class.forName(getClassName(), true, new IntegroBridgeClassLoader()));
     }
 
     /**

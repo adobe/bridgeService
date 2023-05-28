@@ -17,6 +17,9 @@ import java.util.stream.Collectors;
 
 public class CallContent {
 
+    @JsonProperty("instance")
+    public String instanceObject;
+
     @JsonProperty("class")
     private String className;
 
@@ -151,7 +154,9 @@ public class CallContent {
             } else {
                 Method l_method = fetchMethod(ourClass);
 
-                Object ourInstance = ourClass.getDeclaredConstructor().newInstance();
+                Object ourInstance = (iClassLoader.getCallResultCache()
+                        .containsKey(instanceObject)) ? iClassLoader.getCallResultCache()
+                        .get(instanceObject) : ourClass.getDeclaredConstructor().newInstance();
                 lr_object = l_method.invoke(ourInstance, expandArgs(iClassLoader));
             }
 

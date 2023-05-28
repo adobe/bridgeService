@@ -226,6 +226,6 @@ public class CallContent {
      */
     @JsonIgnore
     public boolean isConstructorCall() {
-        return getClassName().substring(getClassName().lastIndexOf('.')+1).equals(getMethodName());
+        return getMethodName()==null || getClassName().substring(getClassName().lastIndexOf('.')+1).equals(getMethodName());
     }
 }

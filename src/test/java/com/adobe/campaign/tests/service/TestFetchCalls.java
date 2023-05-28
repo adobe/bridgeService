@@ -1362,6 +1362,22 @@ public class TestFetchCalls {
     }
 
     @Test
+    public void testIsConstructorCallNullMethod() {
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.apitools.Authentication");
+        l_cc.setArgs(new Object[] { "myBToken" });
+
+        assertThat("We should be in a constructor call", l_cc.isConstructorCall());
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("Authentication");
+        l_cc2.setArgs(new Object[] { "myBToken" });
+
+        assertThat("We should be in a constructor call", l_cc2.isConstructorCall());
+
+    }
+
+    @Test
     public void testIsConstructorCallNegative() {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.apitools.Authentication");
@@ -1383,7 +1399,6 @@ public class TestFetchCalls {
     public void testFetchMethodCandidates() {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.integro.apitools.Authentication");
-        l_cc.setMethodName("Authentication");
         l_cc.setArgs(new Object[] { "mylin","mypwd","kj" });
 
 
@@ -1400,7 +1415,6 @@ public class TestFetchCalls {
         sb.append("3");
         CallContent l_cc = new CallContent();
         l_cc.setClassName("java.lang.StringBuilder");
-        l_cc.setMethodName("StringBuilder");
 
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
         List<Constructor> l_methods = l_cc.fetchConstructorCandidates(ibcl.loadClass(l_cc.getClassName()));
@@ -1416,7 +1430,7 @@ public class TestFetchCalls {
         JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
-        l_cc.setMethodName("Instantiable");
+        //l_cc.setMethodName("Instantiable");
         l_cc.setArgs(new Object[] { "3" });
         jc.getCallContent().put("call1", l_cc);
 

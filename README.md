@@ -1,6 +1,37 @@
 # integroBridgeService
 This project allows you to expose Integro ACC as a REST service. It allows you to make calls to Java code.
 
+## Table of Contents
+- [Release Notes](#release-notes)
+- [Implementing The Bridge Service in Your Project](#implementing-the-bridge-service-in-your-project)
+    * [Adding the Bridge Service to Your Project](#adding-the-bridge-service-to-your-project)
+        - [Installation](#installation)
+        + [Considerations](#considerations)
+    * [Including your project in the BridgeService](#including-your-project-in-the-bridgeservice)
+- [Setting information about your environment](#setting-information-about-your-environment)
+- [Testing That all is Working](#testing-that-all-is-working)
+- [Testing That all External Dervices can be Accessed](#testing-that-all-external-dervices-can-be-accessed)
+- [Making a basic Java Call](#making-a-basic-java-call)
+- [Instantiating Objects](#instantiating-objects)
+- [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
+    * [Call Chaining and Call Dependencies](#call-chaining-and-call-dependencies)
+    * [Call Chaining and Instance Methods](#call-chaining-and-instance-methods)
+- [Creating a Call Context](#creating-a-call-context)
+    * [Static Variable Scopes](#static-variable-scopes)
+        + [Session Scopes](#session-scopes)
+        + [Product Scope](#product-scope)
+- [Error Management](#error-management)
+- [Code Management](#code-management)
+- [Known Issues and Limitations](#known-issues-and-limitations)
+    * [Cannot call overloaded methods with the same number of arguments.](#cannot-call-overloaded-methods-with-the-same-number-of-arguments)
+    * [Only simple arguments](#only-simple-arguments)
+    * [Complex Non-Serialisable Return Objects](#complex-non-serialisable-return-objects)
+    * [Calling Enum Methods](#calling-enum-methods)
+- [Building Image](#building-image)
+- [Existing Images](#existing-images)
+    * [Standard SSL](#standard-ssl)
+    * [Without SSL](#without-ssl)
+
 ## Release Notes
 The release notes can be found [here](ReleaseNotes.md).
 
@@ -121,6 +152,21 @@ If the IntegroBridgeService can find the method it will execute it. The result i
 }
 ```
 
+## Instantiating Objects
+If we do not specify a method, the bridge service assumes that we are instantiating the given class:
+```JSON
+{
+    "callContent": {
+        "<ID>": {
+            "class": "<package name>.<class Name>",
+            "args": ["argument1","argument2"]
+        }
+    }
+}
+```
+
+**Note :** You can also set the method name to the class name, but it may be easier to simply skip setting a method name in this case.
+
 ## Call Chaining a basic Java Call
 We can chain a series of java calls in the same payload:
 
@@ -175,7 +221,30 @@ We now have the possibility of injecting call results from one call to the other
 
 In the example above "ID-2" will use the return value of the call "ID-1" as ts first argument.
 
+
 **NOTE** : When passing a call result as an argument, it needs to be a String. In many languages such as JavaScript, the JSON keys need not be a string, however, for this to work you need to pass the ID as a string.  
+
+### Call Chaining and Instance Methods
+We now have the possibility of injecting call results from one call to the other. In the example below we instantiate an object, and in the following call we call a method of that object. This is done by passing the ID of the first call as the `instance` value for the following call.
+
+```JSON
+{
+    "callContent": {
+        "<ID-1>": {
+           "class": "<package name>.<class name>",
+           "args": ["argument1","argument2"]
+        },
+        "<ID-2>": {
+           "class": "<package name>.<class name>",
+           "instance" : "<ID-1>",
+           "method": "<method name>",
+           "args": ["argument2"]
+        }
+    }
+}
+```
+
+In the example above "ID-2" will use call the instance method of the object created in call "ID-1".
 
 ## Creating a Call Context
 We sometimes need to set environment variables when making calls. This is usually indirectly related to the call you are doing. These variable mirror the values of a property file, so they are always treated as strings.
@@ -268,6 +337,9 @@ Since this is a REST call we can only correctly manage simple arguments in the p
 
 ### Complex Non-Serialisable Return Objects
 In many cases the object a method returns is not rerializable. If that is the case we mine the object, and extract all simple values from the object.
+
+### Calling Enum Methods
+We are currently unable to call enums with the Bridge Service.
 
 ## Building Image
 In order to build an image you need to run the following command:

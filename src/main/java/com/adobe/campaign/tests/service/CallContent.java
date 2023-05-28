@@ -6,6 +6,7 @@ import com.adobe.campaign.tests.service.exceptions.TargetJavaMethodCallException
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -75,6 +76,21 @@ public class CallContent {
         return lr_method.get(0);
     }
 
+    /**
+     * Returns the method object that is defined by this class
+     *
+     * @return the method object
+     */
+    public Constructor fetchConstructor(Class in_class) {
+
+        List<Constructor> lr_method = fetchConstructorCandidates(in_class);
+        if (lr_method.size() > 1) {
+            throw new AmbiguousMethodException(
+                    "We could not find a unique method for " + this.getFullName());
+        }
+        return lr_method.get(0);
+    }
+
     public List<Method> fetchMethodCandidates(Class in_class) {
 
         List<Method> lr_method = lr_method = Arrays.stream(in_class.getMethods())
@@ -90,9 +106,24 @@ public class CallContent {
         return lr_method;
     }
 
-    public <T extends Executable> T fetchMethod() throws ClassNotFoundException {
 
-        return (T) fetchMethod(Class.forName(getClassName(), true, new IntegroBridgeClassLoader()));
+    public List<Constructor> fetchConstructorCandidates(Class in_class) {
+
+        List<Constructor> lr_method = Arrays.stream(in_class.getConstructors())
+                    .filter(fp -> fp.getParameterCount() == this.getArgs().length).collect(
+                            Collectors.toList());
+
+        if (lr_method.size() == 0) {
+            throw new NonExistentJavaObjectException(
+                    "Constructor " + this.getClassName() + "." + this.getMethodName() + "   with " + this.getArgs().length
+                            + " arguments could not be found.");
+        }
+        return lr_method;
+    }
+
+    public Method fetchMethod() throws ClassNotFoundException {
+
+        return fetchMethod(Class.forName(getClassName(), true, new IntegroBridgeClassLoader()));
     }
 
     /**
@@ -114,10 +145,16 @@ public class CallContent {
 
             Class ourClass = Class.forName(getClassName(), true, iClassLoader);
 
-            Method l_method = fetchMethod(ourClass);
+            if (isConstructorCall()) {
+                Constructor l_constructor = fetchConstructor(ourClass);
+                lr_object = l_constructor.newInstance(expandArgs(iClassLoader));
+            } else {
+                Method l_method = fetchMethod(ourClass);
 
-            Object ourInstance = ourClass.getDeclaredConstructor().newInstance();
-            lr_object = l_method.invoke(ourInstance, expandArgs(iClassLoader));
+                Object ourInstance = ourClass.getDeclaredConstructor().newInstance();
+                lr_object = l_method.invoke(ourInstance, expandArgs(iClassLoader));
+            }
+
         } catch (IllegalArgumentException e) {
             throw new NonExistentJavaObjectException(
                     "The given method " + this.getFullName() + " could not accept the given arguments..");
@@ -176,5 +213,14 @@ public class CallContent {
     public Object[] expandArgs(IntegroBridgeClassLoader in_currentClassLoader) {
         return Arrays.stream(getArgs()).map(arg -> in_currentClassLoader.getCallResultCache().getOrDefault(
                 arg, arg)).toArray();
+    }
+
+    /**
+     * Lets us know if the giben Call Content is a Constructor call
+     * @return true if the methos is actually a constructor
+     */
+    @JsonIgnore
+    public boolean isConstructorCall() {
+        return getClassName().substring(getClassName().lastIndexOf('.')+1).equals(getMethodName());
     }
 }

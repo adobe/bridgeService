@@ -8,6 +8,7 @@ import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.adobe.campaign.tests.service.data.MyPropertiesHandler;
 import com.adobe.campaign.tests.service.exceptions.*;
 import com.adobe.campaign.tests.service.testobjects.Instantiable;
+import com.adobe.campaign.tests.service.testobjects.StaticType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
@@ -1452,12 +1453,20 @@ public class TestFetchCalls {
     public void testCallConstructor_case1_negative2()
             throws ClassNotFoundException, JsonProcessingException {
 
-        Instantiable reference = new Instantiable("3");
+        // To be removed with issue #60 : added for coverage
+        Instantiable reference = new Instantiable("3","3");
+        Instantiable reference2 = new Instantiable("3",3);
+        reference.setValueString("4");
+        StaticType x = new StaticType();
+        StaticType.fetchInstantiableStringValue(reference);
+
         JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
         l_cc.setArgs(new Object[] {"A", "B" });
         jc.getCallContent().put("call1", l_cc);
+
+
 
         Assert.assertThrows(AmbiguousMethodException.class, () -> jc.submitCalls());
     }

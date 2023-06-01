@@ -143,6 +143,7 @@ public class CallContent {
             }
 
             Object l_instanceObject = iClassLoader.getCallResultCache().get(this.getClassName());
+
             String l_usedClassName = (l_instanceObject == null ? this.getClassName() :
                     iClassLoader.getCallResultCache()
                             .get(this.getClassName()).getClass().getTypeName());

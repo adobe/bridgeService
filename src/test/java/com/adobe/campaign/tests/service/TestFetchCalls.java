@@ -1500,7 +1500,6 @@ public class TestFetchCalls {
         assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("call2"), Matchers.equalTo(reference.getValueString()));
 
         assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("call4"), Matchers.equalTo("7"));
-
-
     }
+
 }

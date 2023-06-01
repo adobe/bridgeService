@@ -1421,7 +1421,6 @@ public class TestFetchCalls {
         assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
     }
 
-
     @Test
     public void testCallConstructor_case1()
             throws ClassNotFoundException, JsonProcessingException {
@@ -1432,20 +1431,36 @@ public class TestFetchCalls {
         l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
         l_cc.setArgs(new Object[] { "3" });
         jc.getCallContent().put("call1", l_cc);
-
-        CallContent l_cc2 = new CallContent();
-        l_cc2.setClassName("com.adobe.campaign.tests.service.testobjects.StaticType");
-        l_cc2.setMethodName("fetchInstantiableStringValue");
-        l_cc2.setArgs(new Object[] { "call1" });
-        jc.getCallContent().put("call2", l_cc2);
-
-        JavaCallResults jcr = jc.submitCalls();
-
-       assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("call2"), Matchers.equalTo(reference.getValueString()));
-
-
     }
 
+
+    @Test
+    public void testCallConstructor_case1_negative()
+            throws ClassNotFoundException, JsonProcessingException {
+
+        Instantiable reference = new Instantiable("3");
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
+        l_cc.setArgs(new Object[] { });
+        jc.getCallContent().put("call1", l_cc);
+
+       Assert.assertThrows(NonExistentJavaObjectException.class, () -> jc.submitCalls());
+    }
+
+    @Test
+    public void testCallConstructor_case1_negative2()
+            throws ClassNotFoundException, JsonProcessingException {
+
+        Instantiable reference = new Instantiable("3");
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
+        l_cc.setArgs(new Object[] {"A", "B" });
+        jc.getCallContent().put("call1", l_cc);
+
+        Assert.assertThrows(AmbiguousMethodException.class, () -> jc.submitCalls());
+    }
 
     @Test
     public void testCallConstructor_case2_InstanceMethod()

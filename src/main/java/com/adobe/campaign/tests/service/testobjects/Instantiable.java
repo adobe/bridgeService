@@ -7,6 +7,12 @@ public class Instantiable {
         valueString = in_valueString;
     }
 
+    public Instantiable(String in_valueString1,String in_valueString2 ) {
+    }
+
+    public Instantiable(String in_valueString1,int in_valueint1 ) {
+    }
+
     public String getValueString() {
         return valueString;
     }

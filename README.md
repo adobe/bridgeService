@@ -235,8 +235,7 @@ We now have the possibility of injecting call results from one call to the other
            "args": ["argument1","argument2"]
         },
         "<ID-2>": {
-           "class": "<package name>.<class name>",
-           "instance" : "<ID-1>",
+           "class": "<ID-1>",
            "method": "<method name>",
            "args": ["argument2"]
         }

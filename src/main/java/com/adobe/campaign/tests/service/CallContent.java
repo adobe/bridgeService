@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -16,9 +15,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class CallContent {
-
-    @JsonProperty("instance")
-    public String instanceObject;
 
     @JsonProperty("class")
     private String className;
@@ -109,16 +105,16 @@ public class CallContent {
         return lr_method;
     }
 
-
     public List<Constructor> fetchConstructorCandidates(Class in_class) {
 
         List<Constructor> lr_method = Arrays.stream(in_class.getConstructors())
-                    .filter(fp -> fp.getParameterCount() == this.getArgs().length).collect(
-                            Collectors.toList());
+                .filter(fp -> fp.getParameterCount() == this.getArgs().length).collect(
+                        Collectors.toList());
 
         if (lr_method.size() == 0) {
             throw new NonExistentJavaObjectException(
-                    "Constructor " + this.getClassName() + "." + this.getMethodName() + "   with " + this.getArgs().length
+                    "Constructor " + this.getClassName() + "." + this.getMethodName() + "   with "
+                            + this.getArgs().length
                             + " arguments could not be found.");
         }
         return lr_method;
@@ -146,7 +142,12 @@ public class CallContent {
                                 .substring(0, this.getClassName().lastIndexOf('.')) : this.getClassName());
             }
 
-            Class ourClass = Class.forName(getClassName(), true, iClassLoader);
+            Object l_instanceObject = iClassLoader.getCallResultCache().get(this.getClassName());
+            String l_usedClassName = (l_instanceObject == null ? this.getClassName() :
+                    iClassLoader.getCallResultCache()
+                            .get(this.getClassName()).getClass().getTypeName());
+
+            Class ourClass = Class.forName(l_usedClassName, true, iClassLoader);
 
             if (isConstructorCall()) {
                 Constructor l_constructor = fetchConstructor(ourClass);
@@ -154,9 +155,7 @@ public class CallContent {
             } else {
                 Method l_method = fetchMethod(ourClass);
 
-                Object ourInstance = (iClassLoader.getCallResultCache()
-                        .containsKey(instanceObject)) ? iClassLoader.getCallResultCache()
-                        .get(instanceObject) : ourClass.getDeclaredConstructor().newInstance();
+                Object ourInstance = (l_instanceObject == null) ? ourClass.getDeclaredConstructor().newInstance() : l_instanceObject;
                 lr_object = l_method.invoke(ourInstance, expandArgs(iClassLoader));
             }
 
@@ -222,10 +221,12 @@ public class CallContent {
 
     /**
      * Lets us know if the giben Call Content is a Constructor call
+     *
      * @return true if the methos is actually a constructor
      */
     @JsonIgnore
     public boolean isConstructorCall() {
-        return getMethodName()==null || getClassName().substring(getClassName().lastIndexOf('.')+1).equals(getMethodName());
+        return getMethodName() == null || getClassName().substring(getClassName().lastIndexOf('.') + 1)
+                .equals(getMethodName());
     }
 }

@@ -1430,7 +1430,6 @@ public class TestFetchCalls {
         JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
-        //l_cc.setMethodName("Instantiable");
         l_cc.setArgs(new Object[] { "3" });
         jc.getCallContent().put("call1", l_cc);
 
@@ -1456,23 +1455,18 @@ public class TestFetchCalls {
         JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
-        l_cc.setMethodName("Instantiable");
         l_cc.setArgs(new Object[] { "3" });
         jc.getCallContent().put("call1", l_cc);
 
         CallContent l_cc2 = new CallContent();
-        l_cc2.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
-        l_cc2.instanceObject = "call1";
+        l_cc2.setClassName("call1");
         l_cc2.setMethodName("getValueString");
         jc.getCallContent().put("call2", l_cc2);
 
         JavaCallResults jcr = jc.submitCalls();
 
         assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("call2"), Matchers.equalTo(reference.getValueString()));
-
-
     }
-
 
     @Test
     public void testCallConstructor_case3_InstanceMethod()
@@ -1486,21 +1480,18 @@ public class TestFetchCalls {
         jc.getCallContent().put("call1", l_cc);
 
         CallContent l_cc2 = new CallContent();
-        l_cc2.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
-        l_cc2.instanceObject = "call1";
+        l_cc2.setClassName("call1");
         l_cc2.setMethodName("getValueString");
         jc.getCallContent().put("call2", l_cc2);
 
         CallContent l_cc3 = new CallContent();
-        l_cc3.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
-        l_cc3.instanceObject = "call1";
+        l_cc3.setClassName("call1");
         l_cc3.setMethodName("setValueString");
         l_cc3.setArgs(new Object[] { "7" });
         jc.getCallContent().put("call3", l_cc3);
 
         CallContent l_cc4 = new CallContent();
-        l_cc4.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
-        l_cc4.instanceObject = "call1";
+        l_cc4.setClassName("call1");
         l_cc4.setMethodName("getValueString");
         jc.getCallContent().put("call4", l_cc4);
 

@@ -1,5 +1,8 @@
 # Integro Bridge Service - RELEASE NOTES
 
+## 2.11.6
+* [#58 Object Instance Management](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/58). We can now instantiate objects and call their instance methods.
+
 ## 2.11.5
 * [#56 Java 11 Compatibility](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/56).Integro Bridge Service is now Java 11 compatible. From now on the standard builds are in Java 11. (Java 8 is also available, but is made on demand).
 * [#48 Dynamically load all called classes](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48). Previously, we were loading a preset set of packages for managing the static variable contexts in calls. We now automatically include the classes that are being called. This solves the following issues:

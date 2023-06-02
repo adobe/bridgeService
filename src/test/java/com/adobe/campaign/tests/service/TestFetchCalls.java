@@ -1,11 +1,14 @@
 package com.adobe.campaign.tests.service;
 
+import com.adobe.campaign.tests.integro.apitools.Authentication;
 import com.adobe.campaign.tests.integro.core.SystemValueHandler;
 import com.adobe.campaign.tests.integro.tools.DateAndTimeTools;
 import com.adobe.campaign.tests.integro.tools.LanguageEncodings;
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.adobe.campaign.tests.service.data.MyPropertiesHandler;
 import com.adobe.campaign.tests.service.exceptions.*;
+import com.adobe.campaign.tests.service.testobjects.Instantiable;
+import com.adobe.campaign.tests.service.testobjects.StaticType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
@@ -19,6 +22,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -1337,8 +1342,188 @@ public class TestFetchCalls {
         jc.setEnvironmentVariables(x);
 
         Assert.assertThrows(IBSRunTimeException.class, () -> jc.submitCalls());
+    }
+
+    @Test
+    public void testIsConstructorCall() {
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.apitools.Authentication");
+        l_cc.setMethodName("Authentication");
+        l_cc.setArgs(new Object[] { "myBToken" });
+
+        assertThat("We should be in a constructor call", l_cc.isConstructorCall());
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("Authentication");
+        l_cc2.setMethodName("Authentication");
+        l_cc2.setArgs(new Object[] { "myBToken" });
+
+        assertThat("We should be in a constructor call", l_cc2.isConstructorCall());
+
+    }
+
+    @Test
+    public void testIsConstructorCallNullMethod() {
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.apitools.Authentication");
+        l_cc.setArgs(new Object[] { "myBToken" });
+
+        assertThat("We should be in a constructor call", l_cc.isConstructorCall());
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("Authentication");
+        l_cc2.setArgs(new Object[] { "myBToken" });
+
+        assertThat("We should be in a constructor call", l_cc2.isConstructorCall());
+
+    }
+
+    @Test
+    public void testIsConstructorCallNegative() {
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.apitools.Authentication");
+        l_cc.setMethodName("addHeader");
+        l_cc.setArgs(new Object[] { "myBToken" , "jh"});
+
+        assertThat("We should be in a constructor call", !l_cc.isConstructorCall());
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("Authentication");
+        l_cc2.setMethodName("addHeader");
+        l_cc2.setArgs(new Object[] { "myBToken" , "kjh"});
+
+        assertThat("We should be in a constructor call", !l_cc2.isConstructorCall());
+
+    }
+
+    @Test
+    public void testFetchMethodCandidates() {
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.apitools.Authentication");
+        l_cc.setArgs(new Object[] { "mylin","mypwd","kj" });
 
 
+        IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
+        List<Constructor> l_methods = l_cc.fetchConstructorCandidates(ibcl.loadClass(l_cc.getClassName()));
+        assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
+
+
+    }
+
+    @Test
+    public void testFetchMethodCandidates2() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("3");
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("java.lang.StringBuilder");
+
+        IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
+        List<Constructor> l_methods = l_cc.fetchConstructorCandidates(ibcl.loadClass(l_cc.getClassName()));
+        assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
+    }
+
+    @Test
+    public void testCallConstructor_case1()
+            throws ClassNotFoundException, JsonProcessingException {
+
+        Instantiable reference = new Instantiable("3");
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
+        l_cc.setArgs(new Object[] { "3" });
+        jc.getCallContent().put("call1", l_cc);
+    }
+
+
+    @Test
+    public void testCallConstructor_case1_negative()
+            throws ClassNotFoundException, JsonProcessingException {
+
+        Instantiable reference = new Instantiable("3");
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
+        l_cc.setArgs(new Object[] { });
+        jc.getCallContent().put("call1", l_cc);
+
+       Assert.assertThrows(NonExistentJavaObjectException.class, () -> jc.submitCalls());
+    }
+
+    @Test
+    public void testCallConstructor_case1_negative2()
+            throws ClassNotFoundException, JsonProcessingException {
+
+        // To be removed with issue #60 : added for coverage
+        Instantiable reference = new Instantiable("3","3");
+        Instantiable reference2 = new Instantiable("3",3);
+        reference.setValueString("4");
+        StaticType x = new StaticType();
+        StaticType.fetchInstantiableStringValue(reference);
+
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
+        l_cc.setArgs(new Object[] {"A", "B" });
+        jc.getCallContent().put("call1", l_cc);
+
+
+
+        Assert.assertThrows(AmbiguousMethodException.class, () -> jc.submitCalls());
+    }
+
+    @Test
+    public void testCallConstructor_case2_InstanceMethod()
+            throws ClassNotFoundException, JsonProcessingException {
+
+        Instantiable reference = new Instantiable("3");
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
+        l_cc.setArgs(new Object[] { "3" });
+        jc.getCallContent().put("call1", l_cc);
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("call1");
+        l_cc2.setMethodName("getValueString");
+        jc.getCallContent().put("call2", l_cc2);
+
+        JavaCallResults jcr = jc.submitCalls();
+
+        assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("call2"), Matchers.equalTo(reference.getValueString()));
+    }
+
+    @Test
+    public void testCallConstructor_case3_InstanceMethod()
+            throws ClassNotFoundException, JsonProcessingException {
+
+        Instantiable reference = new Instantiable("3");
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.service.testobjects.Instantiable");
+        l_cc.setArgs(new Object[] { "3" });
+        jc.getCallContent().put("call1", l_cc);
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("call1");
+        l_cc2.setMethodName("getValueString");
+        jc.getCallContent().put("call2", l_cc2);
+
+        CallContent l_cc3 = new CallContent();
+        l_cc3.setClassName("call1");
+        l_cc3.setMethodName("setValueString");
+        l_cc3.setArgs(new Object[] { "7" });
+        jc.getCallContent().put("call3", l_cc3);
+
+        CallContent l_cc4 = new CallContent();
+        l_cc4.setClassName("call1");
+        l_cc4.setMethodName("getValueString");
+        jc.getCallContent().put("call4", l_cc4);
+
+        JavaCallResults jcr = jc.submitCalls();
+
+        assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("call2"), Matchers.equalTo(reference.getValueString()));
+
+        assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("call4"), Matchers.equalTo("7"));
     }
 
 }

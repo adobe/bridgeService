@@ -611,8 +611,8 @@ public class TestFetchCalls {
         //Call 2 - in this case our second call cannot access the values of the first
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
-        l_ccB.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
-        l_ccB.setMethodName("fetchExecutionProperty");
+        l_ccB.setClassName(EnvironmentVariableHandler.class.getTypeName());
+        l_ccB.setMethodName("getCacheProperty");
         l_ccB.setArgs(new Object[]{"PREFIX"});
         l_myJavaCallsB.getCallContent().put("getProperty", l_ccB);
 

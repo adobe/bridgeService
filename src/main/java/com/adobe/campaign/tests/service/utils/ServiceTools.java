@@ -5,9 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 
 public class ServiceTools {
 
@@ -141,6 +139,53 @@ public class ServiceTools {
                 return false;
             }
         }
+    }
+
+    /**
+     * This method given a host returns the next free port number on localhost.
+     *
+     * @return the number of the next free port
+     * @throws IOException if a network error occurs
+     */
+    public static int fetchNextFreePortNumber() throws IOException {
+
+        try (ServerSocket socket = new ServerSocket(0);) {
+            return socket.getLocalPort();
+        }
+    }
+
+    /**
+     * This method lets us know if a given port is free on the local host
+     *
+     * @param in_port Port you want to use
+     * @return true if port is not used
+     */
+    public static boolean isPortFree(int in_port) {
+        ServerSocket ss = null;
+        DatagramSocket ds = null;
+        try {
+            ss = new ServerSocket(in_port);
+            ss.setReuseAddress(true);
+            ds = new DatagramSocket(in_port);
+            ds.setReuseAddress(true);
+            return true;
+        } catch (IOException e) {
+            log.error(e);
+        } finally {
+            if (ds != null) {
+                ds.close();
+            }
+
+            if (ss != null) {
+                try {
+                    ss.close();
+                } catch (IOException e) {
+                    log.error(e);
+                }
+            }
+        }
+
+        return false;
     }
 
 

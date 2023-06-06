@@ -156,6 +156,11 @@
             <version>3.1.0</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.adobe.campaign.tests.bridgeservice.testdata</groupId>
+            <artifactId>ibs-data</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     <scm>
         <url>https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/tree/master/src</url>

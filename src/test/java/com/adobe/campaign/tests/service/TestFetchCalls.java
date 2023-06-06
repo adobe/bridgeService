@@ -1,8 +1,7 @@
 package com.adobe.campaign.tests.service;
 
-import com.adobe.campaign.tests.integro.apitools.Authentication;
+import com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods;
 import com.adobe.campaign.tests.integro.core.SystemValueHandler;
-import com.adobe.campaign.tests.integro.tools.DateAndTimeTools;
 import com.adobe.campaign.tests.integro.tools.LanguageEncodings;
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.adobe.campaign.tests.service.data.MyPropertiesHandler;
@@ -23,13 +22,10 @@ import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Stream;
 
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestFetchCalls {
@@ -42,68 +38,93 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testJSONCall()
+    public void testSimpleCall()
             throws ClassNotFoundException {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName(RandomManager.class.getTypeName());
-        l_cc.setMethodName("fetchRandomCountry");
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodReturningString");
 
         l_cc.setArgs(new Object[] { "A" });
 
-        l_myJavaCalls.getCallContent().put("fetchEmail", l_cc);
+        l_myJavaCalls.getCallContent().put("fetchString", l_cc);
 
         assertThat("We should access our calls correctly",
-                l_myJavaCalls.getCallContent().get("fetchEmail").getClassName(),
-                Matchers.equalTo(RandomManager.class.getTypeName()));
+                l_myJavaCalls.getCallContent().get("fetchString").getClassName(),
+                Matchers.equalTo(SimpleStaticMethods.class.getTypeName()));
         assertThat("We should access our calls correctly",
-                l_myJavaCalls.getCallContent().get("fetchEmail").getMethodName(),
-                Matchers.equalTo("fetchRandomCountry"));
-        assertThat("We should access our calls correctly", l_myJavaCalls.getCallContent().get("fetchEmail").getArgs(),
+                l_myJavaCalls.getCallContent().get("fetchString").getMethodName(),
+                Matchers.equalTo("methodReturningString"));
+        assertThat("We should access our calls correctly", l_myJavaCalls.getCallContent().get("fetchString").getArgs(),
                 Matchers.arrayContainingInAnyOrder("A"));
 
-        l_myJavaCalls.getCallContent().get("fetchEmail").setArgs(new Object[] {});
+        l_myJavaCalls.getCallContent().get("fetchString").setArgs(new Object[] {});
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
-        Method l_definedMethod = l_myJavaCalls.getCallContent().get("fetchEmail").fetchMethod();
+        Method l_definedMethod = l_myJavaCalls.getCallContent().get("fetchString").fetchMethod();
         assertThat("The method should not be null", l_definedMethod, Matchers.notNullValue());
 
         assertThat("We should have created the correct method", l_definedMethod.getName(),
-                Matchers.equalTo(l_myJavaCalls.getCallContent().get("fetchEmail").getMethodName()));
+                Matchers.equalTo(l_myJavaCalls.getCallContent().get("fetchString").getMethodName()));
 
-        String returnedCountry = (String) l_myJavaCalls.getCallContent().get("fetchEmail").call(iClassLoader);
+        String returnedString = (String) l_myJavaCalls.getCallContent().get("fetchString").call(iClassLoader);
         assertThat("We should get a good answer back from the call",
-                Stream.of("AT", "AU", "CA", "CH", "DE", "US", "FR", "CN", "IN", "JP", "RU", "BR", "ID", "GB", "MX")
-                        .anyMatch(f -> f.equals(returnedCountry)));
+                returnedString, Matchers.equalTo(SimpleStaticMethods.SUCCESS_VAL));
     }
 
     @Test
-    public void testJSONCallWithAruments()
+    public void testSimpleCallWithStringAruments()
             throws ClassNotFoundException {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName(RandomManager.class.getTypeName());
-        l_cc.setMethodName("getRandomNumber");
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodAcceptingStringArgument");
 
-        l_cc.setArgs(new Object[] { 13 });
+        l_cc.setArgs(new Object[] { "13" });
 
-        l_myJavaCalls.getCallContent().put("fetchEmail", l_cc);
+        l_myJavaCalls.getCallContent().put("fetchString", l_cc);
 
-        assertThat("We should access our calls correctly", l_myJavaCalls.getCallContent().get("fetchEmail").getArgs(),
-                Matchers.arrayContainingInAnyOrder(13));
+        assertThat("We should access our calls correctly", l_myJavaCalls.getCallContent().get("fetchString").getArgs(),
+                Matchers.arrayContainingInAnyOrder("13"));
 
-        Method l_definedMethod = l_myJavaCalls.getCallContent().get("fetchEmail").fetchMethod();
+        Method l_definedMethod = l_myJavaCalls.getCallContent().get("fetchString").fetchMethod();
         assertThat("The method should not be null", l_definedMethod, Matchers.notNullValue());
 
         assertThat("We should have created the correct method", l_definedMethod.getName(),
-                Matchers.equalTo(l_myJavaCalls.getCallContent().get("fetchEmail").getMethodName()));
+                Matchers.equalTo(l_myJavaCalls.getCallContent().get("fetchString").getMethodName()));
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
-        Object returnedValue = l_myJavaCalls.getCallContent().get("fetchEmail").call(iClassLoader);
-        assertThat("We should get a good answer back from the call", (Integer) returnedValue, Matchers.lessThan(13));
+        Object returnedValue = l_myJavaCalls.getCallContent().get("fetchString").call(iClassLoader);
+        assertThat("We should get a good answer back from the call", (String) returnedValue, Matchers.endsWith(SimpleStaticMethods.SUCCESS_VAL));
+    }
 
+    @Test
+    public void testSimpleCallWithIntAruments()
+            throws ClassNotFoundException {
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodAcceptingIntArgument");
+
+        l_cc.setArgs(new Object[] { 13 });
+
+        l_myJavaCalls.getCallContent().put("fetchInt", l_cc);
+
+        assertThat("We should access our calls correctly", l_myJavaCalls.getCallContent().get("fetchInt").getArgs(),
+                Matchers.arrayContainingInAnyOrder(13));
+
+        Method l_definedMethod = l_myJavaCalls.getCallContent().get("fetchInt").fetchMethod();
+        assertThat("The method should not be null", l_definedMethod, Matchers.notNullValue());
+
+        assertThat("We should have created the correct method", l_definedMethod.getName(),
+                Matchers.equalTo(l_myJavaCalls.getCallContent().get("fetchInt").getMethodName()));
+
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+        Object returnedValue = l_myJavaCalls.getCallContent().get("fetchInt").call(iClassLoader);
+        assertThat("We should get a good answer back from the call", (Integer) returnedValue, Matchers.equalTo(39));
     }
 
     @Test
@@ -207,10 +228,10 @@ public class TestFetchCalls {
     public void testJSONCallWithFailingTargetMethod() {
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName(DateAndTimeTools.class.getTypeName());
-        l_cc.setMethodName("convertStringToDate");
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodThrowingException");
 
-        l_cc.setArgs(new Object[] { "", "" });
+        l_cc.setArgs(new Object[] { "" });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
         Assert.assertThrows(TargetJavaMethodCallException.class, () -> l_cc.call(iClassLoader));
@@ -221,8 +242,8 @@ public class TestFetchCalls {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
-        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        myContent.setMethodName("getCountries");
+        myContent.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods");
+        myContent.setMethodName("methodReturningString");
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
@@ -252,14 +273,14 @@ public class TestFetchCalls {
     public void testJSONTransformation()
             throws IOException, ClassNotFoundException {
         String l_jsonString =
-                "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + RandomManager.class.getTypeName() + "\",\n"
-                        + "    \"method\": \"getUniqueEmail\",\n" + "    \"returnType\": \"java.lang.String\",\n"
+                "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + SimpleStaticMethods.class.getTypeName() + "\",\n"
+                        + "    \"method\": \"methodAcceptingTwoArguments\",\n" + "    \"returnType\": \"java.lang.String\",\n"
                         + "    \"args\": [\n" + "        \"A\",\n" + "        \"B\"\n" + "    ]\n" + "}\n" + "}}";
 
         ObjectMapper mapper = new ObjectMapper();
         JavaCalls fetchedFromJSON = mapper.readValue(l_jsonString, JavaCalls.class);
         CallContent l_cc = fetchedFromJSON.getCallContent().get("call1");
-        assertThat(l_cc.getMethodName(), Matchers.equalTo("getUniqueEmail"));
+        assertThat(l_cc.getMethodName(), Matchers.equalTo("methodAcceptingTwoArguments"));
 
         Method l_definedMethod = l_cc.fetchMethod();
         assertThat("The method should not be null", l_definedMethod, Matchers.notNullValue());
@@ -273,15 +294,15 @@ public class TestFetchCalls {
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
         Object returnedValue = l_cc.call(iClassLoader);
         assertThat("We should get a good answer back from the call", returnedValue.toString(),
-                Matchers.startsWith("A+"));
-        assertThat("We should get a good answer back from the call", returnedValue.toString(), Matchers.endsWith("@B"));
+                Matchers.startsWith("A+B"));
+        assertThat("We should get a good answer back from the call", returnedValue.toString(), Matchers.containsString("B"));
     }
 
     @Test
     public void testJSONTransformation2() throws JsonProcessingException {
         String l_jsonString =
-                "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + RandomManager.class.getTypeName() + "\",\n"
-                        + "    \"method\": \"getUniqueEmail\",\n" + "    \"returnType\": \"java.lang.String\",\n"
+                "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + SimpleStaticMethods.class.getTypeName() + "\",\n"
+                        + "    \"method\": \"methodAcceptingTwoArguments\",\n" + "    \"returnType\": \"java.lang.String\",\n"
                         + "    \"args\": [\n" + "        \"A\",\n" + "        \"B\"\n" + "    ]\n" + "}\n" + "}}";
 
         ObjectMapper mapper = new ObjectMapper();
@@ -291,23 +312,23 @@ public class TestFetchCalls {
         Object returnedValue = fetchedFromJSON.call("call1");
         assertThat("We should get a good answer back from the call", returnedValue.toString(),
                 Matchers.startsWith("A+"));
-        assertThat("We should get a good answer back from the call", returnedValue.toString(), Matchers.endsWith("@B"));
+        assertThat("We should get a good answer back from the call", returnedValue.toString(), Matchers.endsWith(SimpleStaticMethods.SUCCESS_VAL));
 
         Map<String, Object> l_returnValue = fetchedFromJSON.submitCalls().getReturnValues();
         assertThat("We should have an entry with the key call1", l_returnValue.containsKey("call1"));
         Object returnedValue2 = l_returnValue.get("call1");
         assertThat("We should get a good answer back from the call", returnedValue2.toString(),
-                Matchers.startsWith("A+"));
+                Matchers.startsWith("A+B"));
 
         assertThat("We should get a good answer back from the call", returnedValue2.toString(),
-                Matchers.endsWith("@B"));
+                Matchers.endsWith(SimpleStaticMethods.SUCCESS_VAL));
     }
 
     @Test
     public void testJSONTransformation_deserialize() throws JsonProcessingException {
         String l_jsonString =
-                "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + RandomManager.class.getTypeName() + "\",\n"
-                        + "    \"method\": \"getUniqueEmail\",\n" + "    \"returnType\": \"java.lang.String\",\n"
+                "{\"callContent\" :{\"call1\" :  {" + "    \"class\": \"" + SimpleStaticMethods.class.getTypeName() + "\",\n"
+                        + "    \"method\": \"methodAcceptingTwoArguments\",\n" + "    \"returnType\": \"java.lang.String\",\n"
                         + "    \"args\": [\n" + "        \"A\",\n" + "        \"B\"\n" + "    ]\n" + "}\n" + "}}";
 
         ObjectMapper mapper = new ObjectMapper();
@@ -319,7 +340,7 @@ public class TestFetchCalls {
         assertThat("The retun value should be of a correct format", l_returnValue.returnValues.get("call1").toString(),
                 Matchers.startsWith("A"));
         assertThat("The retun value should be of a correct format", l_returnValue.returnValues.get("call1").toString(),
-                Matchers.endsWith("B"));
+                Matchers.endsWith(SimpleStaticMethods.SUCCESS_VAL));
 
     }
 
@@ -402,7 +423,7 @@ public class TestFetchCalls {
     }
 
     /**
-     * Integrity Tests - Here all calls and env vars are in the package path. Inthis case each call has its own env vars
+     * Integrity Tests - Here all calls and env vars are in the package path. In this case each call has its own env vars
      * In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 1
      * The envvars of calls do not interfere with the others
      */
@@ -412,12 +433,12 @@ public class TestFetchCalls {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity");
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
@@ -433,13 +454,13 @@ public class TestFetchCalls {
         //Call 2
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
-        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_ccB.setMethodName("getRandomEmail");
+        l_ccB.setClassName("com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity");
+        l_ccB.setMethodName("assembleBySystemValues");
         l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
 
         Properties l_authenticationB = new Properties();
-        l_authenticationB.put("AC.UITEST.MAILING.PREFIX", "nana");
-        l_authenticationB.put("AC.INTEGRO.MAILING.BASE", "noon.com");
+        l_authenticationB.put("PREFIX", "nana");
+        l_authenticationB.put("SUFFIX", "noon.com");
         l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
 
         JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
@@ -1446,7 +1467,7 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { });
         jc.getCallContent().put("call1", l_cc);
 
-       Assert.assertThrows(NonExistentJavaObjectException.class, () -> jc.submitCalls());
+        Assert.assertThrows(NonExistentJavaObjectException.class, () -> jc.submitCalls());
     }
 
     @Test
@@ -1527,3 +1548,4 @@ public class TestFetchCalls {
     }
 
 }
+

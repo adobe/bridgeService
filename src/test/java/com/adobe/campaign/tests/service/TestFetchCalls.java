@@ -1,6 +1,7 @@
 package com.adobe.campaign.tests.service;
 
 import com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods;
+import com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity;
 import com.adobe.campaign.tests.integro.core.SystemValueHandler;
 import com.adobe.campaign.tests.integro.tools.LanguageEncodings;
 import com.adobe.campaign.tests.integro.tools.RandomManager;
@@ -482,16 +483,16 @@ public class TestFetchCalls {
     public void testIntegrityEnvVars_case1_allPathsSet_rawMode() {
         ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
-                ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+",com.adobe.campaign.tests.integro.tools.");
+                ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+",com.adobe.campaign.tests.bridgeservice.testdata2");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
@@ -507,13 +508,13 @@ public class TestFetchCalls {
         //Call 2
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
-        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_ccB.setMethodName("getRandomEmail");
+        l_ccB.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_ccB.setMethodName("assembleBySystemValues");
         l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
 
         Properties l_authenticationB = new Properties();
-        l_authenticationB.put("AC.UITEST.MAILING.PREFIX", "nana");
-        l_authenticationB.put("AC.INTEGRO.MAILING.BASE", "noon.com");
+        l_authenticationB.put("PREFIX", "nana");
+        l_authenticationB.put("SUFFIX", "noon.com");
         l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
 
         JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
@@ -537,12 +538,12 @@ public class TestFetchCalls {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
@@ -558,8 +559,8 @@ public class TestFetchCalls {
         //Call 2
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
-        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_ccB.setMethodName("getRandomEmail");
+        l_ccB.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_ccB.setMethodName("assembleBySystemValues");
         l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
 
         JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
@@ -583,12 +584,12 @@ public class TestFetchCalls {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.getCallContent().put("call1", l_cc);
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
@@ -612,7 +613,7 @@ public class TestFetchCalls {
         CallContent l_ccB = new CallContent();
         l_ccB.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
         l_ccB.setMethodName("fetchExecutionProperty");
-        l_ccB.setArgs(new Object[]{"AC.UITEST.MAILING.PREFIX"});
+        l_ccB.setArgs(new Object[]{"PREFIX"});
         l_myJavaCallsB.getCallContent().put("getProperty", l_ccB);
 
         JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
@@ -622,24 +623,25 @@ public class TestFetchCalls {
                 Matchers.not(Matchers.startsWith("nana+")));
     }
 
+
     /**
      * Integrity Tests - Here the envvars are not in the context, but our calls are.
      * In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 3
      * The envvars of calls do not interfere with the others
      */
     @Test
-    public void testIntegrityEnvVars_case3B_allPathsSet_injectionMode() {
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.tools.");
+    public void testIntegrityEnvVars_case3B_allPathsSet_injectionModeNEW() {
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridgeservice.");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
@@ -647,7 +649,7 @@ public class TestFetchCalls {
         //Remove the integrity paths
         l_myJavaCalls.getLocalClassLoader().setPackagePaths(new HashSet<>());
         //set call path to integrity path
-        l_myJavaCalls.getLocalClassLoader().getPackagePaths().add("com.adobe.campaign.tests.integro.tools.");
+        l_myJavaCalls.getLocalClassLoader().getPackagePaths().add("com.adobe.campaign.tests.bridgeservice.");
 
         JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
 
@@ -664,14 +666,14 @@ public class TestFetchCalls {
         l_myJavaCallsB.getCallContent().put("getProperty", l_cc);
 
         Properties l_authenticationB = new Properties();
-        l_authenticationB.put("AC.UITEST.MAILING.PREFIX", "nana");
-        l_authenticationB.put("AC.INTEGRO.MAILING.BASE", "noon.com");
+        l_authenticationB.put("PREFIX", "nana");
+        l_authenticationB.put("SUFFIX", "noon.com");
         l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
 
         //Remove the integrity paths
         l_myJavaCallsB.getLocalClassLoader().setPackagePaths(new HashSet<>());
         //set call path to integrity path
-        l_myJavaCallsB.getLocalClassLoader().getPackagePaths().add("com.adobe.campaign.tests.integro.tools.");
+        l_myJavaCallsB.getLocalClassLoader().getPackagePaths().add("com.adobe.campaign.tests.bridgeservice.");
 
 
         JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
@@ -692,17 +694,17 @@ public class TestFetchCalls {
     @Test
     public void testIntegrityEnvVars_case3B_allPathsSet_rawMode() {
         ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.tools.");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridgeservice.");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
@@ -722,8 +724,8 @@ public class TestFetchCalls {
         l_myJavaCallsB.getCallContent().put("getProperty", l_cc);
 
         Properties l_authenticationB = new Properties();
-        l_authenticationB.put("AC.UITEST.MAILING.PREFIX", "nana");
-        l_authenticationB.put("AC.INTEGRO.MAILING.BASE", "noon.com");
+        l_authenticationB.put("PREFIX", "nana");
+        l_authenticationB.put("SUFFIX", "noon.com");
         l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
 
         JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
@@ -750,13 +752,13 @@ public class TestFetchCalls {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
 
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
@@ -772,18 +774,18 @@ public class TestFetchCalls {
         //Call 2    -- In this case the Environment
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
-        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_ccB.setMethodName("getRandomEmail");
+        l_ccB.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_ccB.setMethodName("assembleBySystemValues");
         l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
 
         JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
 
         assertThat("We should get a good answer back from the call",
                 returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
-                Matchers.startsWith("testqa+"));
+                Matchers.startsWith("null+c@"));
         assertThat("We should get a good answer back from the call",
                 returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
-                Matchers.endsWith("@localhost.corp.adobe.com"));
+                Matchers.endsWith("@null"));
     }
 
     /**
@@ -799,13 +801,13 @@ public class TestFetchCalls {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
 
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
@@ -824,8 +826,8 @@ public class TestFetchCalls {
         //Call 2    -- In this case the Environment
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
-        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_ccB.setMethodName("getRandomEmail");
+        l_ccB.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_ccB.setMethodName("assembleBySystemValues");
         l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
 
         //Remove the integrity paths
@@ -853,12 +855,12 @@ public class TestFetchCalls {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
 
@@ -870,13 +872,13 @@ public class TestFetchCalls {
 
         assertThat("Our class package should not yet be in the integrity path",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
-                        .noneMatch(x -> x.equals("com.adobe.campaign.tests.integro.tools")));
+                        .noneMatch(x -> x.equals("com.adobe.campaign.tests.bridgeservice.testdata2")));
 
         JavaCallResults returnedValueA = l_myJavaCalls.submitCalls();
 
         assertThat("We should now have added the our class path to the integrity path",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
-                        .anyMatch(x -> x.equals("com.adobe.campaign.tests.integro.tools")));
+                        .anyMatch(x -> x.equals("com.adobe.campaign.tests.bridgeservice.testdata2")));
 
         assertThat("We should not have the envvars integrity path set",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
@@ -903,17 +905,16 @@ public class TestFetchCalls {
         ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
 
-
         //Call 1
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
 
@@ -932,10 +933,10 @@ public class TestFetchCalls {
 
         assertThat("We should get a good answer back from the call",
                 returnedValueA.getReturnValues().get("call1PL").toString(),
-                Matchers.startsWith("testqa+"));
+                Matchers.startsWith("null+"));
         assertThat("We should get a good answer back from the call",
                 returnedValueA.getReturnValues().get("call1PL").toString(),
-                Matchers.endsWith("@localhost.corp.adobe.com"));
+                Matchers.endsWith("@null"));
 
     }
 
@@ -947,15 +948,15 @@ public class TestFetchCalls {
                 "{\n"
                         + "    \"callContent\": {\n"
                         + "        \"call1\": {\n"
-                        + "            \"class\": \"com.adobe.campaign.tests.integro.tools.RandomManager\",\n"
-                        + "            \"method\": \"getRandomEmail\",\n"
+                        + "            \"class\": \"com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity\",\n"
+                        + "            \"method\": \"assembleBySystemValues\",\n"
                         + "            \"returnType\": \"java.lang.String\",\n"
                         + "            \"args\": []\n"
                         + "        }\n"
                         + "    },\n"
                         + "    \"environmentVariables\": {\n"
-                        + "        \"AC.UITEST.MAILING.PREFIX\": \"tyrone\",\n"
-                        + "        \"AC.INTEGRO.MAILING.BASE\" : \"profane.com\"\n"
+                        + "        \"PREFIX\": \"tyrone\",\n"
+                        + "        \"SUFFIX\" : \"profane.com\"\n"
                         + "    }\n"
                         + "}";
 
@@ -978,10 +979,9 @@ public class TestFetchCalls {
     @Test
     public void testIssueWithAmbiguousCallException() {
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
-        l_cc.setMethodName("fetchEmail");
-        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq",
-                Boolean.TRUE.booleanValue() });
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("overLoadedMethod1Arg");
+        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
         Assert.assertThrows(AmbiguousMethodException.class,
@@ -992,9 +992,9 @@ public class TestFetchCalls {
     @Test(enabled = false)
     public void testIssueWithAmbiguousCall() {
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
-        l_cc.setMethodName("fetchEmail");
-        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("overLoadedMethod1Arg");
+        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
         List<Method> l_methods = l_cc.fetchMethodCandidates(ibcl.loadClass(l_cc.getClassName()));
@@ -1004,11 +1004,11 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantMethodException_internalMethod() {
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridgeservice.testdata.");
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
-        l_cc.setMethodName("fetchEmailNonExistant");
-        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodAcceptingStringArgumentNonExistant");
+        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
         Assert.assertThrows(NonExistentJavaObjectException.class,
@@ -1017,11 +1017,11 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantMethodException_internalClass() {
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.,utils.,testhelper.");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridgeservice.testdata.");
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientToolsNonExistant");
-        l_cc.setMethodName("fetchEmailNonExistant");
-        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
+        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExistant");
+        l_cc.setMethodName("methodAcceptingStringArgumentNonExistant");
+        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
         Assert.assertThrows(NonExistentJavaObjectException.class,
@@ -1031,9 +1031,9 @@ public class TestFetchCalls {
     @Test
     public void testIssueWithNonExistantMethodException_externalMethod() {
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
-        l_cc.setMethodName("fetchEmailNonExistant");
-        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
+        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods");
+        l_cc.setMethodName("methodAcceptingStringArgumentNonExistant");
+        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com"});
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
         Assert.assertThrows(NonExistentJavaObjectException.class,
@@ -1043,9 +1043,9 @@ public class TestFetchCalls {
     @Test
     public void testIssueWithNonExistantClassException_externalClass() {
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailNonExistantTools");
-        l_cc.setMethodName("fetchEmail");
-        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", Boolean.TRUE });
+        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExistant");
+        l_cc.setMethodName("methodAcceptingStringArgument");
+        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
         Assert.assertThrows(NonExistentJavaObjectException.class,
@@ -1055,10 +1055,10 @@ public class TestFetchCalls {
     @Test(enabled = false)
     public void testIssueWithAmbiguousCall_Apache() {
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.EmailClientTools");
-        l_cc.setMethodName("fetchEmail");
+        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods");
+        l_cc.setMethodName("overLoadedMethod1Arg");
         System.out.println(boolean.class.getTypeName());
-        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com", "rcdbxq", "boolean" });
+        l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         //l_cc.setArgTypes(new Object[] { "java.lang.String", "java.lang.String", "" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
         List<Method> l_methods = l_cc.fetchMethodCandidates(ibcl.loadClass(l_cc.getClassName()));
@@ -1072,9 +1072,9 @@ public class TestFetchCalls {
     @Test
     public void testIssueWithBetterMessageOnInvocationTarget() {
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomNumber");
-        l_cc.setArgs(new Object[] { 3, 3 });
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodThrowingException");
+        l_cc.setArgs(new Object[] { "" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
         try {
             l_cc.call(ibcl);
@@ -1083,9 +1083,9 @@ public class TestFetchCalls {
             assertThat("The error should be of the type TargetJavaMethodCallException", e,
                     Matchers.instanceOf(TargetJavaMethodCallException.class));
             assertThat("We should have correct static messages ", e.getMessage(), Matchers.startsWith(
-                    "We experienced an exception when calling the provided method com.adobe.campaign.tests.integro.tools.RandomManager.getRandomNumber."));
+                    "We experienced an exception when calling the provided method com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods.methodThrowingException."));
             assertThat("The message should contain the target message as well", e.getMessage(), Matchers.endsWith(
-                    "Provided error message : java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number."));
+                    "Provided error message : java.lang.IllegalArgumentException: Empty string was given."));
         }
 
     }

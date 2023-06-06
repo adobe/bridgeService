@@ -1,5 +1,8 @@
 package com.adobe.campaign.tests.service;
 
+import com.adobe.campaign.tests.bridgeservice.testdata.EnvironmentVariableHandler;
+import com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods;
+import com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
@@ -59,14 +62,13 @@ public class E2ETests {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
-        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        myContent.setMethodName("getCountries");
+        myContent.setClassName(SimpleStaticMethods.class.getTypeName());
+        myContent.setMethodName("methodReturningString");
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
-                Matchers.containsInAnyOrder("AT", "AU", "CA", "CH", "DE", "US", "FR", "CN", "IN", "JP", "RU", "BR",
-                        "ID", "GB","MX"));
+                Matchers.equalTo(SimpleStaticMethods.SUCCESS_VAL));
     }
 
     @Test(groups = "E2E")
@@ -105,15 +107,15 @@ public class E2ETests {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
-        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        myContent.setMethodName("getRandomNumber");
+        myContent.setClassName(SimpleStaticMethods.class.getTypeName());
+        myContent.setMethodName("methodThrowingException");
         myContent.setReturnType("java.lang.String");
         myContent.setArgs(
-                new Object[] { 3, 3 });
+                new Object[] { "" });
         l_call.getCallContent().put("call1PL", myContent);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
-                Matchers.containsString("Minimum number must be strictly inferior than maximum number."));
+                Matchers.containsString("Empty string was given."));
 
     }
 
@@ -125,8 +127,8 @@ public class E2ETests {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
-        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        myContent.setMethodName("fetchRandomFileName");
+        myContent.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods");
+        myContent.setMethodName("overLoadedMethod1Arg");
         myContent.setReturnType("java.lang.String");
         myContent.setArgs(
                 new Object[] { "plop" });
@@ -145,8 +147,8 @@ public class E2ETests {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
-        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        myContent.setMethodName("fetchRandomFileName");
+        myContent.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods");
+        myContent.setMethodName("overLoadedMethod1Arg");
         myContent.setReturnType("java.lang.String");
         myContent.setArgs(
                 new Object[] { "plop" });
@@ -171,8 +173,8 @@ public class E2ETests {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
-        myContent.setClassName("com.adobe.campaign.tests.integro.tools.NonExistingRandomManager");
-        myContent.setMethodName("getRandomNumber");
+        myContent.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExisting");
+        myContent.setMethodName("methodReturningString");
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
@@ -188,8 +190,8 @@ public class E2ETests {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
-        myContent.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        myContent.setMethodName("getRandomNumberNonExisting");
+        myContent.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods");
+        myContent.setMethodName("methodReturningStringNonExisting");
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
@@ -208,8 +210,8 @@ public class E2ETests {
                 "{\n"
                         + "    \"callContent\": {\n"
                         + "        \"call1\": {\n"
-                        + "            \"class\": \"com.adobe.campaign.tests.integro.tools.RandomManager\",\n"
-                        + "            \"method\": \"getRandomEmail\",\n"
+                        + "            \"class\": \"com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity\",\n"
+                        + "            \"method\": \"assembleBySystemValues\",\n"
                         + "            \"returnType\": \"java.lang.String\",\n"
                         + "            \"args\": []\n"
                         + "        }\n"
@@ -228,19 +230,19 @@ public class E2ETests {
 
     @Test(groups = "E2E")
     public void testIntegrity_pathsSet() {
-
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.integro.");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridgeservice.testdata2");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(EnvironmentVariableHandler.class.getTypeName());
 
         //Call 1
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
-        l_envVars.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_envVars.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
         l_myJavaCalls.setEnvironmentVariables(l_envVars);
 
@@ -252,8 +254,8 @@ public class E2ETests {
 
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
-        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_ccB.setMethodName("getRandomEmail");
+        l_ccB.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_ccB.setMethodName("assembleBySystemValues");
         l_myJavaCallsB.getCallContent().put("call2PL", l_ccB);
 
         given().body(l_myJavaCallsB).post(EndPointURL + "call").then().assertThat().statusCode(200).
@@ -278,20 +280,21 @@ public class E2ETests {
      */
     @Test(groups = "E2E")
     public void testIntegrity_case2_pathsNotSet() {
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(EnvironmentVariableHandler.class.getTypeName());
 
         //Call 1
         JavaCalls l_myJavaCalls = new JavaCalls();
         //l_myJavaCalls.getLocalClassLoader().setPackagePaths(new HashSet<>());
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_cc.setMethodName("getRandomEmail");
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
 
-        Properties l_authentication = new Properties();
-        l_authentication.put("AC.UITEST.MAILING.PREFIX", "bada");
-        l_authentication.put("AC.INTEGRO.MAILING.BASE", "boom.com");
+        Properties l_envVars = new Properties();
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
 
-        l_myJavaCalls.setEnvironmentVariables(l_authentication);
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
 
         l_myJavaCalls.getCallContent().put("call1PL", l_cc);
 
@@ -302,26 +305,27 @@ public class E2ETests {
         //call 2 -- independant call. No access to the set environment variables
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
-        l_ccB.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
-        l_ccB.setMethodName("getRandomEmail");
+        l_ccB.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_ccB.setMethodName("assembleBySystemValues");
         l_myJavaCallsB.getCallContent().put("call2PL", l_ccB);
 
         given().body(l_myJavaCallsB).post(EndPointURL + "call").then().assertThat().statusCode(200).
-                body("returnValues.call2PL", Matchers.endsWith("localhost.corp.adobe.com"))
-                .body("returnValues.call2PL", Matchers.startsWith("testqa+"));
+                body("returnValues.call2PL", Matchers.endsWith("null"))
+                .body("returnValues.call2PL", Matchers.startsWith("null+c"));
 
     }
 
 
     @Test(groups = "E2E")
     public void testEnvironmentVars() {
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(EnvironmentVariableHandler.class.getTypeName());
 
         //Call 1
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.core.SystemValueHandler");
-        l_cc.setMethodName("fetchExecutionProperty");
+        l_cc.setClassName(EnvironmentVariableHandler.class.getTypeName());
+        l_cc.setMethodName("getCacheProperty");
         l_cc.setArgs(new Object[]{"ABC"});
 
         Properties l_authentication = new Properties();

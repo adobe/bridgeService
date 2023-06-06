@@ -146,8 +146,8 @@
         </dependency>
         <dependency>
             <groupId>com.adobe.campaign.tests.bridgeservice.testdata</groupId>
-            <artifactId>ibs-data</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <artifactId>bridgeServiceTestData</artifactId>
+            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>

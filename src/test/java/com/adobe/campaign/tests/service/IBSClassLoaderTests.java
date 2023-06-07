@@ -1,6 +1,6 @@
 package com.adobe.campaign.tests.service;
 
-import com.adobe.campaign.tests.integro.core.SystemValueHandler;
+import com.adobe.campaign.tests.bridgeservice.testdata.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.service.data.MyPropertiesHandler;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterClass;
@@ -43,7 +43,7 @@ public class IBSClassLoaderTests {
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
 
         assertThat("We should have an array containing only the systemvaluehandler", ibscl.getPackagePaths(),
-                Matchers.not(Matchers.contains(SystemValueHandler.class.getPackage().getName())));
+                Matchers.not(Matchers.contains(EnvironmentVariableHandler.class.getPackage().getName())));
 
         ibscl.setPackagePaths("bau,cel,sab");
 

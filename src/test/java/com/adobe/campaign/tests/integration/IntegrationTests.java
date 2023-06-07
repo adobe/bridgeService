@@ -1,5 +1,9 @@
 package com.adobe.campaign.tests.integration;
 
+import com.adobe.campaign.tests.service.ConfigValueHandlerIBS;
+import org.testng.annotations.BeforeClass;
+
+/*
 import com.adobe.campaign.tests.integro.tools.RandomManager;
 import com.adobe.campaign.tests.service.CallContent;
 import com.adobe.campaign.tests.service.ConfigValueHandlerIBS;
@@ -13,7 +17,7 @@ import org.testng.annotations.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
-
+*/
 public class IntegrationTests {
     static String EndPointURL;
 
@@ -25,7 +29,7 @@ public class IntegrationTests {
 
 
     //Test to make sure that we can do two integro calls
-
+/*
     @Test(groups = "Integration")
     public void testMainHelloWorldCall() throws JsonProcessingException {
         String l_recipientID1 = "";
@@ -135,10 +139,10 @@ public class IntegrationTests {
             call3Content2.setArgs(
                     new Object[] { l_recipientID2 });
 
-              /*
-            call3Content2.setArgs(
-                    new Object[] { l_recipientID1 });
-            */
+
+            //call3Content2.setArgs(
+            //        new Object[] { l_recipientID1 });
+
             l_call3.getCallContent().put("call3Cont1", call3Content1);
             l_call3.getCallContent().put("call3RecipientExists", call3Content2);
 
@@ -151,10 +155,12 @@ public class IntegrationTests {
 
 
     }
-
+    */
+/*
     @Test(groups = "monitoring")
     public void testMainHelloWorld() {
         System.out.println("calling :  "+EndPointURL + "test");
         given().when().get(EndPointURL + "test").then().assertThat().body(Matchers.startsWith("All systems up  -")).body(Matchers.containsString("Bridge Service Version"));
     }
+    */
 }

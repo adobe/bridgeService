@@ -178,7 +178,7 @@ We can chain a series of java calls in the same payload:
             "method": "<method name 1>",
             "args": ["argument1","argument2"]
         },
-        "<ID2->": {
+        "<ID-2>": {
            "class": "<package name 2>.<class name 2>",
            "method": "<method name 2>",
            "args": ["argument1","argument2"]

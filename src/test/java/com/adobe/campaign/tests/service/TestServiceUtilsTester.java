@@ -1,6 +1,5 @@
 package com.adobe.campaign.tests.service;
 
-import com.adobe.campaign.tests.integro.tools.NetworkTools;
 import com.adobe.campaign.tests.service.utils.ServiceTools;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterClass;
@@ -102,21 +101,21 @@ public class TestServiceUtilsTester {
     public void testISIPReachable() {
 
         assertThat("127.0.0.1 should be reachable",
-                NetworkTools.isServerAvailable("127.0.0.1"));
+                ServiceTools.isServerAvailable("127.0.0.1"));
 
         assertThat("Localhost should be reachable",
-                NetworkTools.isServerAvailable("localhost"));
+                ServiceTools.isServerAvailable("localhost"));
 
     }
 
     @Test
     public void testISIPUnreachable() {
-        NetworkTools.setWAIT_BEFORE_INVALIDATE(500);
+        ServiceTools.setWAIT_BEFORE_INVALIDATE(500);
         assertThat("Inexisting ip adress should not be found",
-                !NetworkTools.isServerAvailable("remoteHost"));
+                !ServiceTools.isServerAvailable("remoteHost"));
 
         assertThat("Inexisting ip adress should not be found",
-                !NetworkTools.isServerAvailable("128.0.0.1"));
+                !ServiceTools.isServerAvailable("128.0.0.1"));
     }
 
 
@@ -126,12 +125,12 @@ public class TestServiceUtilsTester {
     @Test
     public void getFreePort() throws IOException {
 
-        int l_nextFreePort = NetworkTools.fetchNextFreePortNumber();
+        int l_nextFreePort = ServiceTools.fetchNextFreePortNumber();
 
         assertThat(
                 "The next free port should be our default port "
                         + l_nextFreePort,
-                NetworkTools.isPortFree(l_nextFreePort));
+                ServiceTools.isPortFree(l_nextFreePort));
     }
 
     /**
@@ -143,7 +142,7 @@ public class TestServiceUtilsTester {
     public void getListeningPort_UnExistingServer() {
 
         assertThat("The inexisting server shouldn't return true",
-                !NetworkTools.isServerListening("RemoteUnexistingHost", 1233));
+                !ServiceTools.isServerListening("RemoteUnexistingHost", 1233));
 
     }
 

@@ -1,10 +1,10 @@
 package com.adobe.campaign.tests.service;
 
-import com.adobe.campaign.tests.bridgeservice.testdata.EnvironmentVariableHandler;
-import com.adobe.campaign.tests.bridgeservice.testdata.Instantiable;
-import com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods;
-import com.adobe.campaign.tests.bridgeservice.testdata.StaticType;
-import com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity;
+import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
+import com.adobe.campaign.tests.bridge.testdata.one.Instantiable;
+import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
+import com.adobe.campaign.tests.bridge.testdata.one.StaticType;
+import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.adobe.campaign.tests.service.data.MyPropertiesHandler;
 import com.adobe.campaign.tests.service.exceptions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -243,7 +243,7 @@ public class TestFetchCalls {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
-        myContent.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods");
+        myContent.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
         myContent.setMethodName("methodReturningString");
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
@@ -434,7 +434,7 @@ public class TestFetchCalls {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity");
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity");
         l_cc.setMethodName("assembleBySystemValues");
 
         Properties l_envVars = new Properties();
@@ -455,7 +455,7 @@ public class TestFetchCalls {
         //Call 2
         JavaCalls l_myJavaCallsB = new JavaCalls();
         CallContent l_ccB = new CallContent();
-        l_ccB.setClassName("com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity");
+        l_ccB.setClassName("com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity");
         l_ccB.setMethodName("assembleBySystemValues");
         l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
 
@@ -483,7 +483,7 @@ public class TestFetchCalls {
     public void testIntegrityEnvVars_case1_allPathsSet_rawMode() {
         ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
-                ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+",com.adobe.campaign.tests.bridgeservice.testdata2");
+                ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()+",com.adobe.campaign.tests.bridge.testdata.two");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -876,7 +876,7 @@ public class TestFetchCalls {
 
         assertThat("We should now have added the our class path to the integrity path",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
-                        .anyMatch(x -> x.equals("com.adobe.campaign.tests.bridgeservice.testdata2")));
+                        .anyMatch(x -> x.equals("com.adobe.campaign.tests.bridge.testdata.two")));
 
         assertThat("We should not have the envvars integrity path set",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
@@ -946,7 +946,7 @@ public class TestFetchCalls {
                 "{\n"
                         + "    \"callContent\": {\n"
                         + "        \"call1\": {\n"
-                        + "            \"class\": \"com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity\",\n"
+                        + "            \"class\": \"com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity\",\n"
                         + "            \"method\": \"assembleBySystemValues\",\n"
                         + "            \"returnType\": \"java.lang.String\",\n"
                         + "            \"args\": []\n"
@@ -1002,7 +1002,7 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantMethodException_internalMethod() {
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridgeservice.testdata.");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.one.");
         CallContent l_cc = new CallContent();
         l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
         l_cc.setMethodName("methodAcceptingStringArgumentNonExistant");
@@ -1015,9 +1015,9 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantMethodException_internalClass() {
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridgeservice.testdata.");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.one.");
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExistant");
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethodsNonExistant");
         l_cc.setMethodName("methodAcceptingStringArgumentNonExistant");
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
@@ -1029,7 +1029,7 @@ public class TestFetchCalls {
     @Test
     public void testIssueWithNonExistantMethodException_externalMethod() {
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods");
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
         l_cc.setMethodName("methodAcceptingStringArgumentNonExistant");
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com"});
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
@@ -1041,7 +1041,7 @@ public class TestFetchCalls {
     @Test
     public void testIssueWithNonExistantClassException_externalClass() {
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExistant");
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethodsNonExistant");
         l_cc.setMethodName("methodAcceptingStringArgument");
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
@@ -1053,7 +1053,7 @@ public class TestFetchCalls {
     @Test(enabled = false)
     public void testIssueWithAmbiguousCall_Apache() {
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods");
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
         l_cc.setMethodName("overLoadedMethod1Arg");
         System.out.println(boolean.class.getTypeName());
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
@@ -1081,7 +1081,7 @@ public class TestFetchCalls {
             assertThat("The error should be of the type TargetJavaMethodCallException", e,
                     Matchers.instanceOf(TargetJavaMethodCallException.class));
             assertThat("We should have correct static messages ", e.getMessage(), Matchers.startsWith(
-                    "We experienced an exception when calling the provided method com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods.methodThrowingException."));
+                    "We experienced an exception when calling the provided method com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowingException."));
             assertThat("The message should contain the target message as well", e.getMessage(), Matchers.endsWith(
                     "Provided error message : java.lang.IllegalArgumentException: Empty string was given."));
         }
@@ -1448,7 +1448,7 @@ public class TestFetchCalls {
         Instantiable reference = new Instantiable("3");
         JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.Instantiable");
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.Instantiable");
         l_cc.setArgs(new Object[] { "3" });
         jc.getCallContent().put("call1", l_cc);
     }
@@ -1461,7 +1461,7 @@ public class TestFetchCalls {
         Instantiable reference = new Instantiable("3");
         JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.Instantiable");
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.Instantiable");
         l_cc.setArgs(new Object[] { });
         jc.getCallContent().put("call1", l_cc);
 
@@ -1481,7 +1481,7 @@ public class TestFetchCalls {
 
         JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.Instantiable");
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.Instantiable");
         l_cc.setArgs(new Object[] {"A", "B" });
         jc.getCallContent().put("call1", l_cc);
 

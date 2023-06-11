@@ -1,6 +1,6 @@
 package com.adobe.campaign.tests.service;
 
-import com.adobe.campaign.tests.bridgeservice.testdata.EnvironmentVariableHandler;
+import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.service.data.MyPropertiesHandler;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterClass;

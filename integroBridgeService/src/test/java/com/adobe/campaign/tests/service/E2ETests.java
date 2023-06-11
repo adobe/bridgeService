@@ -1,8 +1,8 @@
 package com.adobe.campaign.tests.service;
 
-import com.adobe.campaign.tests.bridgeservice.testdata.EnvironmentVariableHandler;
-import com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods;
-import com.adobe.campaign.tests.bridgeservice.testdata2.StaticMethodsIntegrity;
+import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
+import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
+import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
@@ -127,7 +127,7 @@ public class E2ETests {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
-        myContent.setClassName("com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethods");
+        myContent.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
         myContent.setMethodName("overLoadedMethod1Arg");
         myContent.setReturnType("java.lang.String");
         myContent.setArgs(

@@ -1,7 +1,6 @@
 package com.adobe.campaign.tests.integration;
 
-import com.adobe.campaign.tests.service.ConfigValueHandlerIBS;
-import org.testng.annotations.BeforeClass;
+
 
 /*
 import com.adobe.campaign.tests.integro.tools.RandomManager;
@@ -11,19 +10,21 @@ import com.adobe.campaign.tests.service.JavaCallResults;
 import com.adobe.campaign.tests.service.JavaCalls;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+*/
+
+import com.adobe.campaign.tests.service.ConfigValueHandlerIBS;
 import org.hamcrest.Matchers;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.MatcherAssert.assertThat;
-*/
+
 public class IntegrationTests {
-    static String EndPointURL;
+    String EndPointURL;
 
     @BeforeClass(alwaysRun = true)
-    public static void prepareEnvironment() {
-         EndPointURL = ConfigValueHandlerIBS.PRODUCT_DEPLOYMENT_URL.fetchValue();
+    public void prepareEnvironment() {
+        EndPointURL = ConfigValueHandlerIBS.PRODUCT_DEPLOYMENT_URL.fetchValue();
     }
 
 
@@ -156,11 +157,12 @@ public class IntegrationTests {
 
     }
     */
-/*
+
     @Test(groups = "monitoring")
     public void testMainHelloWorld() {
+
         System.out.println("calling :  "+EndPointURL + "test");
         given().when().get(EndPointURL + "test").then().assertThat().body(Matchers.startsWith("All systems up  -")).body(Matchers.containsString("Bridge Service Version"));
     }
-    */
+
 }

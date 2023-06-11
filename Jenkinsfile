@@ -30,7 +30,7 @@ pipeline {
                         usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_API_TOKEN']]) {
                             
                                 sh """
-                                mvn clean test \
+                                mvn clean install \
                             """
                     }
 

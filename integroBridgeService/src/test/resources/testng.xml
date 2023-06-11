@@ -4,7 +4,7 @@
 <suite name="Integro Bridge Service Test Suite - IBS">
     <test verbose="2" name="IBS Tests" time-out="900000">
         <packages>
-            <package name="com.adobe.campaign.tests.service" />
+            <package name="com.adobe.campaign.tests.bridge.service" />
         </packages>
     </test>
 </suite> <!-- Default suite -->

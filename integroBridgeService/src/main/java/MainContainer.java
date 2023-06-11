@@ -1,5 +1,5 @@
-import com.adobe.campaign.tests.service.ConfigValueHandlerIBS;
-import com.adobe.campaign.tests.service.IntegroAPI;
+import com.adobe.campaign.tests.bridge.service.ConfigValueHandlerIBS;
+import com.adobe.campaign.tests.bridge.service.IntegroAPI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

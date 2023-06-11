@@ -45,6 +45,7 @@ pipeline {
                             execPattern: 'integroBridgeService/target/**.exec',
                             sourcePattern: 'integroBridgeService/src/main/java',
                             sourceInclusionPattern: 'integroBridgeService/**/*.java',
+                            sourceExclusionPattern: 'bridgeService-data/**/*.java',
                             changeBuildStatus: true,
                             buildOverBuild: true,
                             minimumBranchCoverage: '85',

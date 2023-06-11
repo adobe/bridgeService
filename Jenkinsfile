@@ -45,7 +45,7 @@ pipeline {
                             execPattern: 'target/**.exec',
                             sourcePattern: 'src/main/java',
                             sourceInclusionPattern: '**/*.java',
-                            inclusionPattern: 'integroBridgeService/**/*.class'
+                            inclusionPattern: 'integroBridgeService/**/*.class',
                             changeBuildStatus: true,
                             buildOverBuild: true,
                             minimumBranchCoverage: '85',

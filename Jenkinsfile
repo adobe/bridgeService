@@ -42,8 +42,8 @@ pipeline {
     post {
             always {
                     jacoco(
-                            execPattern: 'target/**.exec',
-                            sourcePattern: 'src/main/java',
+                            execPattern: 'integroBridgeService/target/**.exec',
+                            sourcePattern: 'integroBridgeService/src/main/java',
                             sourceInclusionPattern: '**/*.java',
                             changeBuildStatus: true,
                             buildOverBuild: true,
@@ -60,7 +60,7 @@ pipeline {
                             deltaInstructionCoverage: '0.3'
                         )
 
-               step([$class: 'Publisher', reportFilenamePattern: 'target/surefire-reports/testng-results.xml'])
+               step([$class: 'Publisher', reportFilenamePattern: 'integroBridgeService/target/surefire-reports/testng-results.xml'])
 
                archiveArtifacts allowEmptyArchive: true, artifacts: "**"
             }

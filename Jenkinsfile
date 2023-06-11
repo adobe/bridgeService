@@ -44,9 +44,9 @@ pipeline {
                     jacoco(
                             execPattern:   'integroBridgeService/target/**.exec',
                             sourcePattern: 'integroBridgeService/src/main/java',
+                            inclusionPattern: 'integroBridgeService/**/*.class',
                             sourceInclusionPattern: 'integroBridgeService/**/*.java',
                             sourceExclusionPattern: 'bridgeService-data/**/*.java',
-                            classPattern: 'integroBridgeService/**/*.class',
                             changeBuildStatus: true,
                             buildOverBuild: true,
                             minimumBranchCoverage: '85',

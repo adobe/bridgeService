@@ -20,7 +20,7 @@ pipeline {
                         usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_API_TOKEN']]) {
                             
                                 sh """
-                                mvn clean test -Dgroups=monitoring -DIBS.DEPLOYMENT.URL=${IBS_DEPLOYMENT_URL} -Dsurefire.suiteXmlFiles=src/test/resources/testngIntegration.xml \
+                                mvn -pl integroBridgeService clean test -Dgroups=monitoring -DIBS.DEPLOYMENT.URL=${IBS_DEPLOYMENT_URL} -Dsurefire.suiteXmlFiles=src/test/resources/testngIntegration.xml \
                             """
 
                     }

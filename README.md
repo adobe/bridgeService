@@ -8,7 +8,10 @@ This project allows you to expose Integro ACC as a REST service. It allows you t
         - [Installation](#installation)
         + [Considerations](#considerations)
     * [Including your project in the BridgeService](#including-your-project-in-the-bridgeservice)
-- [Setting information about your environment](#setting-information-about-your-environment)
+- [Starting the Bridge Service](#starting-the-bridge-service)
+    * [Running the Bridge Locally](#running-the-bridge-locally)
+    * [Running a DEMO](#running-a-demo)
+- [Setting Information About your Environment](#setting-information-about-your-environment)
 - [Testing That all is Working](#testing-that-all-is-working)
 - [Testing That all External Dervices can be Accessed](#testing-that-all-external-dervices-can-be-accessed)
 - [Making a basic Java Call](#making-a-basic-java-call)
@@ -56,7 +59,7 @@ The following dependency needs to be added to your pom file:
 
 ```
  <dependency>
-    <groupId>com.adobe.campaign.tests.service</groupId>
+    <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
     <version>2.11.5</version>
 </dependency>
@@ -72,16 +75,32 @@ In this model you can simply add your project as a dependency to the BridgeProje
 
 ![BridgeService Aggregator Model](diagrams/Processes-aggregatorModel.drawio.png)
 
-When starting the bridge service you need to run the following command line:
+## Starting the Bridge Service
+When deploying this as a project we run this as an executable jar. This is usually done in a Docker image.
 
+### Running the Bridge Locally
+You can also run the project locally to debug your project. To do this, you need to run the following command line:
+
+from the root project:
+```mvn -pl integroBridgeService exec:java -Dexec.args="test"```
+
+or directly from the module "integroBridgeService":
 ```mvn exec:java -Dexec.args="test"```
 
 This will make the service available under :
 ```http://localhost:8080```
 
-This is a legacy mode of use, and is not that scalable.
+### Running a DEMO
+The bridge service can be launched in this project with a demo project (Included in an aggregator mode). When deployed in this mode, we include the module `bridgeService-data` which is part of this project. If you want to include this project in your deployment you need to set the property `demo.project.mode` to `compile`. 
 
-## Setting information about your environment
+from the root project:
+```mvn -pl integroBridgeService exec:java -Dexec.args="test" -Ddemo.project.mode=compile ```
+
+or directly from the module "integroBridgeService":
+```mvn exec:java -Dexec.args="test" -Ddemo.project.mode=compile```
+
+
+## Setting Information About your Environment
 The users accessing bridge service will encounter two different technologies:
 * The Bridge Service
 * The Host Project
@@ -291,8 +310,8 @@ Currently, whenever there is an error in the underlying java call we will includ
 {
     "callContent": {
         "call1": {
-            "class": "com.adobe.campaign.tests.integro.tools.RandomManager",
-            "method": "getRandomNumber",
+            "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+            "method": "methodThrowingException",
             "returnType": "java.lang.String",
             "args": [
                 3,
@@ -305,7 +324,7 @@ Currently, whenever there is an error in the underlying java call we will includ
 
 We would normally get the error:
 ```
-java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number.
+java.lang.IllegalArgumentException: We do not allow numbers that are equal.
 ```
 
 When using the bridge service, we also include additional info:

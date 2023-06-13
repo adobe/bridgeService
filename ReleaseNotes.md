@@ -2,14 +2,15 @@
 
 ## 2.11.6
 * [#58 Object Instance Management](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/58). We can now instantiate objects and call their instance methods.
-* [#60 Integro Independance](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/60). We are now completely independant of integro as a library. For testing purposes we now use dedicate classes that are available in [Integro Bridge Service Test Data Project](https://git.corp.adobe.com/gandomi/bridgeServiceTestData).
+* [#60 Integro Independance](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/60). We are now completely independant of integro as a library. For testing purposes we now use dedicated classes that are available in the module "bridgeService-data". This can be included in a deployment by setting `demo.project.mode=compile`.
+* [#63 multi-module solution](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/63). Moved to a multi-module approach. This we can better manage and maintain the dependant test classes.
 
 ## 2.11.5
 * [#56 Java 11 Compatibility](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/56).Integro Bridge Service is now Java 11 compatible. From now on the standard builds are in Java 11. (Java 8 is also available, but is made on demand).
 * [#48 Dynamically load all called classes](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48). Previously, we were loading a preset set of packages for managing the static variable contexts in calls. We now automatically include the classes that are being called. This solves the following issues:
   * [#41 Ensuring that the system value handler is included in the static paths](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/41) : We were discovering that static variables are not automatically included in the static cpath context.
   * [#47 Issue with Server=null when calling PushNotifications with IBS](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/47) : We discovered that when the environment variables are in one context, and that the following java call isn't, we would not have access to those variables.
-* Renamed Configuration class `com.adobe.campaign.tests.service.ConfigValueHandler` to `com.adobe.campaign.tests.service.ConfigValueHandlerIBS`. This is to avoid confligt with projects using the same design pattern.
+* Renamed Configuration class `com.adobe.campaign.tests.service.ConfigValueHandler` to `com.adobe.campaign.tests.bridge.service.ConfigValueHandlerIBS`. This is to avoid confligt with projects using the same design pattern.
 * Added Continuous Integration Scripts.
 
 ## 2.0.4

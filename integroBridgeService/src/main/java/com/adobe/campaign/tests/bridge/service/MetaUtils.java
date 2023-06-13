@@ -1,0 +1,107 @@
+package com.adobe.campaign.tests.bridge.service;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class MetaUtils {
+    private static final Logger log = LogManager.getLogger();
+    public static final List<Class<?>> ManagedClasses = Arrays.asList(String.class, int.class, long.class, boolean.class,Integer.class, Long.class, Boolean.class, Object.class);
+
+    /**
+     * Extracts a possible field name given a method name
+     * @param in_methodName The name of the method we want to extract
+     * @return A possible field name
+     */
+    public static String extractFieldName(String in_methodName) {
+        //Remove "get"
+        String l_step1Transformation = in_methodName.startsWith("get") ? in_methodName.substring(3) : in_methodName;
+
+        //Transform first character to lower
+        StringBuilder sb = new StringBuilder();
+        sb.append(Character.toLowerCase(l_step1Transformation.charAt(0)));
+        sb.append(l_step1Transformation.substring(1));
+
+        return sb.toString();
+    }
+
+    /**
+     * Used for deserializing Collections of unserializable objects.
+      * @param in_object A collection of complex objects
+     * @return A List of serialized Objects
+     */
+    public static List extractValuesFromList(Collection in_object) {
+        return (List<Map<String, Object>>) in_object.stream().map(MetaUtils::extractValuesFromObject).collect(Collectors.toList());
+    }
+
+    public static boolean isExtractable(Class in_class) {
+        return ManagedClasses.contains(in_class) || in_class.isPrimitive() || Collection.class.isAssignableFrom(in_class) ;
+    }
+
+    /**
+     * Objects of these types should be returned as is
+     * @param in_class a Class object
+     * @return true if the class needs not be managed
+     */
+    public static boolean isBasicReturnType(Class in_class) {
+        return ManagedClasses.contains(in_class) || in_class.isPrimitive() ;
+    }
+
+    /**
+     * Lets us know if we can extract this method
+     * @param in_method a method object
+     * @return true if this method can be invoked in the case of extracting results
+     */
+    public static boolean isExtractable(Method in_method) {
+        List<Boolean> tests = new ArrayList<>();
+
+        tests.add(in_method.getReturnType() instanceof Serializable);
+        tests.add(in_method.getName().startsWith("get") || in_method.getName().startsWith("is")|| in_method.getName().startsWith("has"));
+        tests.add(isExtractable(in_method.getReturnType()));
+        tests.add(in_method.getParameterCount()==0);
+
+        return tests.stream().noneMatch(r -> r.equals(Boolean.FALSE));
+    }
+
+    public static Object extractValuesFromObject(Object in_object) {
+        Map<String, Object> lr_value = new HashMap<>();
+        if (in_object==null) {
+            return lr_value;
+        } else if (isBasicReturnType(in_object.getClass())) {
+            return in_object;
+        } else if (in_object instanceof Collection) {
+            return extractValuesFromList((Collection) in_object);
+        }
+
+        for (Method lt_m : Arrays.stream(in_object.getClass().getMethods()).filter(MetaUtils::isExtractable).collect(
+                Collectors.toSet())) {
+
+              //  if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && isExtractable(lt_m.getReturnType())) {
+            if (lt_m.getParameterCount()==0 && isExtractable(lt_m.getReturnType())) {
+                    Object lt_returnValue = null;
+                    try {
+                        lt_returnValue = lt_m.invoke(in_object);
+
+                        //TODO Add option with null values (extract null)
+                        if (lt_returnValue != null) {
+                            lr_value.put(extractFieldName(lt_m.getName()),lt_returnValue);
+                            log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue.toString());
+                        }
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+
+
+            }
+
+        }
+        return lr_value;
+    }
+
+
+}

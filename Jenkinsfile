@@ -30,7 +30,7 @@ pipeline {
                         usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_API_TOKEN']]) {
                             
                                 sh """
-                                mvn clean test \
+                                mvn clean install \
                             """
                     }
 
@@ -42,9 +42,11 @@ pipeline {
     post {
             always {
                     jacoco(
-                            execPattern: 'target/**.exec',
-                            sourcePattern: 'src/main/java',
-                            sourceInclusionPattern: '**/*.java',
+                            execPattern: 'integroBridgeService/**/**.exec',
+                            classPattern: 'integroBridgeService/target/classes',
+                            exclusionPattern: 'bridgeServiceData',
+                            sourcePattern: 'integroBridgeService/src/main/java',
+                            sourceExclusionPattern: 'bridgeServiceData',
                             changeBuildStatus: true,
                             buildOverBuild: true,
                             minimumBranchCoverage: '85',
@@ -60,7 +62,7 @@ pipeline {
                             deltaInstructionCoverage: '0.3'
                         )
 
-               step([$class: 'Publisher', reportFilenamePattern: 'target/surefire-reports/testng-results.xml'])
+               step([$class: 'Publisher', reportFilenamePattern: 'integroBridgeService/target/surefire-reports/testng-results.xml'])
 
                archiveArtifacts allowEmptyArchive: true, artifacts: "**"
             }

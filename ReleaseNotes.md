@@ -3,7 +3,7 @@
 ## 2.11.6
 * [#58 Object Instance Management](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/58). We can now instantiate objects and call their instance methods.
 * [#60 Integro Independance](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/60). We are now completely independant of integro as a library. For testing purposes we now use dedicated classes that are available in the module "bridgeService-data".
-* [#63 multi-module solution](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/63). Moved to a multi-module approach. This we can better manage and maintaing the dependant test classes.
+* [#63 multi-module solution](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/63). Moved to a multi-module approach. This we can better manage and maintain the dependant test classes.
 
 ## 2.11.5
 * [#56 Java 11 Compatibility](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/56).Integro Bridge Service is now Java 11 compatible. From now on the standard builds are in Java 11. (Java 8 is also available, but is made on demand).

@@ -56,7 +56,7 @@ The following dependency needs to be added to your pom file:
 
 ```
  <dependency>
-    <groupId>com.adobe.campaign.tests.service</groupId>
+    <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
     <version>2.11.5</version>
 </dependency>
@@ -74,6 +74,10 @@ In this model you can simply add your project as a dependency to the BridgeProje
 
 When starting the bridge service you need to run the following command line:
 
+from the root project:
+```mvn -pl integroBridgeService exec:java -Dexec.args="test"```
+
+or directly from the module "integroBridgeService":
 ```mvn exec:java -Dexec.args="test"```
 
 This will make the service available under :

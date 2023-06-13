@@ -43,7 +43,7 @@ pipeline {
             always {
                     jacoco(
                             execPattern: 'integroBridgeService/**/**.exec',
-                            classPattern: 'integroBridgeService/target/classes/java/main',
+                            classPattern: 'integroBridgeService/target/classes'
                             exclusionPattern: 'bridgeServiceData',
                             sourcePattern: 'integroBridgeService/src/main/java',
                             sourceExclusionPattern: 'bridgeServiceData',

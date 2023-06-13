@@ -8,6 +8,20 @@
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <url>https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService</url>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Baubak Gandomi</name>
+            <email>Development@Gandomi.com</email>
+            <organization>Adobe</organization>
+            <url>https://www.linkedin.com/in/baubakgandomi/</url>
+        </developer>
+    </developers>
     <modules>
         <module>integroBridgeService</module>
         <module>bridgeService-data</module>
@@ -15,7 +29,11 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <license.dir>${basedir}/LICENSE_DATA</license.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <sonar.organization>adobeinc</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
     <build>
         <plugins>
@@ -34,6 +52,42 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.1.1</version>
+            </plugin>
+            <!-- License information -->
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>4.2</version>
+                <configuration>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>${license.dir}/LicenseHeader</header>
+                            <excludes>
+                                <exclude>**/*.md</exclude>
+                                <exclude>sonar-project.properties</exclude>
+                                <exclude>ibs_output/**</exclude>
+                                <exclude>**/ibs_output/**</exclude>
+                                <exclude>${license.dir}</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
+                    <properties>
+                        <project>
+                            Integro Bridge Service
+                        </project>
+                        <founder>Adobe Systems Incorporated</founder>
+                        <year>2022</year>
+                        <website>http://www.adobe.com/</website>
+                    </properties>
+                    <strictCheck>true</strictCheck>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

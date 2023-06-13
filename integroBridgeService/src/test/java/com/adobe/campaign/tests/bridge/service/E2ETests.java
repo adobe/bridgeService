@@ -1,3 +1,11 @@
+/*
+ * Copyright 2022 Adobe
+ * All Rights Reserved.
+ *
+ * NOTICE: Adobe permits you to use, modify, and distribute this file in
+ * accordance with the terms of the Adobe license agreement accompanying
+ * it.
+ */
 package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
@@ -50,7 +58,6 @@ public class E2ETests {
                 .body(Matchers.endsWith("Product user version : F")).body(Matchers.containsString("101"));
 
     }
-
 
     @Test(groups = "E2E")
     public void testMainHelloWorld_negative() {
@@ -222,8 +229,7 @@ public class E2ETests {
                         + "    }\n"
                         + "}";
 
-
-           given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
                 Matchers.containsString(IntegroAPI.ERROR_JSON_TRANSFORMATION));
 
     }
@@ -315,7 +321,6 @@ public class E2ETests {
 
     }
 
-
     @Test(groups = "E2E")
     public void testEnvironmentVars() {
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(EnvironmentVariableHandler.class.getTypeName());
@@ -326,7 +331,7 @@ public class E2ETests {
         CallContent l_cc = new CallContent();
         l_cc.setClassName(EnvironmentVariableHandler.class.getTypeName());
         l_cc.setMethodName("getCacheProperty");
-        l_cc.setArgs(new Object[]{"ABC"});
+        l_cc.setArgs(new Object[] { "ABC" });
 
         Properties l_authentication = new Properties();
         l_authentication.put("ABC", 123);

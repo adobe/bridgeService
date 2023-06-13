@@ -232,7 +232,7 @@ public class TestFetchCalls {
         l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
         l_cc.setMethodName("methodThrowingException");
 
-        l_cc.setArgs(new Object[] { "" });
+        l_cc.setArgs(new Object[] { 5, 5 });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
         Assert.assertThrows(TargetJavaMethodCallException.class, () -> l_cc.call(iClassLoader));
@@ -1072,7 +1072,7 @@ public class TestFetchCalls {
         CallContent l_cc = new CallContent();
         l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
         l_cc.setMethodName("methodThrowingException");
-        l_cc.setArgs(new Object[] { "" });
+        l_cc.setArgs(new Object[] { 5,5 });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
         try {
             l_cc.call(ibcl);
@@ -1083,7 +1083,7 @@ public class TestFetchCalls {
             assertThat("We should have correct static messages ", e.getMessage(), Matchers.startsWith(
                     "We experienced an exception when calling the provided method com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowingException."));
             assertThat("The message should contain the target message as well", e.getMessage(), Matchers.endsWith(
-                    "Provided error message : java.lang.IllegalArgumentException: Empty string was given."));
+                    "Provided error message : java.lang.IllegalArgumentException: We do not allow numbers that are equal."));
         }
 
     }

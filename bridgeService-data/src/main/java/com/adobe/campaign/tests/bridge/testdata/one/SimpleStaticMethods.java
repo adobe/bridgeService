@@ -53,9 +53,9 @@ public class SimpleStaticMethods {
 
     //Exceptions
     //DateAndTimeTools.convertStringToDate
-    public static void methodThrowingException(String in_data) {
-        if (in_data.isEmpty()) {
-            throw new IllegalArgumentException("Empty string was given.");
+    public static void methodThrowingException(int in_value1, int in_value2) {
+        if (in_value1==in_value2) {
+            throw new IllegalArgumentException("We do not allow numbers that are equal.");
         }
     }
 }

@@ -14,3 +14,5 @@ buildNumber.properties
 ac_test_output
 ibstest_output
 *.bkp
+ibs_output
+*.dtmp

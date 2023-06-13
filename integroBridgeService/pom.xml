@@ -7,6 +7,9 @@
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <url>https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService</url>
+    <properties>
+        <demo.project.mode>test</demo.project.mode>
+    </properties>
     <build>
         <plugins>
             <plugin>
@@ -147,7 +150,7 @@
             <groupId>com.adobe.campaign.tests.bridge.testdata</groupId>
             <artifactId>bridgeService-data</artifactId>
             <version>${project.parent.version}</version>
-            <scope>test</scope>
+            <scope>${demo.project.mode}</scope>
         </dependency>
     </dependencies>
 

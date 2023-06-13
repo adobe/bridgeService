@@ -111,11 +111,11 @@ public class E2ETests {
         myContent.setMethodName("methodThrowingException");
         myContent.setReturnType("java.lang.String");
         myContent.setArgs(
-                new Object[] { "" });
+                new Object[] { 7, 7 });
         l_call.getCallContent().put("call1PL", myContent);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
-                Matchers.containsString("Empty string was given."));
+                Matchers.containsString("We do not allow numbers that are equal."));
 
     }
 

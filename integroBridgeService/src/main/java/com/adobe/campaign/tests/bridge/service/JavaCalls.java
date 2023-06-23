@@ -66,7 +66,7 @@ public class JavaCalls {
         };
         Future<Object> future = executor.submit(caller);
         try {
-            lr_object = future.get(getTimeout(), TimeUnit.MILLISECONDS);
+            lr_object = getTimeout()>0 ? future.get(getTimeout(), TimeUnit.MILLISECONDS) : future.get() ;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {

@@ -49,7 +49,7 @@ pipeline {
                             sourceExclusionPattern: 'bridgeServiceData',
                             changeBuildStatus: true,
                             buildOverBuild: true,
-                            minimumBranchCoverage: '85',
+                            minimumBranchCoverage: '87',
                             deltaBranchCoverage: '0.3',
                             minimumClassCoverage: '95',
                             deltaClassCoverage: '1',
@@ -57,7 +57,7 @@ pipeline {
                             deltaMethodCoverage: '1',
                             minimumComplexityCoverage: '70',
                             deltaComplexityCoverage: '1',
-                            minimumLineCoverage: '87',
+                            minimumLineCoverage: '92',
                             deltaLineCoverage: '0.1',
                             deltaInstructionCoverage: '0.3'
                         )

@@ -159,5 +159,29 @@ public class TimeOutTesting {
 
     }
 
+    @Test
+    public void testTimeoutOverride() {
+        String l_expectedDuration = "200";
+        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate(l_expectedDuration);
+        Long l_sleepDuration = Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue());
+
+        JavaCalls jc = new JavaCalls();
+        jc.setTimeout(0l);
+        CallContent cc1 = new CallContent();
+        cc1.setClassName(SimpleStaticMethods.class.getTypeName());
+        cc1.setMethodName("methodWithTimeOut");
+        cc1.setArgs(new Object[] { l_sleepDuration + 100 });
+        jc.getCallContent().put("call1", cc1);
+
+        long l_start = System.currentTimeMillis();
+        jc.submitCalls();
+        long l_end = System.currentTimeMillis();
+        long l_actualDuration = l_end - l_start;
+
+        assertThat("The duration of the call should be less than " + l_expectedDuration, l_actualDuration,
+                Matchers.greaterThan(l_sleepDuration));
+
+    }
+
 
 }

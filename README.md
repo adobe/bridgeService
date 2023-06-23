@@ -186,6 +186,39 @@ If we do not specify a method, the bridge service assumes that we are instantiat
 
 **Note :** You can also set the method name to the class name, but it may be easier to simply skip setting a method name in this case.
 
+## Managing Timeouts
+As of version 2.11.6 we now introduce the notion of timeouts. This means that after a declared time a call will be interrupted. Setting this value can be done at two levels:
+* The deployment level
+* The Call session
+
+**Note :** If set to 0, there is no timeout.
+
+### Setting Timeout Globally
+You can set a default value when starting the service. This is done by setting the environment variable `IBS.TIMEOUT.DEFAULT`. If not set, the default value is 10000ms.
+
+### Setting a Timeout for the Call Session
+We can also set the Timeout for a java call transaction. In that case the value you pass overrides the global value, but only for you session. If the `timeout` is not test in the payload at the next call, the global value will be used. 
+
+In the example below the method `methodWithTimeOut` waits for the provided, in this case 800ms, amount of time. In the example below the test will pass because we wait for 800ms, and the timeout is 1000s.  
+```JSON
+{
+	"callContent": {
+		"call1": {
+			"class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+			"method": "methodWithTimeOut",
+			"args": [
+				800
+			]
+		}
+	},
+	"timeout": 1000
+}
+```
+
+If the payload above would have a timout below 800ms, the call will fail.
+
+
+
 ## Call Chaining a basic Java Call
 We can chain a series of java calls in the same payload:
 

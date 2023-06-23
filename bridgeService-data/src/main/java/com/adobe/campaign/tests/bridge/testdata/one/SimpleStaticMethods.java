@@ -66,4 +66,13 @@ public class SimpleStaticMethods {
             throw new IllegalArgumentException("We do not allow numbers that are equal.");
         }
     }
+
+    //Timeouts
+    public static void methodWithTimeOut(long in_sleepDuration) {
+        try {
+            Thread.sleep(in_sleepDuration);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

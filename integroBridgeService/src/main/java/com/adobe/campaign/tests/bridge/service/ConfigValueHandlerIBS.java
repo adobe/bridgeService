@@ -36,10 +36,12 @@ public enum ConfigValueHandlerIBS {
     PRODUCT_USER_VERSION("IBS.PRODUCT.USER.VERSION","not set", false, "The version of the BridgeService, which is used to identify the version that is accessed."),
     AUTOMATIC_INTEGRITY_PACKAGE_INJECTION(
             "IBS.CLASSLOADER.AUTOMATIC.INTEGRITY.INJECTION", "true", false, "When true, we include the called class package in the path. This allows for maintaining static variables in the call."),
-    PRODUCT_DEPLOYMENT_URL("IBS.DEPLOYMENT.URL","https://acc-simulators-ibs.rd.campaign.adobe.com/", false, "The URL of the deployment of IBS.");
+    PRODUCT_DEPLOYMENT_URL("IBS.DEPLOYMENT.URL","https://acc-simulators-ibs.rd.campaign.adobe.com/", false, "The URL of the deployment of IBS."),
+    DEFAULT_CALL_TIMEOUT("IBS.TIMEOUT.DEFAULT"
+            ,"10000" , false, "This value sets a default timeout. If set to '0' we wait indefinitely.");
 
-    public final String defaultValue;
     public final String systemName;
+    public final String defaultValue;
     public final boolean requiredValue;
     public final String description;
 

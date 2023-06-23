@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 
 public class JavaCalls {
 
+    private Long timeout;
+
     private Map<String, CallContent> callContent;
 
     private Properties environmentVariables;
@@ -31,6 +33,8 @@ public class JavaCalls {
         callContent = new LinkedHashMap<>();
         environmentVariables = new Properties();
         setLocalClassLoader(new IntegroBridgeClassLoader());
+        timeout = Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue());
+
         executor = Executors.newSingleThreadExecutor();
     }
 
@@ -54,7 +58,6 @@ public class JavaCalls {
         }
 
         Object lr_object;
-        Long l_timeoutDuration = Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Callable caller = () -> {   // Lambda Expression
@@ -63,7 +66,7 @@ public class JavaCalls {
         };
         Future<Object> future = executor.submit(caller);
         try {
-            lr_object = future.get(l_timeoutDuration, TimeUnit.MILLISECONDS);
+            lr_object = future.get(getTimeout(), TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {
@@ -79,7 +82,7 @@ public class JavaCalls {
             }
 
         } catch (TimeoutException e) {
-            throw new IBSTimeOutException("The call for "+in_key+" took longer than the set time limit of "+l_timeoutDuration+"ms. Process was therefore interrupted by the Bridge Service.");
+            throw new IBSTimeOutException("The call for "+in_key+" took longer than the set time limit of "+getTimeout()+"ms. Process was therefore interrupted by the Bridge Service.");
         }
         return lr_object;
     }
@@ -168,4 +171,13 @@ public class JavaCalls {
     public void setLocalClassLoader(IntegroBridgeClassLoader localClassLoader) {
         this.localClassLoader = localClassLoader;
     }
+
+    public Long getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(Long timeout) {
+        this.timeout = timeout;
+    }
+
 }

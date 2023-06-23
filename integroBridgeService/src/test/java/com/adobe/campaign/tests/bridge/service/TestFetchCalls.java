@@ -67,6 +67,7 @@ public class TestFetchCalls {
                 Matchers.equalTo("methodReturningString"));
         assertThat("We should access our calls correctly", l_myJavaCalls.getCallContent().get("fetchString").getArgs(),
                 Matchers.arrayContainingInAnyOrder("A"));
+        assertThat("We should now have a timeout", l_myJavaCalls.getTimeout(), Matchers.equalTo(Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue())));
 
         l_myJavaCalls.getCallContent().get("fetchString").setArgs(new Object[] {});
 

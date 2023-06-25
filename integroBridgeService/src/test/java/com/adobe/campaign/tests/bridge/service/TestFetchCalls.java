@@ -237,6 +237,17 @@ public class TestFetchCalls {
     }
 
     @Test
+    public void testCall_negativeIllegalArgumentException() {
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("complexMethodAcceptor");
+        l_cc.setArgs(new Object[] {"HI"});
+
+        IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+        Assert.assertThrows(NonExistentJavaObjectException.class, () -> l_cc.call(iClassLoader));
+    }
+
+    @Test
     public void testJSONCallWithFailingTargetMethod() {
 
         CallContent l_cc = new CallContent();
@@ -1008,7 +1019,7 @@ public class TestFetchCalls {
     }
 
     @Test(enabled = false)
-    public void testIssueWithAmbiguousCall() {
+    public void testIssueWithAmbiguousCall() throws ClassNotFoundException {
         CallContent l_cc = new CallContent();
         l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
         l_cc.setMethodName("overLoadedMethod1Arg");
@@ -1042,7 +1053,7 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
-        Assert.assertThrows(NonExistentJavaObjectException.class,
+        Assert.assertThrows(ClassNotFoundException.class,
                 () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
     }
 
@@ -1071,7 +1082,7 @@ public class TestFetchCalls {
     }
 
     @Test(enabled = false)
-    public void testIssueWithAmbiguousCall_Apache() {
+    public void testIssueWithAmbiguousCall_Apache() throws ClassNotFoundException {
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
         l_cc.setMethodName("overLoadedMethod1Arg");
@@ -1436,7 +1447,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testFetchMethodCandidates() {
+    public void testFetchMethodCandidates() throws ClassNotFoundException {
         CallContent l_cc = new CallContent();
         l_cc.setClassName(Instantiable.class.getTypeName());
         l_cc.setArgs(new Object[] { "kj" });
@@ -1448,7 +1459,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testFetchMethodCandidates2() {
+    public void testFetchMethodCandidates2() throws ClassNotFoundException {
         StringBuilder sb = new StringBuilder();
         sb.append("3");
         CallContent l_cc = new CallContent();
@@ -1562,6 +1573,21 @@ public class TestFetchCalls {
         assertThat("We should get a good answer back from the call", jcr.getReturnValues().get("call4"),
                 Matchers.equalTo("7"));
     }
+
+    @Test
+    public void testCallConstructorAbstract_case4_negative()
+            throws ClassNotFoundException, JsonProcessingException {
+
+        // To be removed with issue #60 : added for coverage
+            JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.AbstractClassType");
+        l_cc.setArgs(new Object[] { "A" });
+        jc.getCallContent().put("call1", l_cc);
+
+        Assert.assertThrows(NonExistentJavaObjectException.class, () -> jc.submitCalls());
+    }
+
 
 }
 

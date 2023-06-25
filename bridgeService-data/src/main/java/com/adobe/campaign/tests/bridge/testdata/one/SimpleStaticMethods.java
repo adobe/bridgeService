@@ -15,8 +15,6 @@ public class SimpleStaticMethods {
 
     public static final String SUCCESS_VAL = "_Success";
 
-    //RandomManager.fetchRandomCountry(String)
-    //RandomManager.getCountries()
     public static String methodReturningString() {
         return SUCCESS_VAL;
     }
@@ -29,12 +27,10 @@ public class SimpleStaticMethods {
         return in_stringArgument + SUCCESS_VAL;
     }
 
-    //RandomManager.getRandomNumber(int)
     public static int methodAcceptingIntArgument(int in_intArgument) {
         return in_intArgument *3;
     }
 
-    //RandomManager.getUniqueEmail
     public static String methodAcceptingTwoArguments(String in_stringArgument1, String in_stringArgument2) {
         return in_stringArgument1 + "+" + in_stringArgument2 + SUCCESS_VAL;
     }
@@ -58,6 +54,10 @@ public class SimpleStaticMethods {
         return in_intArgument + SUCCESS_VAL;
     }
 
+    //For impossible Objects exception
+    public static String complexMethodAcceptor(Instantiable in_arg) {
+        return SUCCESS_VAL;
+    }
 
     //Exceptions
     //DateAndTimeTools.convertStringToDate

@@ -210,7 +210,7 @@ public class E2ETests {
      * Testing that we provide the correct error messages whenever the target method throws an error
      */
     @Test(groups = "E2E")
-    public void testMainEror_passiingNull() throws JsonProcessingException {
+    public void testMainEror_passingNull() throws JsonProcessingException {
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
 
         String l_jsonString =

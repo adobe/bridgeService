@@ -42,7 +42,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      *
      * @param in_classPath Full class name
      */
-    private synchronized  Class getClass(String in_classPath) {
+    private synchronized  Class getClass(String in_classPath) throws ClassNotFoundException {
 
         // is this class already loaded?
         Class cls = findLoadedClass(in_classPath);
@@ -87,7 +87,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      *            Full class name
      */
     @Override
-    public Class loadClass(String in_classFullPath) {
+    public Class loadClass(String in_classFullPath) throws ClassNotFoundException {
         log.debug("Preparing class {}",in_classFullPath);
 
         if (isClassAmongPackagePaths(in_classFullPath)) {
@@ -112,12 +112,13 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      * @throws IOException Is thrown when there
      *               was some problem reading the file
      */
-    private byte[] loadClassData(String name) throws IOException {
+    private byte[] loadClassData(String name) throws IOException, ClassNotFoundException {
         // Opening the file
         InputStream stream = getClass().getClassLoader()
                 .getResourceAsStream(name);
         if (stream==null) {
-            throw new NonExistentJavaObjectException("The given class path "+name+" could not be found.");
+            //throw new NonExistentJavaObjectException("The given class path "+name+" could not be found.");
+            throw new ClassNotFoundException("The given class path "+name+" could not be found.");
         }
         int size = stream.available();
         byte buff[] = new byte[size];

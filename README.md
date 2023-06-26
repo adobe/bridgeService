@@ -16,6 +16,9 @@ This project allows you to expose Integro ACC as a REST service. It allows you t
 - [Testing That all External Dervices can be Accessed](#testing-that-all-external-dervices-can-be-accessed)
 - [Making a basic Java Call](#making-a-basic-java-call)
 - [Instantiating Objects](#instantiating-objects)
+- [Managing Timeouts](#managing-timeouts)
+    * [Setting Timeout Globally](#setting-timeout-globally)
+    * [Setting a Timeout for the Call Session](#setting-a-timeout-for-the-call-session)
 - [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
     * [Call Chaining and Call Dependencies](#call-chaining-and-call-dependencies)
     * [Call Chaining and Instance Methods](#call-chaining-and-instance-methods)
@@ -167,6 +170,9 @@ If the IntegroBridgeService can find the method it will execute it. The result i
 {
     "returnValues": {
         "<ID>": "<result>"
+    },
+    "callDurations": {
+        "<ID>": "<duration ms>"
     }
 }
 ```
@@ -215,9 +221,7 @@ In the example below the method `methodWithTimeOut` waits for the provided, in t
 }
 ```
 
-If the payload above would have a timout below 800ms, the call will fail.
-
-
+If the payload above would have a timeout below 800ms, the call will fail.
 
 ## Call Chaining a basic Java Call
 We can chain a series of java calls in the same payload:
@@ -246,6 +250,10 @@ In the example above the results will be stored in the following way:
     "returnValues": {
         "<ID-1>": "<result>",
         "<ID-2>": "<result>"
+    },
+    "callDurations": {
+        "<ID-1>": "<duration ms>",
+        "<ID-2>": "<duration ms>"
     }
 }
 ```

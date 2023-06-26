@@ -129,7 +129,7 @@ public class TimeOutTesting {
                 Matchers.lessThan(l_sleepDuration));
 
         assertThat("The duration of the call should be less than " + l_expectedDuration, l_actualDuration,
-                Matchers.greaterThan(jc.getTimeout()));
+                Matchers.greaterThanOrEqualTo(jc.getTimeout()));
     }
 
     @Test

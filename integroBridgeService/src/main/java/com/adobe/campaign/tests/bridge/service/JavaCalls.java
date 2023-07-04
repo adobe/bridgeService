@@ -26,16 +26,11 @@ public class JavaCalls {
     @JsonIgnore
     private IntegroBridgeClassLoader localClassLoader;
 
-    @JsonIgnore
-    private ExecutorService executor;
-
     public JavaCalls() {
         callContent = new LinkedHashMap<>();
         environmentVariables = new Properties();
         setLocalClassLoader(new IntegroBridgeClassLoader());
         timeout = Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue());
-
-        executor = Executors.newSingleThreadExecutor();
     }
 
     public Map<String, CallContent> getCallContent() {
@@ -100,10 +95,7 @@ public class JavaCalls {
 
         JavaCallResults lr_returnObject = new JavaCallResults();
 
-        //for (String lt_key : this.getCallContent().keySet().stream().sorted().collect(Collectors.toList())) {
         for (String lt_key : this.getCallContent().keySet()) {
-            //Adapt CallContent to results
-            //this.getCallContent().get(lt_key).expandArgs(lr_returnObject);
 
             long l_startOfCall = System.currentTimeMillis();
             Object callResult = this.call(lt_key);

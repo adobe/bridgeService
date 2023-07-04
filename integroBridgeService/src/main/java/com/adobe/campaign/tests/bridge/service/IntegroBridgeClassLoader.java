@@ -60,10 +60,10 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         // like javablogging/package/ClassToLoad.class
         String file = in_classPath.replace('.', '/')
                 + ".class";
-        byte[] b = null;
+
         try {
             // This loads the byte code data from the file
-            b = loadClassData(file);
+            byte[] b = loadClassData(file);
             // defineClass is inherited from the ClassLoader class
             // and converts the byte array into a Class
             cls = defineClass(in_classPath, b, 0, b.length);
@@ -146,7 +146,8 @@ public class IntegroBridgeClassLoader extends ClassLoader {
 
     public void setPackagePaths(String in_packagePaths) {
 
-        setPackagePaths(in_packagePaths.isEmpty() ? new HashSet<>() : new HashSet<String>(Arrays.asList(in_packagePaths.split(","))));
+        setPackagePaths(in_packagePaths.isEmpty() ? new HashSet<>() : new HashSet<>(
+                Arrays.asList(in_packagePaths.split(","))));
 
     }
 

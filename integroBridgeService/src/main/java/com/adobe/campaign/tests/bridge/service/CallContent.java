@@ -140,7 +140,7 @@ public class CallContent {
      */
     public Object call(IntegroBridgeClassLoader iClassLoader) {
 
-        Object lr_object = null;
+        Object lr_object;
         try {
             //Add our package to the classLoader integrity paths
             if (ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.is("true")) {

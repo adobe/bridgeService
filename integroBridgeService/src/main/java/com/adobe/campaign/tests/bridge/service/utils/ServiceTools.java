@@ -157,7 +157,7 @@ public class ServiceTools {
      */
     public static int fetchNextFreePortNumber() throws IOException {
 
-        try (ServerSocket socket = new ServerSocket(0);) {
+        try (ServerSocket socket = new ServerSocket(0)) {
             return socket.getLocalPort();
         }
     }

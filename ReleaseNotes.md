@@ -1,6 +1,7 @@
 # Integro Bridge Service - RELEASE NOTES
 
 ## 2.11.6
+* [#57 Call Timeout Management](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/57). Introducing the timeout, mechanism. We have a global timeout, and a call session timeout. We also log the individual call durations in the return payload.
 * [#58 Object Instance Management](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/58). We can now instantiate objects and call their instance methods.
 * [#60 Integro Independance](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/60). We are now completely independant of integro as a library. For testing purposes we now use dedicated classes that are available in the module "bridgeService-data". This can be included in a deployment by setting `demo.project.mode=compile`.
 * [#63 multi-module solution](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/63). Moved to a multi-module approach. This we can better manage and maintain the dependant test classes.

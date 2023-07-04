@@ -9,13 +9,11 @@
 package com.adobe.campaign.tests.bridge.service.exceptions;
 
 /**
- * This exception is intended to be used for issues related to configuration of the IBS.
- * <p>
- * author: gandomi
+ * This exception is thrown whenever a call takes a longer time than is expected
  */
-public class IBSConfigurationException extends RuntimeException {
+public class IBSTimeOutException extends RuntimeException {
 
-    public IBSConfigurationException(String message, Exception nono) {
-        super(message,nono);
+    public IBSTimeOutException(String message) {
+        super(message);
     }
 }

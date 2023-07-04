@@ -10,7 +10,7 @@ package com.adobe.campaign.tests.bridge.service.exceptions;
 
 /**
  * This exception is intended to be used in the case of exceptions that are related to the IBS, but not related to JSON transformations
- *
+ * <p>
  * author: gandomi
  */
 public class IBSRunTimeException extends RuntimeException {

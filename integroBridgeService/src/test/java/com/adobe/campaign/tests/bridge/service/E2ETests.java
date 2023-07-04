@@ -210,7 +210,7 @@ public class E2ETests {
      * Testing that we provide the correct error messages whenever the target method throws an error
      */
     @Test(groups = "E2E")
-    public void testMainEror_passiingNull() throws JsonProcessingException {
+    public void testMainEror_passingNull() throws JsonProcessingException {
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
 
         String l_jsonString =
@@ -342,6 +342,62 @@ public class E2ETests {
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
                 body("returnValues.call1PL", Matchers.equalTo("123"));
     }
+
+    @Test(groups = "E2E")
+    public void testTimeOutCalls() {
+        String l_expectedDuration = "300";
+        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate(l_expectedDuration);
+        Long l_sleepDuration = Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue());
+
+        JavaCalls jc = new JavaCalls();
+        CallContent cc1 = new CallContent();
+        cc1.setClassName(SimpleStaticMethods.class.getTypeName());
+        cc1.setMethodName("methodWithTimeOut");
+        cc1.setArgs(new Object[] { l_sleepDuration + 100 });
+        jc.getCallContent().put("call1", cc1);
+
+        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(408).body(
+                Matchers.containsString(IntegroAPI.ERROR_CALL_TIMEOUT));
+    }
+
+    @Test(groups = "E2E")
+    public void testTimeOutCalls_overridePass() {
+        String l_expectedDuration = "300";
+        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate(l_expectedDuration);
+        Long l_sleepDuration = Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue());
+
+        JavaCalls jc = new JavaCalls();
+        jc.setTimeout(450l);
+        CallContent cc1 = new CallContent();
+        cc1.setClassName(SimpleStaticMethods.class.getTypeName());
+        cc1.setMethodName("methodWithTimeOut");
+        cc1.setArgs(new Object[] { l_sleepDuration + 100 });
+        jc.getCallContent().put("call1", cc1);
+
+        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(200).body(
+                "callDurations.call1", Matchers.greaterThan(400)).body(
+                "callDurations.call1", Matchers.lessThan(450));
+    }
+
+    @Test(groups = "E2E")
+    public void testTimeOutCalls_overrideFAIL() {
+        String l_expectedDuration = "300";
+        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate(l_expectedDuration);
+        Long l_sleepDuration = Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue());
+
+        JavaCalls jc = new JavaCalls();
+        jc.setTimeout(l_sleepDuration - 150);
+
+        CallContent cc1 = new CallContent();
+        cc1.setClassName(SimpleStaticMethods.class.getTypeName());
+        cc1.setMethodName("methodWithTimeOut");
+        cc1.setArgs(new Object[] { l_sleepDuration - 100 });
+        jc.getCallContent().put("call1", cc1);
+
+        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(408).body(
+                Matchers.containsString(IntegroAPI.ERROR_CALL_TIMEOUT));
+    }
+
 
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {

@@ -8,10 +8,7 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
-import com.adobe.campaign.tests.bridge.service.exceptions.AmbiguousMethodException;
-import com.adobe.campaign.tests.bridge.service.exceptions.IBSConfigurationException;
-import com.adobe.campaign.tests.bridge.service.exceptions.NonExistentJavaObjectException;
-import com.adobe.campaign.tests.bridge.service.exceptions.TargetJavaMethodCallException;
+import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +24,9 @@ public class IntegroAPI {
     protected static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
     protected static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
     protected static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
-    protected static final String ERROR_IBS_RUNTIME = "Problems with payload. Check the passed environment variables";
+    protected static final String ERROR_IBS_RUNTIME = "Problems with payload. Check the passed environment variables.";
+    public static final String ERROR_CALL_TIMEOUT = "The call you made exceeds the set timeout limit.";
+
 
     public static void
     startServices(int port) {
@@ -99,7 +98,6 @@ public class IntegroAPI {
             res.body(response.toString());
         });
 
-        /* Not currently possible
         exception( IBSRunTimeException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();
             response.append(ERROR_IBS_RUNTIME);
@@ -108,7 +106,6 @@ public class IntegroAPI {
             res.status(400);
             res.body(response.toString());
         });
-        */
 
         exception( TargetJavaMethodCallException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();
@@ -126,6 +123,15 @@ public class IntegroAPI {
             response.append("\n");
             response.append(e.getMessage());
             res.status(400);
+            res.body(response.toString());
+        });
+
+        exception( IBSTimeOutException.class, (e, req, res) -> {
+            StringBuilder response = new StringBuilder();
+            response.append(ERROR_CALL_TIMEOUT);
+            response.append("\n");
+            response.append(e.getMessage());
+            res.status(408);
             res.body(response.toString());
         });
 

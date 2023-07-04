@@ -6,7 +6,7 @@
  * accordance with the terms of the Adobe license agreement accompanying
  * it.
  */
-package com.adobe.campaign.tests.bridge.service;
+package com.adobe.campaign.tests.bridge.service.exceptions;
 
 public class CallDefinitionNotFoundException extends RuntimeException {
     public CallDefinitionNotFoundException(String s) {

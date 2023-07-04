@@ -117,7 +117,6 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         InputStream stream = getClass().getClassLoader()
                 .getResourceAsStream(name);
         if (stream==null) {
-            //throw new NonExistentJavaObjectException("The given class path "+name+" could not be found.");
             throw new ClassNotFoundException("The given class path "+name+" could not be found.");
         }
         int size = stream.available();

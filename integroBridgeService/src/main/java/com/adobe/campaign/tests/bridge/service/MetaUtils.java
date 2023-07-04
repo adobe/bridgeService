@@ -91,9 +91,9 @@ public class MetaUtils {
 
               //  if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && isExtractable(lt_m.getReturnType())) {
             if (lt_m.getParameterCount()==0 && isExtractable(lt_m.getReturnType())) {
-                    Object lt_returnValue = null;
+
                     try {
-                        lt_returnValue = lt_m.invoke(in_object);
+                        Object lt_returnValue = lt_m.invoke(in_object);
 
                         //TODO Add option with null values (extract null)
                         if (lt_returnValue != null) {

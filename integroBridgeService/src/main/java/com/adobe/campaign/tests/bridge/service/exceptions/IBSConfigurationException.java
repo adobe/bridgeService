@@ -10,7 +10,7 @@ package com.adobe.campaign.tests.bridge.service.exceptions;
 
 /**
  * This exception is intended to be used for issues related to configuration of the IBS.
- *
+ * <p>
  * author: gandomi
  */
 public class IBSConfigurationException extends RuntimeException {

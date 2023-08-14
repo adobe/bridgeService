@@ -30,8 +30,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: 8.0.275+1
-          distribution: liberica
+          java-version: 11
+          distribution: temurin
       - name: Build with Maven
         run: mvn --batch-mode clean test
         env:
@@ -46,7 +46,7 @@ jobs:
       - name: publish coverage onto codecov
         uses: codecov/codecov-action@v3
         with:
-          file: ./**/target/site/jacoco/jacoco.xml
+          file: ./integroBridgeService/target/site/jacoco/jacoco.xml
           name: codecov
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -54,4 +54,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: jacoco-report
-          path: target/site/jacoco/
+          path: integroBridgeService/target/site/jacoco/

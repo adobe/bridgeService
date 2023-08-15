@@ -22,6 +22,8 @@
             </activation>
             <properties>
                 <gpg.passphrase>${env.GPG_DEVELOPMENT_BGA_PASSPHRASE}</gpg.passphrase>
+                <snapshotRepository-Id>ossrh</snapshotRepository-Id>
+                <snapshotRepository-URL>https://oss.sonatype.org/content/repositories/snapshots</snapshotRepository-URL>
             </properties> 
         </profile>
     </profiles>

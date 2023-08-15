@@ -13,10 +13,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <description>Integro Bridge Service</description>
+    <description>Bridge Service</description>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
-    <url>https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService</url>
     <properties>
         <demo.project.mode>test</demo.project.mode>
     </properties>
@@ -198,5 +197,6 @@
         <groupId>com.adobe.campaign.tests.bridge</groupId>
         <artifactId>parent</artifactId>
         <version>2.0.6-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 </project>

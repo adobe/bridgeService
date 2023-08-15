@@ -14,10 +14,10 @@
     <groupId>com.adobe.campaign.tests.bridge</groupId>
     <artifactId>parent</artifactId>
     <version>2.11.6-SNAPSHOT</version>
-    <description>Integro Bridge Service Parent Project</description>
+    <description>Bridge Service Parent Project</description>
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
-    <url>https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService</url>
+    <url>https://github.com/adobe/bridgeService</url>
     <licenses>
         <license>
             <name>MIT License</name>

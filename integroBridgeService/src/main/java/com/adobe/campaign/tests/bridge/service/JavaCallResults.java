@@ -20,8 +20,8 @@ public class JavaCallResults  implements Serializable {
     private Map<String, Object> returnValues;
 
     JavaCallResults() {
-        returnValues = new HashMap<>();
-        callDurations =  new HashMap<>();
+        setReturnValues(new HashMap<>());
+        setCallDurations(new HashMap<>());
     }
 
 

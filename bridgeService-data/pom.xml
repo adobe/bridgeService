@@ -16,6 +16,9 @@
     <artifactId>bridgeService-data</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Test Library for the Bridge Service</description>
+    <properties>
+        <sonar.skip>true</sonar.skip>
+    </properties>
     <parent>
         <groupId>com.adobe.campaign.tests.bridge</groupId>
         <artifactId>parent</artifactId>

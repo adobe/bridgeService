@@ -75,9 +75,11 @@
                             <excludes>
                                 <exclude>**/*.md</exclude>
                                 <exclude>sonar-project.properties</exclude>
+                                <exclude>LICENSE_DATA/**</exclude>
                                 <exclude>ibs_output/**</exclude>
                                 <exclude>**/ibs_output/**</exclude>
-                                <exclude>${license.dir}/*</exclude>
+                                <exclude>${license.dir}/**</exclude>
+                                <exclude>**/*.drawio</exclude>
                             </excludes>
                         </licenseSet>
                     </licenseSets>
@@ -126,7 +128,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.5</version>
+                        <version>3.1.0</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>

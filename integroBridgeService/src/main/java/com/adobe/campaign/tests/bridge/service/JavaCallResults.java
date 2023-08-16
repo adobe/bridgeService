@@ -13,10 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class JavaCallResults  implements Serializable {
+    private static final long serialVersionUID = 2535562419078918507L;
 
     private Map<String, Long> callDurations;
-
-
 
     private Map<String, Object> returnValues;
 

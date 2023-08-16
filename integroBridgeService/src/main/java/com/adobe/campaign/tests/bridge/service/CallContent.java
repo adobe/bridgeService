@@ -238,4 +238,13 @@ public class CallContent {
         return getMethodName() == null || getClassName().substring(getClassName().lastIndexOf('.') + 1)
                 .equals(getMethodName());
     }
+
+    @Override
+    public int hashCode() {
+        int result = getClassName().hashCode();
+        result = 31 * result + (getMethodName() != null ? getMethodName().hashCode() : 0);
+        result = 31 * result + (getReturnType() != null ? getReturnType().hashCode() : 0);
+        result = 31 * result + Arrays.hashCode(getArgs());
+        return result;
+    }
 }

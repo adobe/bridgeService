@@ -70,7 +70,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
             resolveClass(cls);
             return cls;
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Encountered IOException ",e);
             return null;
         }
     }

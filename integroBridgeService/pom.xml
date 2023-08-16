@@ -13,10 +13,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <description>Integro Bridge Service</description>
+    <description>Bridge Service</description>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
-    <url>https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService</url>
     <properties>
         <demo.project.mode>test</demo.project.mode>
     </properties>
@@ -108,8 +107,34 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.4</version>
+                <configuration>
+                    <stylesheet>java</stylesheet>
+                    <source>11</source>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
     <!-- library dependencies -->
     <dependencies>
         <dependency>
@@ -159,6 +184,8 @@
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
+            <version>1.6.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.adobe.campaign.tests.bridge.testdata</groupId>
@@ -171,6 +198,6 @@
     <parent>
         <groupId>com.adobe.campaign.tests.bridge</groupId>
         <artifactId>parent</artifactId>
-        <version>2.0.6-SNAPSHOT</version>
+        <version>2.11.6-SNAPSHOT</version>
     </parent>
 </project>

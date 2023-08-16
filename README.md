@@ -1,4 +1,10 @@
-# integroBridgeService
+# BridgeService
+# PhasedTesting
+[![unit-tests](https://github.com/adobe/bridgeService/actions/workflows/onPushSimpleTest.yml/badge.svg)](https://github.com/adobe/bridgeService/actions/workflows/onPushSimpleTest.yml)
+[![codecov](https://codecov.io/gh/adobe/bridgeService/branch/main/graph/badge.svg?token=GSi0gUlqq5)](https://codecov.io/gh/adobe/bridgeService)
+[![javadoc](https://javadoc.io/badge2/com.adobe.campaign.tests.bridge.service/integroBridgeService/javadoc.svg)](https://javadoc.io/doc/com.adobe.campaign.tests.bridge.service/integroBridgeService)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=adobe_bridgeService&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=adobe_bridgeService)
+
 This project allows you to expose Integro ACC as a REST service. It allows you to make calls to Java code.
 
 ## Table of Contents

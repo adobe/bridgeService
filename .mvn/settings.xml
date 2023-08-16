@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
@@ -9,107 +10,25 @@
     it.
 
 -->
-<settings xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd" xmlns="http://maven.apache.org/SETTINGS/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xmlns="http://maven.apache.org/SETTINGS/1.1.0" xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd">
     <profiles>
         <profile>
-            <id>artifactory</id>
-
+            <id>sign</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
-                <releaseRepository-Id>central</releaseRepository-Id>
-                <releaseRepository-Name>Adobe Dev Releases</releaseRepository-Name>
-                <releaseRepository-URL>https://artifactory.corp.adobe.com/artifactory/maven-campaign-release-local</releaseRepository-URL>
-
-                <snapshotRepository-Id>snapshots</snapshotRepository-Id>
-                <snapshotRepository-Name>Adobe Dev Snapshots</snapshotRepository-Name>
-                <snapshotRepository-URL>https://artifactory.corp.adobe.com/artifactory/maven-campaign-snapshot-local</snapshotRepository-URL>
-            </properties>
-
-
-            <repositories>
-                <repository>
-                    <id>adobe-releases</id>
-                    <name>Adobe Artifactory Central Repository</name>
-                    <url>https://artifactory.corp.adobe.com/artifactory/maven-campaign-release/</url>
-                </repository>
-                <repository>
-                    <id>adobe-snapshot</id>
-                    <name>Adobe Artifactory Central Snapshot Repository</name>
-                    <url>https://artifactory.corp.adobe.com/artifactory/maven-campaign-snapshot/</url>
-                </repository>
-                <repository>
-                    <id>experienceplatform-releases</id>
-                    <name>Experience Platform Releases</name>
-                    <url>https://artifactory.corp.adobe.com/artifactory/maven-experienceplatform-release/</url>
-                </repository>
-                <repository>
-                    <id>ossrh-snapshots-repo</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                </repository>
-                <repository>
-                    <id>ossrh-releases-repo</id>
-                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-                </repository>
-            </repositories>
-
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>central</id>
-                    <name>plugins-release</name>
-                    <url>https://artifactory.corp.adobe.com:443/artifactory/maven-campaign-release</url>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                </pluginRepository>
-                <pluginRepository>
-                    <id>snapshots</id>
-                    <name>plugins-snapshot</name>
-                    <url>https://artifactory.corp.adobe.com:443/artifactory/maven-campaign-snapshot-local</url>
-                    <snapshots />
-                </pluginRepository>
-                <pluginRepository>
-                    <id>tessa-releases</id>
-                    <name>plugins-tessa-releases</name>
-                    <url>https://artifactory.corp.adobe.com:443/artifactory/maven-est-public-release</url>
-                    <snapshots />
-                </pluginRepository>
-            </pluginRepositories>
+                <gpg.passphrase>${env.GPG_DEVELOPMENT_BGA_PASSPHRASE}</gpg.passphrase>
+                <snapshotRepository-Id>ossrh</snapshotRepository-Id>
+                <snapshotRepository-URL>https://oss.sonatype.org/content/repositories/snapshots</snapshotRepository-URL>
+            </properties> 
         </profile>
     </profiles>
-
-    <activeProfiles>
-        <activeProfile>artifactory</activeProfile>
-    </activeProfiles>
-
     <servers>
         <server>
-            <id>adobe-releases</id>
-            <username>${ARTIFACTORY_USER}</username>
-            <password>${ARTIFACTORY_API_TOKEN}</password>
-        </server>
-        <server>
-            <id>adobe-snapshot</id>
-            <username>${ARTIFACTORY_USER}</username>
-            <password>${ARTIFACTORY_API_TOKEN}</password>
-        </server>
-        <server>
-            <id>experienceplatform-releases</id>
-            <username>${ARTIFACTORY_USER}</username>
-            <password>${ARTIFACTORY_API_TOKEN}</password>
-        </server>
-        <server>
-            <id>tessa-releases</id>
-            <username>${ARTIFACTORY_USER}</username>
-            <password>${ARTIFACTORY_API_TOKEN}</password>
-        </server>
-        <server>
-            <id>snapshots</id>
-            <username>${ARTIFACTORY_USER}</username>
-            <password>${ARTIFACTORY_API_TOKEN}</password>
-        </server>
-        <server>
-            <id>central</id>
-            <username>${ARTIFACTORY_USER}</username>
-            <password>${ARTIFACTORY_API_TOKEN}</password>
+            <id>ossrh</id>
+            <username>${env.OSSRH_ARTIFACTORY_USER}</username>
+            <password>${env.OSSRH_ARTIFACTORY_API_TOKEN}</password>
         </server>
     </servers>
 </settings>

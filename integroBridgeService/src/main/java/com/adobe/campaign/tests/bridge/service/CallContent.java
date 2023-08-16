@@ -100,7 +100,7 @@ public class CallContent {
 
     public List<Method> fetchMethodCandidates(Class in_class) {
 
-        List<Method> lr_method = lr_method = Arrays.stream(in_class.getMethods())
+        List<Method> lr_method = Arrays.stream(in_class.getMethods())
                 .filter(f -> f.getName().equals(this.getMethodName()))
                 .filter(fp -> fp.getParameterCount() == this.getArgs().length).collect(
                         Collectors.toList());

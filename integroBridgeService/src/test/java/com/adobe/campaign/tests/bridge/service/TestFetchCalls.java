@@ -367,10 +367,10 @@ public class TestFetchCalls {
 
         JavaCallResults l_returnValue = fetchedFromJSON.submitCalls();
 
-        assertThat("The retun value should be of a correct format", l_returnValue.returnValues.containsKey("call1"));
-        assertThat("The retun value should be of a correct format", l_returnValue.returnValues.get("call1").toString(),
+        assertThat("The retun value should be of a correct format", l_returnValue.getReturnValues().containsKey("call1"));
+        assertThat("The retun value should be of a correct format", l_returnValue.getReturnValues().get("call1").toString(),
                 Matchers.startsWith("A"));
-        assertThat("The retun value should be of a correct format", l_returnValue.returnValues.get("call1").toString(),
+        assertThat("The retun value should be of a correct format", l_returnValue.getReturnValues().get("call1").toString(),
                 Matchers.endsWith(SimpleStaticMethods.SUCCESS_VAL));
 
     }
@@ -1254,7 +1254,7 @@ public class TestFetchCalls {
 
         assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
         JavaCallResults jcr = new JavaCallResults();
-        jcr.returnValues.put("value", MetaUtils.extractValuesFromObject(x));
+        jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(x));
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
@@ -1272,7 +1272,7 @@ public class TestFetchCalls {
 
         assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
         JavaCallResults jcr = new JavaCallResults();
-        jcr.returnValues.put("value", MetaUtils.extractValuesFromObject(x));
+        jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(x));
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 
@@ -1290,7 +1290,7 @@ public class TestFetchCalls {
 
         assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
         JavaCallResults jcr = new JavaCallResults();
-        jcr.returnValues.put("value", MetaUtils.extractValuesFromObject(x));
+        jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(x));
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr);
 

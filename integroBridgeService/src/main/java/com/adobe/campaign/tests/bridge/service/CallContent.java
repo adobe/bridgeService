@@ -100,12 +100,12 @@ public class CallContent {
 
     public List<Method> fetchMethodCandidates(Class in_class) {
 
-        List<Method> lr_method = lr_method = Arrays.stream(in_class.getMethods())
+        List<Method> lr_method = Arrays.stream(in_class.getMethods())
                 .filter(f -> f.getName().equals(this.getMethodName()))
                 .filter(fp -> fp.getParameterCount() == this.getArgs().length).collect(
                         Collectors.toList());
 
-        if (lr_method.size() == 0) {
+        if (lr_method.isEmpty()) {
             throw new NonExistentJavaObjectException(
                     "Method " + this.getClassName() + "." + this.getMethodName() + "   with " + this.getArgs().length
                             + " arguments could not be found.");
@@ -119,7 +119,7 @@ public class CallContent {
                 .filter(fp -> fp.getParameterCount() == this.getArgs().length).collect(
                         Collectors.toList());
 
-        if (lr_method.size() == 0) {
+        if (lr_method.isEmpty()) {
             throw new NonExistentJavaObjectException(
                     "Constructor " + this.getClassName() + "." + this.getMethodName() + "   with "
                             + this.getArgs().length

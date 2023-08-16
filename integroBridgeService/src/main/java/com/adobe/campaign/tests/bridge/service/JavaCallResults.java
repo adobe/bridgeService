@@ -13,14 +13,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class JavaCallResults  implements Serializable {
+    private static final long serialVersionUID = 2535562419078918507L;
 
-    Map<String, Long> callDurations;
-    Map<String, Object> returnValues;
+    private Map<String, Long> callDurations;
+
+    private Map<String, Object> returnValues;
 
     JavaCallResults() {
-        returnValues = new HashMap<>();
-        callDurations =  new HashMap<>();
+        setReturnValues(new HashMap<>());
+        setCallDurations(new HashMap<>());
     }
+
 
     public Map<String, Object> getReturnValues() {
         return returnValues;
@@ -28,6 +31,14 @@ public class JavaCallResults  implements Serializable {
 
     public Map<String, Long> getCallDurations() {
         return callDurations;
+    }
+
+    public void setCallDurations(Map<String, Long> callDurations) {
+        this.callDurations = callDurations;
+    }
+
+    public void setReturnValues(Map<String, Object> returnValues) {
+        this.returnValues = returnValues;
     }
 
 

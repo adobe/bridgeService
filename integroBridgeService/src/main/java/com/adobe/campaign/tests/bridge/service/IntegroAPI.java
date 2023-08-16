@@ -67,9 +67,7 @@ public class IntegroAPI {
             return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls());
         });
 
-        after((req, res) -> {
-            res.type("application/json");
-        });
+        after((req, res) -> res.type("application/json"));
 
         exception( JsonProcessingException.class, (e, req, res) -> {
             StringBuilder response = new StringBuilder();

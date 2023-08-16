@@ -169,28 +169,16 @@ public class ServiceTools {
      * @return true if port is not used
      */
     public static boolean isPortFree(int in_port) {
-        ServerSocket ss = null;
-        DatagramSocket ds = null;
-        try {
-            ss = new ServerSocket(in_port);
+
+        try (
+                ServerSocket ss = new ServerSocket(in_port);
+                DatagramSocket ds = new DatagramSocket(in_port);
+        ) {
             ss.setReuseAddress(true);
-            ds = new DatagramSocket(in_port);
             ds.setReuseAddress(true);
             return true;
         } catch (IOException e) {
             log.error(e);
-        } finally {
-            if (ds != null) {
-                ds.close();
-            }
-
-            if (ss != null) {
-                try {
-                    ss.close();
-                } catch (IOException e) {
-                    log.error(e);
-                }
-            }
         }
 
         return false;

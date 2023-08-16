@@ -71,7 +71,7 @@ public class TimeOutTesting {
          assertThat("The duration of the call should be less than " + l_expectedDuration, l_actualDuration,
                 Matchers.lessThan(l_sleepDuration));
 
-        assertThat("The stored duration should be less than the measured duration", jcr.callDurations.get("call1"),
+        assertThat("The stored duration should be less than the measured duration", jcr.getCallDurations().get("call1"),
                 Matchers.lessThanOrEqualTo(l_actualDuration));
 
     }

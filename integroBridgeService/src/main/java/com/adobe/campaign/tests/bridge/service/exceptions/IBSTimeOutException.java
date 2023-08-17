@@ -13,6 +13,8 @@ package com.adobe.campaign.tests.bridge.service.exceptions;
  */
 public class IBSTimeOutException extends RuntimeException {
 
+    private static final long serialVersionUID = -4846585893953364457L;
+
     public IBSTimeOutException(String message) {
         super(message);
     }

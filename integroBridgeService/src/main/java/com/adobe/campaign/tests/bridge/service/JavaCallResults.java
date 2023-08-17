@@ -17,7 +17,7 @@ public class JavaCallResults  implements Serializable {
 
     private Map<String, Long> callDurations;
 
-    private Map<String, Object> returnValues;
+    private Map<String, Object> returnValues = new HashMap<>();
 
     JavaCallResults() {
         setReturnValues(new HashMap<>());

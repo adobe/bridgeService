@@ -68,8 +68,6 @@ public class ServiceTools {
 
     protected static Logger log = LogManager.getLogger();
 
-    protected static int STD_PORT_SERIES_START = 50000;
-
     public static void setWAIT_BEFORE_INVALIDATE(int in_waitTimeMS) {
         STD_WAIT_BEFORE_INVALIDATE = in_waitTimeMS;
     }

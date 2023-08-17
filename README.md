@@ -5,7 +5,7 @@
 [![javadoc](https://javadoc.io/badge2/com.adobe.campaign.tests.bridge.service/integroBridgeService/javadoc.svg)](https://javadoc.io/doc/com.adobe.campaign.tests.bridge.service/integroBridgeService)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=adobe_bridgeService&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=adobe_bridgeService)
 
-This project allows you to expose Integro ACC as a REST service. It allows you to make calls to Java code.
+This project allows you to expose your Java project/library as a REST service. It allows you to make calls to Java code from any language or framework you are in.
 
 ## Table of Contents
 - [Release Notes](#release-notes)
@@ -419,33 +419,3 @@ To run the image:
 ```
 docker run --rm -d -p 8080:8080 integrobridgeservice
 ```
-
-## Existing Images
-We currently upload the following versions of the docker image:
-### Standard SSL
-The current standard version is available here at :
-
-```docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice```
-
-You can run it with: 
-```
-docker run --rm -d -p 443:8080 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice
-```
-
-The current standard image expects the certificate to be available in the directory `/home/app/certificates`. We solve this by mapping the directory containing the JKS certificate to that directory.
-
-If you want to access the logs you will need to include a mapping of the logs to the host machine. This is done by adding `-v /root/ibs:/home/app/ibs_output`. In this example all logs are store in the local directory `/root/ibs/ibs`.
-
-### Without SSL
-The current Non-SSL version is available here at :
-```docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl```
-
-You can run it with:
-```
-docker run --rm -d -p 443:8080 -v /root/:/home/app/certificates  docker-campaign-qe-snapshot.dr.corp.adobe.com/integrobridgeservice/integro-acc-bridgeservice-nossl
-```
-
-The current standard image expects the certificate to be availavle in the directory `/home/app/certificates`. We solve this by mapping the directory containing the JKS certificate to that directory.
-
-If you want to access the logs you will need to include a mapping of the logs to the host machine. This is done by adding `-v /root/ibs:/home/app/ibs_output`. In this example all logs are store in the local directory `/root/ibs/ibs`.
-

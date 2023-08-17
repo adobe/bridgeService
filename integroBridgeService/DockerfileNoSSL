@@ -1,4 +1,4 @@
-FROM --platform=linux/x86_64 maven:3.8.7-ibmjava-8 AS build
+FROM --platform=linux/x86_64 maven:3-eclipse-temurin-11-alpine AS build
 
 COPY src/main/resources/conf /home/app/conf
 COPY target/integroBridgeService-jar-with-dependencies.jar integroBridgeService-jar-with-dependencies.jar

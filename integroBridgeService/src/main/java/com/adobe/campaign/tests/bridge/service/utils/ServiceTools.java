@@ -118,9 +118,9 @@ public class ServiceTools {
         try {
             return isInetAddressReachable(InetAddress.getByName(in_ipAddress));
         } catch (UnknownHostException e) {
-            log.error("Caught UnknownHost Error : " + e);
+            log.error("Caught UnknownHost Error", e);
         } catch (IOException e) {
-            log.error("IOException " + e + " occurred.");
+            log.error("IOException occurred.", e);
         }
         return false;
     }

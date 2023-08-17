@@ -98,19 +98,6 @@
             </plugin>
         </plugins>
     </build>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.3</version>
-                <configuration>
-                    <stylesheet>java</stylesheet>
-                    <source>11</source>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
     <!-- library dependencies -->
     <dependencies>
         <dependency>

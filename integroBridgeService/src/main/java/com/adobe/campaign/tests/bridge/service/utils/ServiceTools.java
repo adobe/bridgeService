@@ -68,8 +68,6 @@ public class ServiceTools {
 
     protected static Logger log = LogManager.getLogger();
 
-    protected static int STD_PORT_SERIES_START = 50000;
-
     public static void setWAIT_BEFORE_INVALIDATE(int in_waitTimeMS) {
         STD_WAIT_BEFORE_INVALIDATE = in_waitTimeMS;
     }
@@ -120,9 +118,9 @@ public class ServiceTools {
         try {
             return isInetAddressReachable(InetAddress.getByName(in_ipAddress));
         } catch (UnknownHostException e) {
-            log.error("Caught UnknownHost Error : " + e);
+            log.error("Caught UnknownHost Error", e);
         } catch (IOException e) {
-            log.error("IOException " + e + " occurred.");
+            log.error("IOException occurred.", e);
         }
         return false;
     }

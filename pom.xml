@@ -74,7 +74,7 @@
                             <header>${license.dir}/LicenseHeader</header>
                             <excludes>
                                 <exclude>**/*.md</exclude>
-                                <exclude>sonar-project.properties</exclude>
+                                <exclude>**/*.properties</exclude>
                                 <exclude>LICENSE_DATA/**</exclude>
                                 <exclude>ibs_output/**</exclude>
                                 <exclude>**/ibs_output/**</exclude>

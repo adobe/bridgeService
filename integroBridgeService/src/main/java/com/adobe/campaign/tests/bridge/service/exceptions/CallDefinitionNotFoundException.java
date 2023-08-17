@@ -9,6 +9,8 @@
 package com.adobe.campaign.tests.bridge.service.exceptions;
 
 public class CallDefinitionNotFoundException extends RuntimeException {
+    private static final long serialVersionUID = 3333272575099510405L;
+
     public CallDefinitionNotFoundException(String s) {
         super(s);
     }

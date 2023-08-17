@@ -37,10 +37,6 @@ public class JavaCalls {
         return callContent;
     }
 
-    public void setCallContent(Map<String, CallContent> callContent) {
-        this.callContent = callContent;
-    }
-
     /**
      * Calls the underlying method call
      * @param in_key the key for identifying the java call

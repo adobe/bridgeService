@@ -9,6 +9,8 @@
 package com.adobe.campaign.tests.bridge.service.exceptions;
 
 public class NonExistentJavaObjectException extends RuntimeException {
+    private static final long serialVersionUID = -6973899601813799743L;
+
     public NonExistentJavaObjectException(String message, Throwable cause) {
         super(message, cause);
     }

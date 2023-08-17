@@ -98,7 +98,7 @@ public class MetaUtils {
                         //TODO Add option with null values (extract null)
                         if (lt_returnValue != null) {
                             lr_value.put(extractFieldName(lt_m.getName()),lt_returnValue);
-                            log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue.toString());
+                            log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue);
                         }
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);

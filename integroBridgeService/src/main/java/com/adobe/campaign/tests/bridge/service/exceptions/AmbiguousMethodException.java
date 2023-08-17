@@ -10,6 +10,8 @@ package com.adobe.campaign.tests.bridge.service.exceptions;
 
 public class AmbiguousMethodException extends RuntimeException {
 
+    private static final long serialVersionUID = 6790779647449526934L;
+
     public AmbiguousMethodException(String message) {
         super(message);
     }

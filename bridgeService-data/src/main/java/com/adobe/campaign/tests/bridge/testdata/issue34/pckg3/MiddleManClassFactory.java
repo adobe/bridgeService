@@ -1,16 +1,11 @@
-/**************************************************************************
- * ADOBE CONFIDENTIAL
+/*
+ * Copyright 2022 Adobe
+ * All Rights Reserved.
  *
- * Copyright 2019 Adobe Systems Incorporated All Rights Reserved.
- * NOTICE: All information contained herein is, and remains the property of Adobe Systems
- * Incorporated and its suppliers, if any. The intellectual and technical concepts contained herein
- * are proprietary to Adobe Systems Incorporated and its suppliers and are protected by all
- * applicable intellectual property laws, including trade secret and copyright laws. Dissemination
- * of this information or reproduction of this material is strictly forbidden unless prior written
- * permission is obtained from Adobe Systems Incorporated.
- *
- * @author David Mendez-Acuna
- **************************************************************************/
+ * NOTICE: Adobe permits you to use, modify, and distribute this file in
+ * accordance with the terms of the Adobe license agreement accompanying
+ * it.
+ */
 package com.adobe.campaign.tests.bridge.testdata.issue34.pckg3;
 
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.MiddleMan;

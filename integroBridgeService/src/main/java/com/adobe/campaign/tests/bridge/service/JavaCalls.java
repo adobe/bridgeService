@@ -68,6 +68,8 @@ public class JavaCalls {
                 throw new AmbiguousMethodException(e.getMessage());
             } else if (e.getCause() instanceof TargetJavaMethodCallException) {
                 throw new TargetJavaMethodCallException(e.getCause().getMessage(), e.getCause().getCause());
+            } else if (e.getCause() instanceof ClassLoaderConflictException) {
+                throw new IBSConfigurationException(e.getCause().getMessage(), e.getCause());
             } else {
                 throw new IBSRunTimeException(e.getMessage());
             }

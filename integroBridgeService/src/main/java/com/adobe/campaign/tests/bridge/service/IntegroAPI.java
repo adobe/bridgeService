@@ -133,7 +133,7 @@ public class IntegroAPI {
             response.append(e.getMessage());
             res.status(404);
             res.type(ERRROR_CONTENT_TYPE);
-            
+
 
             res.body(response.toString());
         });

@@ -75,4 +75,9 @@ public class SimpleStaticMethods {
             throw new RuntimeException(e);
         }
     }
+
+    //Issue #34
+    public static void methodThrowingLinkageError() {
+        throw new LinkageError("This is for tests");
+    }
 }

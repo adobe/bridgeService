@@ -134,7 +134,7 @@ public class E2ETests {
      * Testing that we provide the correct error messages whenever the target method throws an error
      */
     @Test(groups = "E2E")
-    public void testMainEror_Case2AmbiguousMethodException() {
+    public void testMainError_Case2AmbiguousMethodException() {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();

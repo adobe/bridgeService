@@ -1094,6 +1094,19 @@ public class TestFetchCalls {
         assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
     }
 
+
+    @Test
+    public void testIssue34LinkageError() throws ClassNotFoundException {
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodThrowingLinkageError");
+        jc.getCallContent().put("firstCall",l_cc);
+        Assert.assertThrows(ClassLoaderConflictException.class, () -> l_cc.call(jc.getLocalClassLoader()));
+
+        Assert.assertThrows(IBSConfigurationException.class, () -> jc.submitCalls());
+    }
+
     /**
      * Related to issue #3: Where we want a clear message + the original error whenever there is an invocation target
      * exception

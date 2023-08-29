@@ -9,6 +9,7 @@
 package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.exceptions.AmbiguousMethodException;
+import com.adobe.campaign.tests.bridge.service.exceptions.ClassLoaderConflictException;
 import com.adobe.campaign.tests.bridge.service.exceptions.NonExistentJavaObjectException;
 import com.adobe.campaign.tests.bridge.service.exceptions.TargetJavaMethodCallException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -175,6 +176,9 @@ public class CallContent {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof LinkageError) {
+                throw new ClassLoaderConflictException("Linkage Error detected. This can be corrected by enriching the "+ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.systemName+" property", e.getCause());
+            }
             //Arrays.stream(e.getTargetException().getStackTrace()).sequential().forEach(t -> response.append(t).append("\n"));
             throw new TargetJavaMethodCallException(
                     "We experienced an exception when calling the provided method " + this.getFullName()

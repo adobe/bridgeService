@@ -15,6 +15,7 @@ import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.restassured.http.ContentType;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -124,7 +125,7 @@ public class E2ETests {
                 new Object[] { 7, 7 });
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).contentType("application/problem+json").body(
                 Matchers.containsString("We do not allow numbers that are equal."));
 
     }
@@ -170,7 +171,7 @@ public class E2ETests {
 
         l_call.setEnvironmentVariables(l_envVars);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).body(
                 Matchers.containsString(IntegroAPI.ERROR_IBS_CONFIG));
 
     }

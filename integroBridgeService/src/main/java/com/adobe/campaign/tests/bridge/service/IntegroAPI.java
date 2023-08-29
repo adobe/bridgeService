@@ -74,7 +74,7 @@ public class IntegroAPI {
             response.append(ERROR_JSON_TRANSFORMATION);
             response.append("\n");
             response.append(e.getMessage());
-            res.status(400);
+            res.status(404);
             res.body(response.toString());
         });
 
@@ -83,7 +83,7 @@ public class IntegroAPI {
             response.append(ERROR_JSON_TRANSFORMATION);
             response.append("\n");
             response.append(e.getMessage());
-            res.status(400);
+            res.status(404);
             res.body(response.toString());
         });
 
@@ -120,7 +120,7 @@ public class IntegroAPI {
             response.append(ERROR_JAVA_OBJECT_NOT_FOUND);
             response.append("\n");
             response.append(e.getMessage());
-            res.status(400);
+            res.status(404);
             res.body(response.toString());
         });
 

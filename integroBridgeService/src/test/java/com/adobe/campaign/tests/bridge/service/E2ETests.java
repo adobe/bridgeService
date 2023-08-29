@@ -85,7 +85,7 @@ public class E2ETests {
     public void testErrors() {
         JavaCallResults jcr = new JavaCallResults();
 
-        given().body(jcr).post(EndPointURL + "call").then().statusCode(400).and().assertThat()
+        given().body(jcr).post(EndPointURL + "call").then().statusCode(404).and().assertThat()
                 .body(Matchers.startsWith(IntegroAPI.ERROR_JSON_TRANSFORMATION));
     }
 
@@ -93,7 +93,7 @@ public class E2ETests {
     public void testTestAccess() {
         JavaCallResults jcr = new JavaCallResults();
 
-        given().body(jcr).post(EndPointURL + "call").then().statusCode(400).and().assertThat()
+        given().body(jcr).post(EndPointURL + "call").then().statusCode(404).and().assertThat()
                 .body(Matchers.startsWith(IntegroAPI.ERROR_JSON_TRANSFORMATION));
     }
 
@@ -144,7 +144,7 @@ public class E2ETests {
                 new Object[] { "plop" });
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
                 Matchers.containsString(IntegroAPI.ERROR_JSON_TRANSFORMATION));
     }
 
@@ -188,7 +188,7 @@ public class E2ETests {
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
                 Matchers.containsString(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND));
     }
 
@@ -205,7 +205,7 @@ public class E2ETests {
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
                 Matchers.containsString(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND));
     }
 
@@ -232,7 +232,7 @@ public class E2ETests {
                         + "    }\n"
                         + "}";
 
-        given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
                 Matchers.containsString(IntegroAPI.ERROR_JSON_TRANSFORMATION));
 
     }

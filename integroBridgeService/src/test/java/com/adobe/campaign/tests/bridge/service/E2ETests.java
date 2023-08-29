@@ -8,6 +8,9 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.CalledClass2;
+import com.adobe.campaign.tests.bridge.testdata.issue34.pckg3.MiddleManClassFactory;
+import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1;
 import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
@@ -396,6 +399,35 @@ public class E2ETests {
 
         given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(408).body(
                 Matchers.containsString(IntegroAPI.ERROR_CALL_TIMEOUT));
+    }
+
+    /**
+     * Related to issue #34, where certain call combinations create a LinkageError
+     */
+    @Test(groups = "E2E")
+    public void testIssue34() {
+
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        //Call 1
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call1", l_cc1);
+
+        //Call 2
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call2", l_cc2);
+
+        /* Problem disappears
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(CalledClass1.class.getPackageName()+","+CalledClass2.class.getPackageName()+","+
+                MiddleManClassFactory.class.getPackageName());
+        */
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
+                body("returnValues.call2", Matchers.equalTo("Whatever"));
     }
 
 

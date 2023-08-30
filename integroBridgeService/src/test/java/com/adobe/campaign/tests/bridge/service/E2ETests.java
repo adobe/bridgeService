@@ -8,8 +8,8 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
-import com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.CalledClass2;
-import com.adobe.campaign.tests.bridge.testdata.issue34.pckg3.MiddleManClassFactory;
+import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2;
+import com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory;
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1;
 import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;

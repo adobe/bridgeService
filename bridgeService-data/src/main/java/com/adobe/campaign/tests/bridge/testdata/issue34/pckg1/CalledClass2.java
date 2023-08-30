@@ -6,9 +6,9 @@
  * accordance with the terms of the Adobe license agreement accompanying
  * it.
  */
-package com.adobe.campaign.tests.bridge.testdata.issue34.pckg2;
+package com.adobe.campaign.tests.bridge.testdata.issue34.pckg1;
 
-import com.adobe.campaign.tests.bridge.testdata.issue34.pckg3.MiddleManClassFactory;
+import com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory;
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.MiddleMan;
 
 public class CalledClass2 {

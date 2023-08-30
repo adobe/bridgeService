@@ -383,14 +383,6 @@ Provided error message :
 java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number.
 ```
 
-## Code Management
-The project is under continuous integration using Jenkins. Each PR is tested and checked for coverage with the following job [integroBridgeService](https://campaign-test-dev-sj.ci.corp.adobe.com/job/integroBridgeService/).
-
-General Rules are:
-* Line Coverage 87%
-* Branch Coverage 85%
-* No significant decrease in coverage should be detected.
-
 ## Known Issues and Limitations
 As this is a new project there are a few limitations to our solution:
 ### Cannot call overloaded methods with the same number of arguments.
@@ -405,6 +397,20 @@ In many cases the object a method returns is not rerializable. If that is the ca
 
 ### Calling Enum Methods
 We are currently unable to call enums with the Bridge Service.
+
+## Development Notes
+The project is under continuous integration using Jenkins. Each PR is tested and checked for coverage with the following job [integroBridgeService](https://campaign-test-dev-sj.ci.corp.adobe.com/job/integroBridgeService/).
+
+General Rules are:
+* Line Coverage 87%
+* Branch Coverage 85%
+* No significant decrease in coverage should be detected.
+
+### License Management
+The bridgeService is under the MIT open source license. This requires that added classes have a header. This can be done by running :
+```
+mvn license:format
+```
 
 ## Building Image
 In order to build an image you need to run the following command:

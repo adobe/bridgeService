@@ -6,7 +6,7 @@
  * accordance with the terms of the Adobe license agreement accompanying
  * it.
  */
-package com.adobe.campaign.tests.bridge.testdata.issue34.pckg3;
+package com.adobe.campaign.tests.bridge.testdata.issue34.pckg2;
 
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.MiddleMan;
 

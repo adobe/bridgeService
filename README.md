@@ -33,19 +33,18 @@ This project allows you to expose your Java project/library as a REST service. I
         + [Session Scopes](#session-scopes)
         + [Product Scope](#product-scope)
 - [Error Management](#error-management)
-- [Code Management](#code-management)
+    * [Known Errors](#known-errors)
+    * [Linked Error](#linked-error)
 - [Known Issues and Limitations](#known-issues-and-limitations)
     * [Cannot call overloaded methods with the same number of arguments.](#cannot-call-overloaded-methods-with-the-same-number-of-arguments)
     * [Only simple arguments](#only-simple-arguments)
     * [Complex Non-Serialisable Return Objects](#complex-non-serialisable-return-objects)
     * [Calling Enum Methods](#calling-enum-methods)
-- [Building Image](#building-image)
-- [Existing Images](#existing-images)
-    * [Standard SSL](#standard-ssl)
-    * [Without SSL](#without-ssl)
+- [Development Notes](#development-notes)
+    * [License Management](#license-management)
 
-## Release Notes
 The release notes can be found [here](ReleaseNotes.md).
+## Release Notes
 
 ## Implementing The Bridge Service in Your Project
 The bridge service can be used in two ways:
@@ -343,7 +342,7 @@ One of our main concerns has been the management of static variables. For the sa
 #### Session Scopes
 For now our approach is that two distinct calls to the same Bridge Service node, should share little or no variables. Another way of defining this is that two calls should not interfere with one another. In a Session Context we have two use cases:
 
-We have covered all the use cases in the document [Managing Contexts and Static Variables](docs/ReleaseNotes.md).
+We have covered all the use cases in the document [Managing Contexts and Static Variables](docs/Context.md).
 
 #### Product Scope
 Although we do not, yet, provide tools for managing variables that are valid for all calls to the IBS, we can define a series or local environment variables are deployment of the service. This can be done in two ways:
@@ -383,6 +382,18 @@ Provided error message :
 java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number.
 ```
 
+### Known Errors
+
+### Linked Error
+This error can happen when you are chaining calls, and that the called classes call a third class in a static way. In such cases you will get an error like:
+
+```
+Problems with payload. Check the passed environment variables.
+java.lang.LinkageError: loader  constraint violation: when resolving method "com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory.getMarketingInstance()Lcom/adobe/campaign/tests/bridge/testdata/issue34/pckg1/MiddleMan;" the class loader com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader @697a1a68 (instance of com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader, child of 'app' jdk.internal.loader.ClassLoaders$AppClassLoader) of the current class, com/adobe/campaign/tests/bridge/testdata/issue34/pckg1/CalledClass2, and the class loader 'app' (instance of jdk.internal.loader.ClassLoaders$AppClassLoader) for the method's defining class, com/adobe/campaign/tests/bridge/testdata/issue34/pckg2/MiddleManClassFactory, have different Class objects for the type com/adobe/campaign/tests/bridge/testdata/issue34/pckg1/MiddleMan used in the signature
+```
+
+This usually means that some additional packages need to be included in the environment variable: `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES`.
+
 ## Known Issues and Limitations
 As this is a new project there are a few limitations to our solution:
 ### Cannot call overloaded methods with the same number of arguments.
@@ -410,18 +421,4 @@ General Rules are:
 The bridgeService is under the MIT open source license. This requires that added classes have a header. This can be done by running :
 ```
 mvn license:format
-```
-
-## Building Image
-In order to build an image you need to run the following command:
-```
-docker build -t integrobridgeservice .
-```
-
-ARTIFACTORY_USER and ARTIFACTORY_API_TOKEN are locally stored credentials for connecting to your artefactory.
-
-To run the image:
-
-```
-docker run --rm -d -p 8080:8080 integrobridgeservice
 ```

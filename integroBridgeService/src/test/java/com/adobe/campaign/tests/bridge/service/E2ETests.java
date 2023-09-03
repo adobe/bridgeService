@@ -8,14 +8,12 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1;
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2;
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory;
-import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1;
 import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.restassured.http.ContentType;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -214,7 +212,7 @@ public class E2ETests {
      * Testing that we provide the correct error messages whenever the target method throws an error
      */
     @Test(groups = "E2E")
-    public void testMainEror_passingNull() throws JsonProcessingException {
+    public void testMainEror_passingNull() {
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
 
         String l_jsonString =
@@ -405,9 +403,11 @@ public class E2ETests {
     /**
      * Related to issue #34, where certain call combinations create a LinkageError
      */
+    //@Test(groups = "E2E", invocationCount = 5001)
     @Test(groups = "E2E")
-    public void testIssue34() {
-
+    public void testIssue34Manual() {
+        //long before = MemoryTools.fetchMemory();
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         //Call 1
@@ -422,13 +422,48 @@ public class E2ETests {
         l_cc2.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
 
-        /* Problem disappears
+        /* Problem disappears*/
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(CalledClass1.class.getPackageName()+","+CalledClass2.class.getPackageName()+","+
                 MiddleManClassFactory.class.getPackageName());
-        */
+
 
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
                 body("returnValues.call2", Matchers.equalTo("Whatever"));
+
+        //long after = MemoryTools.fetchMemory();
+        //System.out.println(before+";"+after+";"+(after-before));
+
+    }
+
+    @Test(groups = "E2E")
+    public void testIssue34Automatic() {
+        //long before = MemoryTools.fetchMemory();
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("automatic");
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        //Call 1
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call1", l_cc1);
+
+        //Call 2
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call2", l_cc2);
+
+        /* Problem disappears*/
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(CalledClass1.class.getPackageName()+","+CalledClass2.class.getPackageName()+","+
+                MiddleManClassFactory.class.getPackageName());
+
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
+                body("returnValues.call2", Matchers.equalTo("Whatever"));
+
+        //long after = MemoryTools.fetchMemory();
+        //System.out.println(before+";"+after+";"+(after-before));
+
     }
 
 

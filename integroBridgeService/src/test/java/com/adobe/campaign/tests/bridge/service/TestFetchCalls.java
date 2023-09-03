@@ -511,7 +511,7 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case1_allPathsSet_rawMode() {
-        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
                 ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()
                         + ",com.adobe.campaign.tests.bridge.testdata.two");
@@ -722,7 +722,7 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case3B_allPathsSet_rawMode() {
-        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridgeservice.");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -823,7 +823,7 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case4_noPackagesInIntegrityPath_rawMode() {
-        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -877,7 +877,7 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case2_withEnvVarPathsIncludedButNotCallPath_injectionMode() {
-
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
         //Call 1
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -930,7 +930,7 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case2_withEnvVarPathsIncludedButNotCallPath_rawMode() {
-        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
                 ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
 
@@ -1046,6 +1046,7 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantMethodException_internalClass() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.one.");
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethodsNonExistant");
@@ -1053,12 +1054,14 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
-        Assert.assertThrows(ClassNotFoundException.class,
+        Assert.assertThrows(NonExistentJavaObjectException.class,
                 () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
     }
 
     @Test
     public void testIssueWithNonExistantMethodException_externalMethod() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
+
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
         l_cc.setMethodName("methodAcceptingStringArgumentNonExistant");
@@ -1071,6 +1074,7 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantClassException_externalClass() {
+
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethodsNonExistant");
         l_cc.setMethodName("methodAcceptingStringArgument");
@@ -1348,7 +1352,7 @@ public class TestFetchCalls {
     @Test
     public void testSEnvironmentVariablesBadConfigValues()
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUp");
 
@@ -1530,8 +1534,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testCallConstructor_case2_InstanceMethod()
-            throws ClassNotFoundException, JsonProcessingException {
+    public void testCallConstructor_case2_InstanceMethod() {
 
         Instantiable reference = new Instantiable("3");
         JavaCalls jc = new JavaCalls();
@@ -1552,8 +1555,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testCallConstructor_case3_InstanceMethod()
-            throws ClassNotFoundException, JsonProcessingException {
+    public void testCallConstructor_case3_InstanceMethod() {
 
         Instantiable reference = new Instantiable("3");
         JavaCalls jc = new JavaCalls();
@@ -1588,8 +1590,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testCallConstructorAbstract_case4_negative()
-            throws ClassNotFoundException, JsonProcessingException {
+    public void testCallConstructorAbstract_case4_negative() {
 
         // To be removed with issue #60 : added for coverage
             JavaCalls jc = new JavaCalls();

@@ -90,15 +90,20 @@ public class IntegroBridgeClassLoader extends ClassLoader {
     public Class loadClass(String in_classFullPath) throws ClassNotFoundException {
         log.debug("Preparing class {}",in_classFullPath);
 
-        if (isClassAmongPackagePaths(in_classFullPath)) {
+        if (ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.is("manual","semi-manual")) {
+            if (isClassAmongPackagePaths(in_classFullPath)) {
+                return getClass(in_classFullPath);
+            }
+        } else if (!in_classFullPath.startsWith("java")) {
             return getClass(in_classFullPath);
         }
 
         try {
-            return super.loadClass(in_classFullPath);
-        } catch (ClassNotFoundException cnfe) {
-            throw new NonExistentJavaObjectException("The given class path "+in_classFullPath+" could not be found.", cnfe);
-        }
+                return super.loadClass(in_classFullPath);
+            } catch (ClassNotFoundException cnfe) {
+                throw new NonExistentJavaObjectException("The given class path "+in_classFullPath+" could not be found.", cnfe);
+            }
+
 
     }
 
@@ -112,12 +117,12 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      * @throws IOException Is thrown when there
      *               was some problem reading the file
      */
-    private byte[] loadClassData(String name) throws IOException, ClassNotFoundException {
+    private byte[] loadClassData(String name) throws IOException {
         // Opening the file
         InputStream stream = getClass().getClassLoader()
                 .getResourceAsStream(name);
         if (stream==null) {
-            throw new ClassNotFoundException("The given class path "+name+" could not be found.");
+            throw new NonExistentJavaObjectException("The given class path "+name+" could not be found.");
         }
         int size = stream.available();
         byte buff[] = new byte[size];
@@ -158,5 +163,14 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      */
     public boolean isClassAmongPackagePaths(String in_classFullPath) {
         return getPackagePaths().stream().anyMatch(in_classFullPath::startsWith);
+    }
+
+    /**
+     * Checks if a class is loaded by the class loader
+     * @param typeName Is the full name of the class that we want to see if it is loaded
+     * @return true if the class has been loaded by the IBSClassLoader
+     */
+    public boolean isClassLoaded(String typeName) {
+        return !(findLoadedClass(typeName)==null);
     }
 }

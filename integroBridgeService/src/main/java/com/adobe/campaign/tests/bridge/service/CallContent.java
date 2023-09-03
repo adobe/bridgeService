@@ -144,7 +144,7 @@ public class CallContent {
         Object lr_object;
         try {
             //Add our package to the classLoader integrity paths
-            if (ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.is("true")) {
+            if (ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.is("semi-manual")) {
 
                 iClassLoader.getPackagePaths()
                         .add(this.getClassName().contains(".") ? this.getClassName()
@@ -191,6 +191,13 @@ public class CallContent {
         } catch (NoSuchMethodException e) {
             throw new NonExistentJavaObjectException(
                     "Could not find the method " + this.getFullName() + ".");
+        } catch (LinkageError e) {
+            throw new ClassLoaderConflictException(
+                    "Linkage Error detected. This can be corrected by either setting the config value "
+                            + ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.systemName
+                            + " to 'automatic', or by enriching the "
+                            + ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.systemName
+                            + " property with the given path.", e);
         }
 
         return lr_object;

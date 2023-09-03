@@ -37,7 +37,7 @@ public enum ConfigValueHandlerIBS {
             "The version of the BridgeService, which is used to identify the version that is accessed."),
     PRODUCT_USER_VERSION("IBS.PRODUCT.USER.VERSION", "not set", false,
             "The version of the BridgeService, which is used to identify the version that is accessed."),
-    PRODUCT_DEPLOYMENT_URL("IBS.DEPLOYMENT.URL", "https://acc-simulators-ibs.rd.campaign.adobe.com/", false,
+    PRODUCT_DEPLOYMENT_URL("IBS.DEPLOYMENT.URL", "http://localhost:8080/", false,
             "The URL of the deployment of IBS."),
     DEFAULT_CALL_TIMEOUT("IBS.TIMEOUT.DEFAULT"
             , "10000", false,

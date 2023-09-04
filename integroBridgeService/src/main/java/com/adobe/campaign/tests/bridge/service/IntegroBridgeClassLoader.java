@@ -42,10 +42,10 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      *
      * @param in_classPath Full class name
      */
-    private synchronized  Class getClass(String in_classPath) {
+    private synchronized  Class getClass(String in_classPath) throws ClassNotFoundException {
 
         // is this class already loaded?
-        Class cls = super.findLoadedClass(in_classPath);
+            Class cls = super.findLoadedClass(in_classPath);
         if (cls != null) {
             log.debug("Class {} has already been loaded.",in_classPath);
             return cls;
@@ -89,7 +89,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      *            Full class name
      */
     @Override
-    public Class loadClass(String in_classFullPath) {
+    public Class loadClass(String in_classFullPath) throws ClassNotFoundException {
         log.debug("Preparing class {}", in_classFullPath);
 
         if (ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.is("manual", "semi-manual")) {
@@ -100,12 +100,8 @@ public class IntegroBridgeClassLoader extends ClassLoader {
             return getClass(in_classFullPath);
         }
 
-        try {
-            return super.loadClass(in_classFullPath);
-        } catch (ClassNotFoundException cnfe) {
-            throw new NonExistentJavaObjectException(
-                    "The given class path " + in_classFullPath + " could not be found.", cnfe);
-        }
+        return super.loadClass(in_classFullPath);
+
     }
 
     /**
@@ -116,12 +112,12 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      * @return Byte array read from the file
      * @throws IOException Is thrown when there was some problem reading the file
      */
-    private byte[] loadClassData(String name) throws IOException {
+    private byte[] loadClassData(String name) throws IOException, ClassNotFoundException {
         // Opening the file
         InputStream stream = getClass().getClassLoader()
                 .getResourceAsStream(name);
         if (stream == null) {
-            throw new NonExistentJavaObjectException("The given class path " + name + " could not be found.");
+            throw new ClassNotFoundException("The given class path " + name + " could not be found.");
         }
         int size = stream.available();
         byte buff[] = new byte[size];

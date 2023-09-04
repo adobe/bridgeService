@@ -104,7 +104,7 @@ public class IBSClassLoaderTests {
         }
         assertThat("We should have thrown an excption", caughtException, Matchers.notNullValue());
 
-        assertThat("We should have thrown an excption", caughtException, Matchers.instanceOf(NonExistentJavaObjectException.class));
+        assertThat("We should have thrown an excption", caughtException, Matchers.instanceOf(ClassNotFoundException.class));
     }
 
     @Test
@@ -121,7 +121,7 @@ public class IBSClassLoaderTests {
         }
         assertThat("We should have thrown an excption", caughtException, Matchers.notNullValue());
 
-        assertThat("We should have thrown an excption", caughtException, Matchers.instanceOf(NonExistentJavaObjectException.class));
+        assertThat("We should have thrown an excption", caughtException, Matchers.instanceOf(ClassNotFoundException.class));
     }
 
     @Test

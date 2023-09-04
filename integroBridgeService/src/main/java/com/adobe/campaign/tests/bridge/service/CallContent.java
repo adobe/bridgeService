@@ -129,13 +129,8 @@ public class CallContent {
         return lr_method;
     }
 
-    public Method fetchMethod() {
-
-        try {
-            return fetchMethod(Class.forName(getClassName(), true, new IntegroBridgeClassLoader()));
-        } catch (ClassNotFoundException e) {
-            throw new NonExistentJavaObjectException("The given class "+this.getClassName()+" does not exist.",e);
-        }
+    protected Method fetchMethod() throws ClassNotFoundException {
+        return fetchMethod(Class.forName(getClassName(), true, new IntegroBridgeClassLoader()));
     }
 
     /**

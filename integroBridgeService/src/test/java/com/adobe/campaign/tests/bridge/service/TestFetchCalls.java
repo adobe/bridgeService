@@ -222,7 +222,11 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { MimeMessageFactory.getMessage("ab") });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+
+        Assert.assertThrows(NonExistentJavaObjectException.class, () -> l_cc.fetchMethod());
+
         Assert.assertThrows(NonExistentJavaObjectException.class, () -> l_cc.call(iClassLoader));
+
     }
 
     @Test

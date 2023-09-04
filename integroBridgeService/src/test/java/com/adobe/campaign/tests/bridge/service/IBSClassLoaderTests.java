@@ -11,6 +11,7 @@ package com.adobe.campaign.tests.bridge.service;
 import com.adobe.campaign.tests.bridge.service.data.MyPropertiesHandler;
 import com.adobe.campaign.tests.bridge.service.exceptions.ClassLoaderConflictException;
 import com.adobe.campaign.tests.bridge.service.exceptions.IBSConfigurationException;
+import com.adobe.campaign.tests.bridge.service.exceptions.NonExistentJavaObjectException;
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1;
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2;
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.MiddleMan;
@@ -87,6 +88,48 @@ public class IBSClassLoaderTests {
         assertThat("We should have a single entry array", ibscl.getPackagePaths(),
                 Matchers.contains("a"));
 
+    }
+
+    @Test
+    public void testLoadClass_negativeNonexistantClassManual1() throws ClassNotFoundException {
+        String l_nonExistantNormalClass = CalledClass1.class.getTypeName()+"NonExistant";
+
+        IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
+        Exception caughtException=null;
+        try {
+            ibscl.loadClass(l_nonExistantNormalClass);
+        } catch (Exception e) {
+            caughtException=e;
+
+        }
+        assertThat("We should have thrown an excption", caughtException, Matchers.notNullValue());
+
+        assertThat("We should have thrown an excption", caughtException, Matchers.instanceOf(NonExistentJavaObjectException.class));
+    }
+
+    @Test
+    public void testLoadClass_negativeNonexistantClassManual2_usingJavaClass() throws ClassNotFoundException {
+        String l_nonExistantNormalClass = String.class.getTypeName()+"NonExistant";
+
+        IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
+        Exception caughtException=null;
+        try {
+            ibscl.loadClass(l_nonExistantNormalClass);
+        } catch (Exception e) {
+            caughtException=e;
+
+        }
+        assertThat("We should have thrown an excption", caughtException, Matchers.notNullValue());
+
+        assertThat("We should have thrown an excption", caughtException, Matchers.instanceOf(NonExistentJavaObjectException.class));
+    }
+
+    @Test
+    public void testsearchClass_negativeNonexistantClassManual2_usingJavaClass() throws ClassNotFoundException {
+        String l_nonExistantNormalClass = CalledClass1.class.getTypeName() + "NonExistant";
+
+        IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
+        assertThat("This class should not andd cannot be loaded" ,Matchers.not(ibscl.isClassLoaded(l_nonExistantNormalClass)));
     }
 
 
@@ -175,4 +218,5 @@ public class IBSClassLoaderTests {
         assertThat("The MiddleManFactory class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(MiddleManClassFactory.class.getTypeName()));
 
     }
+
 }

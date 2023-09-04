@@ -16,3 +16,5 @@ ibstest_output
 *.bkp
 ibs_output
 *.dtmp
+/integroBridgeService/profile.jfr
+/integroBridgeService/.profileconfig.json

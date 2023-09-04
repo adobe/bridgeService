@@ -43,6 +43,7 @@ public class TestFetchCalls {
         MyPropertiesHandler.resetAll();
         EnvironmentVariableHandler.setIntegroCache(new Properties());
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(EnvironmentVariableHandler.class.getTypeName());
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
 
     }
 
@@ -463,6 +464,57 @@ public class TestFetchCalls {
      * envvars of calls do not interfere with the others
      */
     @Test
+    public void testIntegrityEnvVars_case1_automatedMode() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("automatic");
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity");
+        l_cc.setMethodName("assembleBySystemValues");
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
+
+        l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
+
+        JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(), Matchers.endsWith("@boom.com"));
+
+        //Call 2
+        JavaCalls l_myJavaCallsB = new JavaCalls();
+        CallContent l_ccB = new CallContent();
+        l_ccB.setClassName("com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity");
+        l_ccB.setMethodName("assembleBySystemValues");
+        l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
+
+        Properties l_authenticationB = new Properties();
+        l_authenticationB.put("PREFIX", "nana");
+        l_authenticationB.put("SUFFIX", "noon.com");
+        l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
+
+        JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.startsWith("nana+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.endsWith("@noon.com"));
+    }
+
+    /**
+     * Integrity Tests - Here all calls and env vars are in the package path. In this case each call has its own env
+     * vars In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 1 The
+     * envvars of calls do not interfere with the others
+     */
+    @Test
     public void testIntegrityEnvVars_case1_allPathsSet_injectionMode() {
 
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -569,7 +621,7 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case1B_allPathsSet_injectionMode() {
-
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -779,7 +831,7 @@ public class TestFetchCalls {
      */
     @Test
     public void testIntegrityEnvVars_case4_noPackagesInIntegrityPath_injectionMode() {
-
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -1604,6 +1656,20 @@ public class TestFetchCalls {
         jc.getCallContent().put("call1", l_cc);
 
         Assert.assertThrows(NonExistentJavaObjectException.class, () -> jc.submitCalls());
+    }
+
+    @Test
+    public void testHashCallContent() {
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(Instantiable.class.getTypeName());
+        l_cc.setArgs(new Object[] { "3" });
+
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(Instantiable.class.getTypeName());
+        l_cc2.setArgs(new Object[] { "5" });
+
+        assertThat("Hashes are different", l_cc.hashCode(), Matchers.not(Matchers.equalTo(l_cc2.hashCode())));
     }
 
 

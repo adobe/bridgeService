@@ -17,7 +17,7 @@ public class IBSConfigurationException extends RuntimeException {
 
     private static final long serialVersionUID = 4664435638875457216L;
 
-    public IBSConfigurationException(String message, Exception nono) {
-        super(message,nono);
+    public IBSConfigurationException(String message, Throwable original) {
+        super(message,original);
     }
 }

@@ -26,7 +26,7 @@ public class IntegroAPI {
     protected static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
     protected static final String ERROR_IBS_RUNTIME = "Problems with payload. Check the passed environment variables.";
     public static final String ERROR_CALL_TIMEOUT = "The call you made exceeds the set timeout limit.";
-
+    public static final String ERRROR_CONTENT_TYPE = "application/problem+json";
 
     public static void
     startServices(int port) {
@@ -70,11 +70,14 @@ public class IntegroAPI {
         after((req, res) -> res.type("application/json"));
 
         exception( JsonProcessingException.class, (e, req, res) -> {
+
             StringBuilder response = new StringBuilder();
             response.append(ERROR_JSON_TRANSFORMATION);
             response.append("\n");
             response.append(e.getMessage());
-            res.status(400);
+            res.status(404);
+            res.type(ERRROR_CONTENT_TYPE);
+
             res.body(response.toString());
         });
 
@@ -83,7 +86,9 @@ public class IntegroAPI {
             response.append(ERROR_JSON_TRANSFORMATION);
             response.append("\n");
             response.append(e.getMessage());
-            res.status(400);
+            res.status(404);
+            res.type(ERRROR_CONTENT_TYPE);
+
             res.body(response.toString());
         });
 
@@ -92,7 +97,9 @@ public class IntegroAPI {
             response.append(ERROR_IBS_CONFIG);
             response.append("\n");
             response.append(e.getMessage());
-            res.status(400);
+            res.status(500);
+            res.type(ERRROR_CONTENT_TYPE);
+
             res.body(response.toString());
         });
 
@@ -101,7 +108,9 @@ public class IntegroAPI {
             response.append(ERROR_IBS_RUNTIME);
             response.append("\n");
             response.append(e.getMessage());
-            res.status(400);
+            res.status(500);
+            res.type(ERRROR_CONTENT_TYPE);
+
             res.body(response.toString());
         });
 
@@ -110,7 +119,9 @@ public class IntegroAPI {
             response.append(ERROR_CALLING_JAVA_METHOD);
             response.append("\n");
 
-            res.status(400);
+            res.status(500);
+            res.type(ERRROR_CONTENT_TYPE);
+
             response.append(e.getMessage()).append("\n");
             res.body(response.toString());
         });
@@ -120,7 +131,10 @@ public class IntegroAPI {
             response.append(ERROR_JAVA_OBJECT_NOT_FOUND);
             response.append("\n");
             response.append(e.getMessage());
-            res.status(400);
+            res.status(404);
+            res.type(ERRROR_CONTENT_TYPE);
+
+
             res.body(response.toString());
         });
 
@@ -129,6 +143,8 @@ public class IntegroAPI {
             response.append(ERROR_CALL_TIMEOUT);
             response.append("\n");
             response.append(e.getMessage());
+            res.type(ERRROR_CONTENT_TYPE);
+
             res.status(408);
             res.body(response.toString());
         });

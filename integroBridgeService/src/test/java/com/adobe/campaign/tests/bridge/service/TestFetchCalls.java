@@ -43,6 +43,7 @@ public class TestFetchCalls {
         MyPropertiesHandler.resetAll();
         EnvironmentVariableHandler.setIntegroCache(new Properties());
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(EnvironmentVariableHandler.class.getTypeName());
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
 
     }
 
@@ -222,7 +223,11 @@ public class TestFetchCalls {
         l_cc.setArgs(new Object[] { MimeMessageFactory.getMessage("ab") });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
+
+        Assert.assertThrows(ClassNotFoundException.class, () -> l_cc.fetchMethod());
+
         Assert.assertThrows(NonExistentJavaObjectException.class, () -> l_cc.call(iClassLoader));
+
     }
 
     @Test
@@ -459,7 +464,58 @@ public class TestFetchCalls {
      * envvars of calls do not interfere with the others
      */
     @Test
-    public void testIntegrityEnvVars_case1_allPathsSet_injectionMode() {
+    public void testIntegrityEnvVars_case1_automatedMode() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("automatic");
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity");
+        l_cc.setMethodName("assembleBySystemValues");
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
+
+        l_myJavaCalls.getCallContent().put("getRandomEmail", l_cc);
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
+
+        JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("getRandomEmail").toString(), Matchers.endsWith("@boom.com"));
+
+        //Call 2
+        JavaCalls l_myJavaCallsB = new JavaCalls();
+        CallContent l_ccB = new CallContent();
+        l_ccB.setClassName("com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity");
+        l_ccB.setMethodName("assembleBySystemValues");
+        l_myJavaCallsB.getCallContent().put("getRandomEmailB", l_ccB);
+
+        Properties l_authenticationB = new Properties();
+        l_authenticationB.put("PREFIX", "nana");
+        l_authenticationB.put("SUFFIX", "noon.com");
+        l_myJavaCallsB.setEnvironmentVariables(l_authenticationB);
+
+        JavaCallResults returnedValueB = l_myJavaCallsB.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.startsWith("nana+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValueB.getReturnValues().get("getRandomEmailB").toString(),
+                Matchers.endsWith("@noon.com"));
+    }
+
+    /**
+     * Integrity Tests - Here all calls and env vars are in the package path. In this case each call has its own env
+     * vars In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 1 The
+     * envvars of calls do not interfere with the others
+     */
+    @Test
+    public void testIntegrityEnvVars_case1_allPathsSet_semiManualMode() {
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -505,13 +561,14 @@ public class TestFetchCalls {
     }
 
     /**
-     * Integrity Tests - Here all calls and env vars are in the package path. Inthis case each call has its own env vars
+     * Integrity Tests - Here all calls and env vars are in the package path. In this case each call has its own env vars
      * In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 1 The envvars
      * of calls do not interfere with the others
      */
     @Test
-    public void testIntegrityEnvVars_case1_allPathsSet_rawMode() {
-        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+    public void testIntegrityEnvVars_case1_allPathsSet_manualMode() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
+
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
                 ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue()
                         + ",com.adobe.campaign.tests.bridge.testdata.two");
@@ -564,8 +621,8 @@ public class TestFetchCalls {
      * envvars of calls do not interfere with the others
      */
     @Test
-    public void testIntegrityEnvVars_case1B_allPathsSet_injectionMode() {
-
+    public void testIntegrityEnvVars_case1B_allPathsSet_semiManualMode() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -610,7 +667,7 @@ public class TestFetchCalls {
      * Case 3 The envvars of calls do not interfere with the others
      */
     @Test
-    public void testIntegrityEnvVars_case3_envNotInPathCallInPath_injectionMode() {
+    public void testIntegrityEnvVars_case3_envNotInPathCallInPath_semiManualMode() {
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -660,7 +717,7 @@ public class TestFetchCalls {
      * do not interfere with the others
      */
     @Test
-    public void testIntegrityEnvVars_case3B_allPathsSet_injectionModeNEW() {
+    public void testIntegrityEnvVars_case3B_allPathsSet_semiManualModeNEW() {
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridgeservice.");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -721,8 +778,8 @@ public class TestFetchCalls {
      * do not interfere with the others
      */
     @Test
-    public void testIntegrityEnvVars_case3B_allPathsSet_rawMode() {
-        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+    public void testIntegrityEnvVars_case3B_allPathsSet_manualMode() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridgeservice.");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -774,8 +831,8 @@ public class TestFetchCalls {
      * consecutive calls including the class call itself
      */
     @Test
-    public void testIntegrityEnvVars_case4_noPackagesInIntegrityPath_injectionMode() {
-
+    public void testIntegrityEnvVars_case4_noPackagesInIntegrityPath_semiManualMode() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
@@ -822,8 +879,8 @@ public class TestFetchCalls {
      * consecutive calls including the class call itself
      */
     @Test
-    public void testIntegrityEnvVars_case4_noPackagesInIntegrityPath_rawMode() {
-        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+    public void testIntegrityEnvVars_case4_noPackagesInIntegrityPath_manualMode() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -876,8 +933,60 @@ public class TestFetchCalls {
      * https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is case 2
      */
     @Test
-    public void testIntegrityEnvVars_case2_withEnvVarPathsIncludedButNotCallPath_injectionMode() {
+    public void testIntegrityEnvVars_case2_withEnvVarPathsIncludedButNotCallPath_automatic() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("automatic");
+        //Call 1
+        JavaCalls l_myJavaCalls = new JavaCalls();
 
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
+
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
+
+        l_myJavaCalls.getCallContent().put("call1PL", l_cc);
+
+        assertThat("We should not have the env vars integrity path set",
+                l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
+                        .noneMatch(
+                                x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+
+        assertThat("Our class package should not yet be in the integrity path",
+                l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
+                        .noneMatch(x -> x.equals("com.adobe.campaign.tests.bridgeservice.testdata2")));
+
+        JavaCallResults returnedValueA = l_myJavaCalls.submitCalls();
+
+        assertThat("The integrity path should not have been set. ",
+                l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
+                        .noneMatch(x -> x.equals("com.adobe.campaign.tests.bridge.testdata.two")));
+
+        assertThat("We should not have the envvars integrity path set",
+                l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
+                        .noneMatch(x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+
+        assertThat("We should get a good answer back from the call",
+                returnedValueA.getReturnValues().get("call1PL").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValueA.getReturnValues().get("call1PL").toString(),
+                Matchers.endsWith("@boom.com"));
+
+    }
+
+
+    /**
+     * In this case the packages of the SystemValueHandler are added at the constructor time of Java calls. However, we
+     * do not include the package path of the java call itself In issue
+     * https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is case 2
+     */
+    @Test
+    public void testIntegrityEnvVars_case2_withEnvVarPathsIncludedButNotCallPath_semiManualMode() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
         //Call 1
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -929,8 +1038,8 @@ public class TestFetchCalls {
      * In this case we test how the system will work by default if we do not have auto injection
      */
     @Test
-    public void testIntegrityEnvVars_case2_withEnvVarPathsIncludedButNotCallPath_rawMode() {
-        ConfigValueHandlerIBS.AUTOMATIC_INTEGRITY_PACKAGE_INJECTION.activate("false");
+    public void testIntegrityEnvVars_case2_withEnvVarPathsIncludedButNotCallPath_manualMode() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
                 ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue());
 
@@ -957,7 +1066,7 @@ public class TestFetchCalls {
 
         JavaCallResults returnedValueA = l_myJavaCalls.submitCalls();
 
-        assertThat("We should now have added the our class path to the integrity path",
+        assertThat("We should not have added the our class path to the integrity path",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
                         .noneMatch(x -> x.equals("com.adobe.campaign.tests.integro.tools")));
 
@@ -967,6 +1076,60 @@ public class TestFetchCalls {
         assertThat("We should get a good answer back from the call",
                 returnedValueA.getReturnValues().get("call1PL").toString(),
                 Matchers.endsWith("@null"));
+
+    }
+
+    /**
+     * In this case the packages of the SystemValueHandler are added at the constructor time of Java calls. However, we
+     * do not include the package path of the java call itself In issue
+     * https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is case 2
+     * <p>
+     * In this case we are using an unknown mode. If the mode is not within "manual","semi-manual" or "automatic" the
+     * default mode is taken , I.e. automatic.
+     */
+    @Test
+    public void testIntegrityEnvVars_case2_withEnvVarPathsIncludedButNotCallPath_negativeUnknownMode() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("non-existant");
+        //Call 1
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(StaticMethodsIntegrity.class.getTypeName());
+        l_cc.setMethodName("assembleBySystemValues");
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("PREFIX", "bada");
+        l_envVars.put("SUFFIX", "boom.com");
+
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
+
+        l_myJavaCalls.getCallContent().put("call1PL", l_cc);
+
+        assertThat("We should not have the env vars integrity path set",
+                l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
+                        .noneMatch(
+                                x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+
+        assertThat("Our class package should not yet be in the integrity path",
+                l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
+                        .noneMatch(x -> x.equals("com.adobe.campaign.tests.bridgeservice.testdata2")));
+
+        JavaCallResults returnedValueA = l_myJavaCalls.submitCalls();
+
+        assertThat("The integrity path should not have been set. ",
+                l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
+                        .noneMatch(x -> x.equals("com.adobe.campaign.tests.bridge.testdata.two")));
+
+        assertThat("We should not have the envvars integrity path set",
+                l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
+                        .noneMatch(x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+
+        assertThat("We should get a good answer back from the call",
+                returnedValueA.getReturnValues().get("call1PL").toString(),
+                Matchers.startsWith("bada+"));
+        assertThat("We should get a good answer back from the call",
+                returnedValueA.getReturnValues().get("call1PL").toString(),
+                Matchers.endsWith("@boom.com"));
 
     }
 
@@ -1046,6 +1209,7 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantMethodException_internalClass() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.one.");
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethodsNonExistant");
@@ -1059,6 +1223,8 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantMethodException_externalMethod() {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
+
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
         l_cc.setMethodName("methodAcceptingStringArgumentNonExistant");
@@ -1071,13 +1237,14 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantClassException_externalClass() {
+
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethodsNonExistant");
         l_cc.setMethodName("methodAcceptingStringArgument");
         l_cc.setArgs(new Object[] { "testqa+krs3726@acc-simulators.email.corp.adobe.com" });
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
 
-        Assert.assertThrows(NonExistentJavaObjectException.class,
+        Assert.assertThrows(ClassNotFoundException.class,
                 () -> l_cc.fetchMethod(ibcl.loadClass(l_cc.getClassName())));
     }
 
@@ -1092,6 +1259,19 @@ public class TestFetchCalls {
         IntegroBridgeClassLoader ibcl = new IntegroBridgeClassLoader();
         List<Method> l_methods = l_cc.fetchMethodCandidates(ibcl.loadClass(l_cc.getClassName()));
         assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
+    }
+
+
+    @Test
+    public void testIssue34LinkageError() throws ClassNotFoundException {
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodThrowingLinkageError");
+        jc.getCallContent().put("firstCall",l_cc);
+        Assert.assertThrows(ClassLoaderConflictException.class, () -> l_cc.call(jc.getLocalClassLoader()));
+
+        Assert.assertThrows(IBSConfigurationException.class, () -> jc.submitCalls());
     }
 
     /**
@@ -1335,7 +1515,7 @@ public class TestFetchCalls {
     @Test
     public void testSEnvironmentVariablesBadConfigValues()
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUp");
 
@@ -1517,8 +1697,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testCallConstructor_case2_InstanceMethod()
-            throws ClassNotFoundException, JsonProcessingException {
+    public void testCallConstructor_case2_InstanceMethod() {
 
         Instantiable reference = new Instantiable("3");
         JavaCalls jc = new JavaCalls();
@@ -1539,8 +1718,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testCallConstructor_case3_InstanceMethod()
-            throws ClassNotFoundException, JsonProcessingException {
+    public void testCallConstructor_case3_InstanceMethod() {
 
         Instantiable reference = new Instantiable("3");
         JavaCalls jc = new JavaCalls();
@@ -1575,8 +1753,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testCallConstructorAbstract_case4_negative()
-            throws ClassNotFoundException, JsonProcessingException {
+    public void testCallConstructorAbstract_case4_negative() {
 
         // To be removed with issue #60 : added for coverage
             JavaCalls jc = new JavaCalls();
@@ -1586,6 +1763,20 @@ public class TestFetchCalls {
         jc.getCallContent().put("call1", l_cc);
 
         Assert.assertThrows(NonExistentJavaObjectException.class, () -> jc.submitCalls());
+    }
+
+    @Test
+    public void testHashCallContent() {
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(Instantiable.class.getTypeName());
+        l_cc.setArgs(new Object[] { "3" });
+
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(Instantiable.class.getTypeName());
+        l_cc2.setArgs(new Object[] { "5" });
+
+        assertThat("Hashes are different", l_cc.hashCode(), Matchers.not(Matchers.equalTo(l_cc2.hashCode())));
     }
 
 

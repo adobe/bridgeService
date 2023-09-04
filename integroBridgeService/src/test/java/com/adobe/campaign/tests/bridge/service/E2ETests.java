@@ -8,10 +8,12 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1;
+import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2;
+import com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory;
 import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -82,7 +84,7 @@ public class E2ETests {
     public void testErrors() {
         JavaCallResults jcr = new JavaCallResults();
 
-        given().body(jcr).post(EndPointURL + "call").then().statusCode(400).and().assertThat()
+        given().body(jcr).post(EndPointURL + "call").then().statusCode(404).and().assertThat()
                 .body(Matchers.startsWith(IntegroAPI.ERROR_JSON_TRANSFORMATION));
     }
 
@@ -90,7 +92,7 @@ public class E2ETests {
     public void testTestAccess() {
         JavaCallResults jcr = new JavaCallResults();
 
-        given().body(jcr).post(EndPointURL + "call").then().statusCode(400).and().assertThat()
+        given().body(jcr).post(EndPointURL + "call").then().statusCode(404).and().assertThat()
                 .body(Matchers.startsWith(IntegroAPI.ERROR_JSON_TRANSFORMATION));
     }
 
@@ -121,7 +123,7 @@ public class E2ETests {
                 new Object[] { 7, 7 });
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).contentType("application/problem+json").body(
                 Matchers.containsString("We do not allow numbers that are equal."));
 
     }
@@ -130,7 +132,7 @@ public class E2ETests {
      * Testing that we provide the correct error messages whenever the target method throws an error
      */
     @Test(groups = "E2E")
-    public void testMainEror_Case2AmbiguousMethodException() {
+    public void testMainError_Case2AmbiguousMethodException() {
 
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
@@ -141,7 +143,7 @@ public class E2ETests {
                 new Object[] { "plop" });
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
                 Matchers.containsString(IntegroAPI.ERROR_JSON_TRANSFORMATION));
     }
 
@@ -167,7 +169,7 @@ public class E2ETests {
 
         l_call.setEnvironmentVariables(l_envVars);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).body(
                 Matchers.containsString(IntegroAPI.ERROR_IBS_CONFIG));
 
     }
@@ -185,7 +187,7 @@ public class E2ETests {
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
                 Matchers.containsString(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND));
     }
 
@@ -202,7 +204,7 @@ public class E2ETests {
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
                 Matchers.containsString(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND));
     }
 
@@ -210,7 +212,7 @@ public class E2ETests {
      * Testing that we provide the correct error messages whenever the target method throws an error
      */
     @Test(groups = "E2E")
-    public void testMainEror_passingNull() throws JsonProcessingException {
+    public void testMainEror_passingNull() {
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate("a.b.c.NonExistingClass");
 
         String l_jsonString =
@@ -229,7 +231,7 @@ public class E2ETests {
                         + "    }\n"
                         + "}";
 
-        given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(400).body(
+        given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
                 Matchers.containsString(IntegroAPI.ERROR_JSON_TRANSFORMATION));
 
     }
@@ -396,6 +398,72 @@ public class E2ETests {
 
         given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(408).body(
                 Matchers.containsString(IntegroAPI.ERROR_CALL_TIMEOUT));
+    }
+
+    /**
+     * Related to issue #34, where certain call combinations create a LinkageError
+     */
+    //@Test(groups = "E2E", invocationCount = 5001)
+    @Test(groups = "E2E")
+    public void testIssue34Manual() {
+        //long before = MemoryTools.fetchMemory();
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1");
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        //Call 1
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call1", l_cc1);
+
+        //Call 2
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call2", l_cc2);
+
+        /* Problem disappears*/
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(CalledClass1.class.getPackageName()+","+CalledClass2.class.getPackageName()+","+
+                MiddleManClassFactory.class.getPackageName());
+
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
+                body("returnValues.call2", Matchers.equalTo("Whatever"));
+
+        //long after = MemoryTools.fetchMemory();
+        //System.out.println(before+";"+after+";"+(after-before));
+
+    }
+
+    @Test(groups = "E2E")
+    public void testIssue34Automatic() {
+        //long before = MemoryTools.fetchMemory();
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("automatic");
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        //Call 1
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call1", l_cc1);
+
+        //Call 2
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call2", l_cc2);
+
+        /* Problem disappears*/
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(CalledClass1.class.getPackageName()+","+CalledClass2.class.getPackageName()+","+
+                MiddleManClassFactory.class.getPackageName());
+
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
+                body("returnValues.call2", Matchers.equalTo("Whatever"));
+
+        //long after = MemoryTools.fetchMemory();
+        //System.out.println(before+";"+after+";"+(after-before));
+
     }
 
 

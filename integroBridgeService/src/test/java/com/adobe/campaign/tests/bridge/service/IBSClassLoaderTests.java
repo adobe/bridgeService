@@ -158,6 +158,32 @@ public class IBSClassLoaderTests {
 
     }
 
+
+    @Test
+    public void testIssue34AutomaticLoading_negativeDefaultBehavior()  {
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("nonExistantMode");
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        //Call 1
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call1", l_cc1);
+
+        //Call 2
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call2", l_cc2);
+
+        l_myJavaCalls.submitCalls();
+
+        assertThat("The called class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(CalledClass1.class.getTypeName()));
+        assertThat("The MiddleMan class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(MiddleMan.class.getTypeName()));
+        assertThat("The MiddleManFactory class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(MiddleManClassFactory.class.getTypeName()));
+
+    }
+
     @Test
     public void testIssue34ManualLoading_case1Negative()  {
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");

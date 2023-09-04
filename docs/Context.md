@@ -4,8 +4,12 @@ We have three modes of Integrity management :
 * Semi-Manual
 * Manual
 
+These modes can be set by changing the system property `IBS.CLASSLOADER.AUTOMATIC.INTEGRITY.INJECTION`.
+
 ## Automatic Loading
-Automatic loading assumes that all classes that are accessed by the called system should be loaded in the context. In this case we do not need to specify what should be managed by the local class loader and what bythe standard loader. The drawback of this is that some more memory will be needed (5%).
+Automatic loading assumes that all classes that are accessed by the called system should be loaded in the context. In this case we do not need to specify what should be managed by the local class loader and what by the standard loader. The drawback of this is that some more memory will be needed (5%).
+
+This is the default behavior, and it kicks in even when a wrong value is given for the execution property `IBS.CLASSLOADER.AUTOMATIC.INTEGRITY.INJECTION`.
 
 ## Manual Loading
 In some cases we want to have control over the classes and packages that are loaded into the Class Loader. In this case we load a minimal number of classes in the IBS classLoader. The drawback of this is that the controls are a little more complex.

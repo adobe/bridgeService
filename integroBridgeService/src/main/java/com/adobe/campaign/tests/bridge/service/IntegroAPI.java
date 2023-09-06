@@ -24,7 +24,7 @@ public class IntegroAPI {
     protected static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
     protected static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
     protected static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
-    protected static final String ERROR_IBS_RUNTIME = "Problems with payload. Check the passed environment variables.";
+    protected static final String ERROR_IBS_RUNTIME = "Problems with payload.";
     public static final String ERROR_CALL_TIMEOUT = "The call you made exceeds the set timeout limit.";
     public static final String ERRROR_CONTENT_TYPE = "application/problem+json";
 

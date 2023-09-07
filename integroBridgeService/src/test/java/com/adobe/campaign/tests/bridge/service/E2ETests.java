@@ -144,7 +144,7 @@ public class E2ETests {
         l_call.getCallContent().put("call1PL", myContent);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
-                Matchers.containsString(IntegroAPI.ERROR_JSON_TRANSFORMATION));
+                Matchers.containsString(IntegroAPI.ERROR_AMBIGUOUS_METHOD));
     }
 
     /**
@@ -466,6 +466,18 @@ public class E2ETests {
 
     }
 
+
+    @Test(groups = "E2E")
+    public void test_issue35_callToClassWithNoModifiers() {
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ClassWithNoModifiers");
+        l_cc.setMethodName("hello");
+        jc.getCallContent().put("one", l_cc);
+
+        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(500).
+                body(Matchers.containsString(IntegroAPI.ERROR_IBS_RUNTIME));
+    }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {

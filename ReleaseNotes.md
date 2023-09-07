@@ -1,10 +1,10 @@
 # Integro Bridge Service - RELEASE NOTES
 ## 2.11.11 (SNAPSHOT)
 This is the first version that is on the public github. Hence we have the issue numbers being reset.
-* [#34 java.lang.LinkageError: loader constraint violation: loader 'app' (instance of jdk.internal.loader.ClassLoaders](https://github.com/adobe/bridgeService/issues/34): Discovered a problem with Linkage error when using the traditional class loader. We now load everything locally, this means that all static variables are stored in the context.
-* [#39 Object not found should be error 404](https://github.com/adobe/bridgeService/issues/39)
-* [#40 Manage server side exceptions](https://github.com/adobe/bridgeService/issues/40)
-* [#43 Introduce automatic loading of classes](https://github.com/adobe/bridgeService/issues/43)
+* [#43 Introduce automatic loading of classes](https://github.com/adobe/bridgeService/issues/43): Instead of selectively loading classes from designated packages, we now load all needed classes in the class loader.
+* [#34 java.lang.LinkageError: loader constraint violation: loader 'app' (instance of jdk.internal.loader.ClassLoaders](https://github.com/adobe/bridgeService/issues/34): Discovered a problem with Linkage error when using the traditional class loader. We now load everything locally, this means that all static variables are stored in the context (Issue #43).
+* We started reorganizing the errors, and have started doing a more predefined error management.
+* [#35 When calling a class with no modifiers we do not get enough information](https://github.com/adobe/bridgeService/issues/35)
 
 ## 2.11.10
 * [#57 Call Timeout Management](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/57): Introducing the timeout, mechanism. We have a global timeout, and a call session timeout. We also log the individual call durations in the return payload.

@@ -173,7 +173,7 @@ public class CallContent {
                     "The given method " + this.getFullName() + " could not accept the given arguments..");
 
         } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("We do not have the right to execute the gien class. Original message : "+e.getMessage(), e);
         } catch (InvocationTargetException e) {
             if (e.getCause() instanceof LinkageError) {
                 throw new ClassLoaderConflictException("Linkage Error detected. This can be corrected by enriching the "+ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.systemName+" property", e.getCause());
@@ -187,7 +187,7 @@ public class CallContent {
         } catch (InstantiationException e) {
             throw new NonExistentJavaObjectException(
                     "Could not instantiate class. The given class " + this.getClassName() + "could not be found.");
-        } catch (NoSuchMethodException e) {
+        } catch (NonExistentJavaObjectException | NoSuchMethodException e) {
             throw new NonExistentJavaObjectException(
                     "Could not find the method " + this.getFullName() + ".");
         } catch (LinkageError e) {

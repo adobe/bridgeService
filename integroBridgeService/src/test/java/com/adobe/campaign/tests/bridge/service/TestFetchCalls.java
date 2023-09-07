@@ -1196,7 +1196,6 @@ public class TestFetchCalls {
 
     @Test
     public void testIssueWithNonExistantMethodException_internalMethod() {
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.one.");
         CallContent l_cc = new CallContent();
         l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
         l_cc.setMethodName("methodAcceptingStringArgumentNonExistant");
@@ -1756,7 +1755,7 @@ public class TestFetchCalls {
     public void testCallConstructorAbstract_case4_negative() {
 
         // To be removed with issue #60 : added for coverage
-            JavaCalls jc = new JavaCalls();
+        JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.AbstractClassType");
         l_cc.setArgs(new Object[] { "A" });
@@ -1780,5 +1779,26 @@ public class TestFetchCalls {
     }
 
 
+    @Test
+    public void test_issue35_callToClassWithNoModifiers() {
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ClassWithNoModifiers");
+        l_cc.setMethodName("hello");
+        jc.getCallContent().put("one", l_cc);
+        Exception expectedException = null;
+        try {
+            l_cc.call(jc.getLocalClassLoader());
+        } catch (Exception e) {
+            expectedException = e;
+            assertThat("We should have a runtime exception", expectedException,
+                    Matchers.instanceOf(RuntimeException.class));
+            assertThat("The original exception should Illegalaccess", expectedException.getCause(), Matchers.instanceOf(
+                    IllegalAccessException.class));
+        }
+        assertThat("We should have thrown an exception here", expectedException, Matchers.notNullValue());
+        Assert.assertThrows(IBSRunTimeException.class, () -> jc.submitCalls());
+
+    }
 }
 

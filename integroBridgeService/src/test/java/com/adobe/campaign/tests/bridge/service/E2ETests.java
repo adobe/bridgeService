@@ -144,7 +144,7 @@ public class E2ETests {
         l_call.getCallContent().put("call1PL", myContent);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
-                Matchers.containsString(IntegroAPI.ERROR_JSON_TRANSFORMATION));
+                Matchers.containsString(IntegroAPI.ERROR_AMBIGUOUS_METHOD));
     }
 
     /**

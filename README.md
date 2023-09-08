@@ -374,12 +374,18 @@ java.lang.IllegalArgumentException: We do not allow numbers that are equal.
 
 When using the bridge service, we also include additional info:
 
+```JSON
+{
+  "title": "Error during call of target Java Class and Method.",
+  "code": 500,
+  "detail": "We experienced an exception when calling the provided method com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowingException.\nProvided error message : java.lang.IllegalArgumentException: We do not allow numbers that are equal.",
+  "bridgeServiceException": "com.adobe.campaign.tests.bridge.service.exceptions.TargetJavaMethodCallException",
+  "originalException": "java.lang.IllegalArgumentException",
+  "originalMessage": "We do not allow numbers that are equal."
+}
 ```
-Error during call of target Java Class and Method.
-We experienced an exception when calling the provided method com.adobe.campaign.tests.integro.tools.RandomManager.getRandomNumber.
-Provided error message : 
-java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number.
-```
+
+The BridgeService exception is how the bridgeService manages underlying errors. However we also share the background, originating exception and message in order to help.
 
 ## Contribution
 There are two main docs for contributing:

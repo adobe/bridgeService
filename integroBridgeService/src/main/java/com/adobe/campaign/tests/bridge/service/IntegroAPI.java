@@ -9,11 +9,15 @@
 package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import static spark.Spark.*;
 
@@ -28,6 +32,10 @@ public class IntegroAPI {
     public static final String ERROR_CALL_TIMEOUT = "The call you made exceeds the set timeout limit.";
     public static final String ERRROR_CONTENT_TYPE = "application/problem+json";
     protected static final String ERROR_AMBIGUOUS_METHOD = "No unique method could be identified that matches your request.";
+    public static final String SYSTEM_UP_MESSAGE = "All systems up";
+    protected enum DeploymentMode {
+            TEST, PRODUCTION
+    };
 
     public static void
     startServices(int port) {
@@ -43,18 +51,19 @@ public class IntegroAPI {
         }
 
         get("/test", (req, res) -> {
-            res.type("text/plain");
+            res.type("application/json");
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, String> status = new HashMap<>();
+            status.put("overALLSystemState",SYSTEM_UP_MESSAGE);
+            status.put("deploymentMode", ConfigValueHandlerIBS.DEPLOYMENT_MODEL.fetchValue());
+                    //mapper.readValue(in_requestJSON, Map.class);
 
-            StringBuilder sb = new StringBuilder("All systems up "+ ConfigValueHandlerIBS.DEPLOYMENT_MODEL.fetchValue());
-            sb.append("\n");
-            sb.append("Bridge Service Version : ");
-            sb.append(ConfigValueHandlerIBS.PRODUCT_VERSION.fetchValue());
+            status.put("bridgeServiceVersion", ConfigValueHandlerIBS.PRODUCT_VERSION.fetchValue());
             if (ConfigValueHandlerIBS.PRODUCT_USER_VERSION.isSet()) {
-                sb.append("\n");
-                sb.append("Product user version : ");
-                sb.append(ConfigValueHandlerIBS.PRODUCT_USER_VERSION.fetchValue());
+                status.put("hostVersion", ConfigValueHandlerIBS.PRODUCT_USER_VERSION.fetchValue());
             }
-            return sb.toString();
+
+            return mapper.writeValueAsString(status);
         });
 
         post("/service-check", (req, res) -> {
@@ -72,82 +81,59 @@ public class IntegroAPI {
 
         exception( JsonProcessingException.class, (e, req, res) -> {
 
-            StringBuilder response = new StringBuilder();
-            response.append(ERROR_JSON_TRANSFORMATION);
-            response.append("\n");
-            response.append(e.getMessage());
             res.status(404);
             res.type(ERRROR_CONTENT_TYPE);
 
-            res.body(response.toString());
+            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_JSON_TRANSFORMATION, 404));
         });
 
         exception( AmbiguousMethodException.class, (e, req, res) -> {
-            StringBuilder response = new StringBuilder();
-            response.append(ERROR_AMBIGUOUS_METHOD);
-            response.append("\n");
-            response.append(e.getMessage());
             res.status(404);
             res.type(ERRROR_CONTENT_TYPE);
+            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_AMBIGUOUS_METHOD, 404));
 
-            res.body(response.toString());
         });
 
         exception( IBSConfigurationException.class, (e, req, res) -> {
-            StringBuilder response = new StringBuilder();
-            response.append(ERROR_IBS_CONFIG);
-            response.append("\n");
-            response.append(e.getMessage());
-            res.status(500);
+            int statusCode = 500;
+
+            res.status(statusCode);
             res.type(ERRROR_CONTENT_TYPE);
 
-            res.body(response.toString());
+            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_IBS_CONFIG, statusCode));
         });
 
         exception( IBSRunTimeException.class, (e, req, res) -> {
-            StringBuilder response = new StringBuilder();
-            response.append(ERROR_IBS_RUNTIME);
-            response.append("\n");
-            response.append(e.getMessage());
-            res.status(500);
+            int statusCode = 500;
+            res.status(statusCode);
             res.type(ERRROR_CONTENT_TYPE);
 
-            res.body(response.toString());
+            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_IBS_RUNTIME, statusCode));
+
         });
 
         exception( TargetJavaMethodCallException.class, (e, req, res) -> {
-            StringBuilder response = new StringBuilder();
-            response.append(ERROR_CALLING_JAVA_METHOD);
-            response.append("\n");
-
-            res.status(500);
+            int statusCode = 500;
+            res.status(statusCode);
             res.type(ERRROR_CONTENT_TYPE);
 
-            response.append(e.getMessage()).append("\n");
-            res.body(response.toString());
+            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_CALLING_JAVA_METHOD, statusCode));
         });
 
         exception( NonExistentJavaObjectException.class, (e, req, res) -> {
-            StringBuilder response = new StringBuilder();
-            response.append(ERROR_JAVA_OBJECT_NOT_FOUND);
-            response.append("\n");
-            response.append(e.getMessage());
-            res.status(404);
+            int statusCode = 404;
+            res.status(statusCode);
             res.type(ERRROR_CONTENT_TYPE);
 
-
-            res.body(response.toString());
+            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_JAVA_OBJECT_NOT_FOUND, statusCode));
         });
 
         exception( IBSTimeOutException.class, (e, req, res) -> {
-            StringBuilder response = new StringBuilder();
-            response.append(ERROR_CALL_TIMEOUT);
-            response.append("\n");
-            response.append(e.getMessage());
+            int statusCode = 408;
+            res.status(statusCode);
             res.type(ERRROR_CONTENT_TYPE);
 
-            res.status(408);
-            res.body(response.toString());
+            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_CALL_TIMEOUT, statusCode));
         });
 
     }

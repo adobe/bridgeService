@@ -10,6 +10,7 @@ package com.adobe.campaign.tests.bridge.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.hamcrest.Matchers;
+import org.testng.annotations.Test;
 
 import java.util.Properties;
 

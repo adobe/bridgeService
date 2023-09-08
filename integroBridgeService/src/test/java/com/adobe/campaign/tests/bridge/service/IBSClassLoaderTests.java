@@ -25,7 +25,7 @@ import org.testng.annotations.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class IBSClassLoaderTests {
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     @AfterClass
     public void reset() {
         ConfigValueHandlerIBS.resetAllValues();
@@ -187,7 +187,6 @@ public class IBSClassLoaderTests {
     @Test
     public void testIssue34ManualLoading_case1Negative()  {
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
-        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate("60000");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         //Call 1
@@ -208,18 +207,17 @@ public class IBSClassLoaderTests {
             caughtException=e;
 
         }
-        assertThat("We should have thrown an excption", caughtException, Matchers.notNullValue());
+        assertThat("We should have thrown an exception", caughtException, Matchers.notNullValue());
 
-        assertThat("We should have thrown an excption", caughtException, Matchers.instanceOf(IBSConfigurationException.class));
-        assertThat("We should have thrown an excption", caughtException.getCause(), Matchers.instanceOf(ClassLoaderConflictException.class));
-        assertThat("We should have thrown an excption", caughtException.getCause().getCause(), Matchers.instanceOf(LinkageError.class));
+        assertThat("We should have thrown an exception", caughtException, Matchers.instanceOf(IBSConfigurationException.class));
+        assertThat("We should have thrown an exception", caughtException.getCause(), Matchers.instanceOf(ClassLoaderConflictException.class));
+        assertThat("We should have thrown an exception", caughtException.getCause().getCause(), Matchers.instanceOf(LinkageError.class));
 
     }
 
     @Test
     public void testIssue34ManualLoading_case2()  {
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
-        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate("60000");
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(MiddleManClassFactory.class.getPackageName()+","+MiddleMan.class.getPackageName());
 
         JavaCalls l_myJavaCalls = new JavaCalls();

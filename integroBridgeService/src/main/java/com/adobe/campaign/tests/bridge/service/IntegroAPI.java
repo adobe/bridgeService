@@ -9,7 +9,6 @@
 package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
@@ -30,15 +29,14 @@ public class IntegroAPI {
     protected static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
     protected static final String ERROR_IBS_RUNTIME = "Problems with payload.";
     public static final String ERROR_CALL_TIMEOUT = "The call you made exceeds the set timeout limit.";
-    public static final String ERRROR_CONTENT_TYPE = "application/problem+json";
+    public static final String ERROR_CONTENT_TYPE = "application/problem+json";
     protected static final String ERROR_AMBIGUOUS_METHOD = "No unique method could be identified that matches your request.";
     public static final String SYSTEM_UP_MESSAGE = "All systems up";
     protected enum DeploymentMode {
             TEST, PRODUCTION
-    };
+    }
 
-    public static void
-    startServices(int port) {
+    public static void startServices(int port) {
 
         if (Boolean.parseBoolean(ConfigValueHandlerIBS.SSL_ACTIVE.fetchValue())) {
             File l_file = new File(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue());
@@ -79,61 +77,63 @@ public class IntegroAPI {
 
         after((req, res) -> res.type("application/json"));
 
-        exception( JsonProcessingException.class, (e, req, res) -> {
-
-            res.status(404);
-            res.type(ERRROR_CONTENT_TYPE);
-
-            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_JSON_TRANSFORMATION, 404));
-        });
-
-        exception( AmbiguousMethodException.class, (e, req, res) -> {
-            res.status(404);
-            res.type(ERRROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_AMBIGUOUS_METHOD, 404));
-
-        });
-
-        exception( IBSConfigurationException.class, (e, req, res) -> {
-            int statusCode = 500;
-
-            res.status(statusCode);
-            res.type(ERRROR_CONTENT_TYPE);
-
-            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_IBS_CONFIG, statusCode));
-        });
-
-        exception( IBSRunTimeException.class, (e, req, res) -> {
-            int statusCode = 500;
-            res.status(statusCode);
-            res.type(ERRROR_CONTENT_TYPE);
-
-            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_IBS_RUNTIME, statusCode));
-
-        });
-
-        exception( TargetJavaMethodCallException.class, (e, req, res) -> {
-            int statusCode = 500;
-            res.status(statusCode);
-            res.type(ERRROR_CONTENT_TYPE);
-
-            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_CALLING_JAVA_METHOD, statusCode));
-        });
-
-        exception( NonExistentJavaObjectException.class, (e, req, res) -> {
+        exception(JsonProcessingException.class, (e, req, res) -> {
             int statusCode = 404;
             res.status(statusCode);
-            res.type(ERRROR_CONTENT_TYPE);
-
-            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_JAVA_OBJECT_NOT_FOUND, statusCode));
+            res.type(ERROR_CONTENT_TYPE);
+            res.body(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_JSON_TRANSFORMATION, statusCode)));
         });
 
-        exception( IBSTimeOutException.class, (e, req, res) -> {
+        exception(AmbiguousMethodException.class, (e, req, res) -> {
+            int statusCode = 404;
+            res.status(statusCode);
+            res.type(ERROR_CONTENT_TYPE);
+            res.body(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_AMBIGUOUS_METHOD, statusCode)));
+        });
+
+        exception(IBSConfigurationException.class, (e, req, res) -> {
+            int statusCode = 500;
+            res.status(statusCode);
+            res.type(ERROR_CONTENT_TYPE);
+
+            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_CONFIG, statusCode)));
+        });
+
+        exception(IBSRunTimeException.class, (e, req, res) -> {
+            int statusCode = 500;
+            res.status(statusCode);
+            res.type(ERROR_CONTENT_TYPE);
+
+            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_RUNTIME, statusCode)));
+
+        });
+
+        exception(TargetJavaMethodCallException.class, (e, req, res) -> {
+            int statusCode = 500;
+            res.status(statusCode);
+            res.type(ERROR_CONTENT_TYPE);
+
+            res.body(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_CALLING_JAVA_METHOD, statusCode)));
+        });
+
+        exception(NonExistentJavaObjectException.class, (e, req, res) -> {
+            int statusCode = 404;
+            res.status(statusCode);
+            res.type(ERROR_CONTENT_TYPE);
+
+            res.body(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_JAVA_OBJECT_NOT_FOUND, statusCode)));
+        });
+
+        exception(IBSTimeOutException.class, (e, req, res) -> {
             int statusCode = 408;
             res.status(statusCode);
-            res.type(ERRROR_CONTENT_TYPE);
+            res.type(ERROR_CONTENT_TYPE);
 
-            res.body(BridgeServiceFactory.createExceptionPayLoad(e, ERROR_CALL_TIMEOUT, statusCode));
+            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_CALL_TIMEOUT, statusCode)));
         });
 
     }

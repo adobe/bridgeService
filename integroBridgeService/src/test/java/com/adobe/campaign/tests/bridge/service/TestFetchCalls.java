@@ -1802,13 +1802,5 @@ public class TestFetchCalls {
 
     }
 
-    @Test
-    public void testFactory() throws JsonProcessingException {
-        ObjectMapper omMock = Mockito.mock(ObjectMapper.class);
-        Mockito.when(omMock.writeValueAsString(Mockito.anyMap())).thenThrow(JsonProcessingException.class);
-        assertThat("When a JSON processing exception is thrown we return a String",
-                BridgeServiceFactory.getErrorPayloadAdString(omMock, "A", new HashMap<>()),
-                Matchers.equalTo("Problem creating error payload. Original error is " + "A"));
-    }
 }
 

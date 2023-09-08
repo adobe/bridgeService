@@ -5,6 +5,9 @@ This is the first version that is on the public github. Hence we have the issue 
 * [#34 java.lang.LinkageError: loader constraint violation: loader 'app' (instance of jdk.internal.loader.ClassLoaders](https://github.com/adobe/bridgeService/issues/34): Discovered a problem with Linkage error when using the traditional class loader. We now load everything locally, this means that all static variables are stored in the context (Issue #43).
 * We started reorganizing the errors, and have started doing a more predefined error management.
 * [#35 When calling a class with no modifiers we do not get enough information](https://github.com/adobe/bridgeService/issues/35)
+* [#37 Better error formatting](https://github.com/adobe/bridgeService/issues/37) We now end errors as a JSON data including errors and messages.
+* [#36 Make the /test endpoint return a JSON](https://github.com/adobe/bridgeService/issues/37) By sending the /test data as json we make it more legible.
+
 
 ## 2.11.10
 * [#57 Call Timeout Management](https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/57): Introducing the timeout, mechanism. We have a global timeout, and a call session timeout. We also log the individual call durations in the return payload.

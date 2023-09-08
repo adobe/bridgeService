@@ -11,7 +11,6 @@ package com.adobe.campaign.tests.bridge.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class BridgeServiceFactory {
@@ -63,40 +62,31 @@ public class BridgeServiceFactory {
 
     /**
      * Extracted the information related to the exceptions caused by the application
-     * @param in_exception The exception that was raised
-     * @param in_ibsSystemMessage The Error message we provide to the users
-     * @param in_errorCode The code of the exception
+     * @param in_errorObject The code of the exception
      * @return A string that represents the error payload
      */
-    public static String createExceptionPayLoad(Exception in_exception, String in_ibsSystemMessage, int in_errorCode) {
-        Map<String, Object> l_errorFields = new HashMap<>();
-        l_errorFields.put("title", in_ibsSystemMessage);
-        l_errorFields.put("bridgServiceException", in_exception.getClass().getTypeName());
-        l_errorFields.put("originalException", (in_exception.getCause() != null) ? in_exception.getCause().getClass().getTypeName() : "N/A");
+    public static String createExceptionPayLoad(ErrorObject in_errorObject) {
 
-        l_errorFields.put("code", in_errorCode);
-        l_errorFields.put("detail", in_exception.getMessage());
 
-        return getErrorPayloadAdString(in_ibsSystemMessage, l_errorFields);
+        return getErrorPayloadAdString(in_errorObject);
     }
 
     //Calls the testable getPayloadAdString
-    private static String getErrorPayloadAdString(String in_ibsSystemMessage, Map<String, Object> l_errorFields) {
-        return getErrorPayloadAdString(new ObjectMapper(), in_ibsSystemMessage, l_errorFields);
+    private static String getErrorPayloadAdString(ErrorObject in_errorObject) {
+        return getErrorPayloadAdString(new ObjectMapper(), in_errorObject);
     }
 
     /**
      * Creates a JSON from the given map
      * @param o an Object mapper object
-     * @param in_ibsSystemErrorMessage The System message
-     * @param in_errorFields The map payload of error data
-     * @return
+     * @param in_errorObject The  payload of error data
+     * @return the error as a payload
      */
-    protected static String getErrorPayloadAdString(ObjectMapper o, String in_ibsSystemErrorMessage, Map<String, Object> in_errorFields) {
+    protected static String getErrorPayloadAdString(ObjectMapper o, ErrorObject in_errorObject) {
         try {
-            return o.writeValueAsString(in_errorFields);
+            return o.writeValueAsString(in_errorObject);
         } catch (JsonProcessingException e) {
-            return "Problem creating error payload. Original error is " + in_ibsSystemErrorMessage;
+            return "Problem creating error payload. Original error is " + in_errorObject.getTitle();
         }
     }
 }

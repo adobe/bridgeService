@@ -24,7 +24,6 @@ import org.testng.annotations.Test;
 import spark.Spark;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,8 +94,8 @@ public class E2ETests {
                 .body("detail", Matchers.startsWith(
                         "Unrecognized field \"callDurations\" (class com.adobe.campaign.tests.bridge.service.JavaCalls), not marked as ignorable"))
                 .body("code", Matchers.equalTo(404))
-                .body("bridgServiceException", Matchers.equalTo(UnrecognizedPropertyException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo("N/A"));
+                .body("bridgeServiceException", Matchers.equalTo(UnrecognizedPropertyException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
     }
 
 
@@ -127,13 +126,13 @@ public class E2ETests {
                 new Object[] { 7, 7 });
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).contentType(IntegroAPI.ERRROR_CONTENT_TYPE)
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).contentType(IntegroAPI.ERROR_CONTENT_TYPE)
                 .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALLING_JAVA_METHOD))
                 .body("detail", Matchers.containsString(
                         "We do not allow numbers that are equal."))
                 .body("code", Matchers.equalTo(500))
-                .body("bridgServiceException", Matchers.equalTo(TargetJavaMethodCallException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo(InvocationTargetException.class.getTypeName()));
+                .body("bridgeServiceException", Matchers.equalTo(TargetJavaMethodCallException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(IllegalArgumentException.class.getTypeName()));
 
     }
 
@@ -157,8 +156,8 @@ public class E2ETests {
                 .body("detail", Matchers.containsString(
                         "We could not find a unique method for"))
                 .body("code", Matchers.equalTo(404))
-                .body("bridgServiceException", Matchers.equalTo(AmbiguousMethodException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo("N/A"));
+                .body("bridgeServiceException", Matchers.equalTo(AmbiguousMethodException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
     }
 
     /**
@@ -190,7 +189,7 @@ public class E2ETests {
                 .body("detail", Matchers.containsString(
                         "could not be found."))
                 .body("code", Matchers.equalTo(500))
-                .body("bridgServiceException", Matchers.equalTo(IBSConfigurationException.class.getTypeName()))
+                .body("bridgeServiceException", Matchers.equalTo(IBSConfigurationException.class.getTypeName()))
                 .body("originalException", Matchers.equalTo(NonExistentJavaObjectException.class.getTypeName()));
     }
 
@@ -212,8 +211,8 @@ public class E2ETests {
                 .body("detail", Matchers.containsString(
                         "The given class com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExisting could not be found."))
                 .body("code", Matchers.equalTo(404))
-                .body("bridgServiceException", Matchers.equalTo(NonExistentJavaObjectException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo("N/A"));
+                .body("bridgeServiceException", Matchers.equalTo(NonExistentJavaObjectException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
 
     }
 
@@ -231,7 +230,7 @@ public class E2ETests {
         l_call.getCallContent().put("call1PL", myContent);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404)
-                .body("bridgServiceException", Matchers.equalTo(NonExistentJavaObjectException.class.getTypeName()));
+                .body("bridgeServiceException", Matchers.equalTo(NonExistentJavaObjectException.class.getTypeName()));
     }
 
     /**
@@ -389,8 +388,9 @@ public class E2ETests {
                 .body("detail", Matchers.containsString(
                         "took longer than the set time limit of"))
                 .body("code", Matchers.equalTo(408))
-                .body("bridgServiceException", Matchers.equalTo(IBSTimeOutException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo("N/A"));
+                .body("bridgeServiceException", Matchers.equalTo(IBSTimeOutException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE))
+                .body("originalMessage", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
     }
 
 
@@ -499,6 +499,14 @@ public class E2ETests {
         //System.out.println(before+";"+after+";"+(after-before));
     }
 
+    /**
+     * This exception is a little tricky as the message changes depending on the number of executions in a session. The
+     * first time, you get: <br/>
+     * <i>loader constraint violation: loader 'app' </i>
+     * <br/> The second time you get: <br/>
+     * <i>loader constraint violation: when resolving method</i>
+     * <br/> This is prevalent only when you run all tests in one go.
+     */
     @Test(groups = "E2E")
     public void testIssue34Manual_Negative() {
         //long before = MemoryTools.fetchMemory();
@@ -517,14 +525,14 @@ public class E2ETests {
         l_cc2.setClassName(CalledClass2.class.getTypeName());
         l_cc2.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
-        System.out.println(given().body(l_myJavaCalls).post(EndPointURL + "call").then().extract().asPrettyString());
 
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(500).
                 body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_CONFIG))
                 .body("code", Matchers.equalTo(500))
                 .body("detail", Matchers.startsWith("Linkage Error detected."))
-                .body("bridgServiceException", Matchers.equalTo(IBSConfigurationException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo(ClassLoaderConflictException.class.getTypeName()));
+                .body("bridgeServiceException", Matchers.equalTo(IBSConfigurationException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(LinkageError.class.getTypeName()))
+                .body("originalMessage", Matchers.startsWith("loader constraint violation:"));
 
 
 

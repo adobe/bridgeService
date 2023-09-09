@@ -33,18 +33,17 @@ This project allows you to expose your Java project/library as a REST service. I
         + [Session Scopes](#session-scopes)
         + [Product Scope](#product-scope)
 - [Error Management](#error-management)
-    * [Known Errors](#known-errors)
+- [Contribution](#contribution)
+- [Known Errors](#known-errors)
     * [Linked Error](#linked-error)
 - [Known Issues and Limitations](#known-issues-and-limitations)
     * [Cannot call overloaded methods with the same number of arguments.](#cannot-call-overloaded-methods-with-the-same-number-of-arguments)
     * [Only simple arguments](#only-simple-arguments)
     * [Complex Non-Serialisable Return Objects](#complex-non-serialisable-return-objects)
     * [Calling Enum Methods](#calling-enum-methods)
-- [Development Notes](#development-notes)
-    * [License Management](#license-management)
 
-The release notes can be found [here](ReleaseNotes.md).
 ## Release Notes
+The release notes can be found [here](ReleaseNotes.md).
 
 ## Implementing The Bridge Service in Your Project
 The bridge service can be used in two ways:
@@ -375,24 +374,36 @@ java.lang.IllegalArgumentException: We do not allow numbers that are equal.
 
 When using the bridge service, we also include additional info:
 
-```
-Error during call of target Java Class and Method.
-We experienced an exception when calling the provided method com.adobe.campaign.tests.integro.tools.RandomManager.getRandomNumber.
-Provided error message : 
-java.lang.IllegalArgumentException: Minimum number must be strictly inferior than maximum number.
+```JSON
+{
+  "title": "Error during call of target Java Class and Method.",
+  "code": 500,
+  "detail": "We experienced an exception when calling the provided method com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowingException.\nProvided error message : java.lang.IllegalArgumentException: We do not allow numbers that are equal.",
+  "bridgeServiceException": "com.adobe.campaign.tests.bridge.service.exceptions.TargetJavaMethodCallException",
+  "originalException": "java.lang.IllegalArgumentException",
+  "originalMessage": "We do not allow numbers that are equal."
+}
 ```
 
-### Known Errors
+The BridgeService exception is how the bridgeService manages underlying errors. However we also share the background, originating exception and message in order to help.
+
+## Contribution
+There are two main docs for contributing:
+* [The Contributing Doc](CONTRIBUTING.md) For general contribution rules.
+* [The Technical Doc](docs/Technical.md) For general technical aspects.
+
+## Known Errors
 
 ### Linked Error
-This error can happen when you are chaining calls, and that the called classes call a third class in a static way. In such cases you will get an error like:
+When using the "manual" mode, this error can happen when you are chaining calls, and that the called classes call a third class in a static way. In such cases you will get an error like:
 
 ```
 Problems with payload. Check the passed environment variables.
 java.lang.LinkageError: loader  constraint violation: when resolving method "com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory.getMarketingInstance()Lcom/adobe/campaign/tests/bridge/testdata/issue34/pckg1/MiddleMan;" the class loader com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader @697a1a68 (instance of com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader, child of 'app' jdk.internal.loader.ClassLoaders$AppClassLoader) of the current class, com/adobe/campaign/tests/bridge/testdata/issue34/pckg1/CalledClass2, and the class loader 'app' (instance of jdk.internal.loader.ClassLoaders$AppClassLoader) for the method's defining class, com/adobe/campaign/tests/bridge/testdata/issue34/pckg2/MiddleManClassFactory, have different Class objects for the type com/adobe/campaign/tests/bridge/testdata/issue34/pckg1/MiddleMan used in the signature
 ```
 
-This usually means that some additional packages need to be included in the environment variable: `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES`.
+This usually means that some additional packages need to be included in the environment variable: `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES`, or you can simply use the "automatic mode".
+
 
 ## Known Issues and Limitations
 As this is a new project there are a few limitations to our solution:
@@ -409,16 +420,5 @@ In many cases the object a method returns is not rerializable. If that is the ca
 ### Calling Enum Methods
 We are currently unable to call enums with the Bridge Service.
 
-## Development Notes
-The project is under continuous integration using Jenkins. Each PR is tested and checked for coverage with the following job [integroBridgeService](https://campaign-test-dev-sj.ci.corp.adobe.com/job/integroBridgeService/).
 
-General Rules are:
-* Line Coverage 87%
-* Branch Coverage 85%
-* No significant decrease in coverage should be detected.
 
-### License Management
-The bridgeService is under the MIT open source license. This requires that added classes have a header. This can be done by running :
-```
-mvn license:format
-```

@@ -11,8 +11,8 @@ package com.adobe.campaign.tests.bridge.service;
 import java.util.Arrays;
 
 public enum ConfigValueHandlerIBS {
-    DEPLOYMENT_MODEL("IBS.DEPLOYMENT.MODEL", " - in test", false,
-            "This property is used for flagging the deplyment model."),
+    DEPLOYMENT_MODEL("IBS.DEPLOYMENT.MODEL", "TEST", false,
+            "This property is used for flagging the deplyment model. We have two options TEST and PROD"),
     SSL_ACTIVE("IBS.SSL.ACTIVE", "false", false, "This property is used to flag if the system is in SSL mode."),
     SSL_KEYSTORE_PATH("IBS.SSL.KEYSTORE_PATH", null, false,
             "This property is used to flag the location of the key store."),

@@ -8,12 +8,11 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
-import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1;
-import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2;
-import com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory;
+import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -49,15 +48,18 @@ public class E2ETests {
 
     @Test(groups = "E2E")
     public void testMainHelloWorld() {
-        ConfigValueHandlerIBS.PRODUCT_VERSION.activate("101");
+        String bridgeServiceVersion = "101";
+        ConfigValueHandlerIBS.PRODUCT_VERSION.activate(bridgeServiceVersion);
 
-        given().when().get(EndPointURL + "test").then().assertThat().body(Matchers.startsWith("All systems up"))
-                .body(Matchers.endsWith("101"));
+        String l_hostVersion = "F";
+        ConfigValueHandlerIBS.PRODUCT_USER_VERSION.activate(l_hostVersion);
 
-        ConfigValueHandlerIBS.PRODUCT_USER_VERSION.activate("F");
-
-        given().when().get(EndPointURL + "test").then().assertThat().body(Matchers.startsWith("All systems up"))
-                .body(Matchers.endsWith("Product user version : F")).body(Matchers.containsString("101"));
+        given().when().get(EndPointURL + "test").then().assertThat()
+                .body("overALLSystemState", Matchers.equalTo(IntegroAPI.SYSTEM_UP_MESSAGE))
+                .body("deploymentMode", Matchers.equalTo(IntegroAPI.DeploymentMode.TEST.toString()))
+                .body("bridgeServiceVersion", Matchers.equalTo(
+                        bridgeServiceVersion))
+                .body("hostVersion", Matchers.equalTo(l_hostVersion));
 
     }
 
@@ -85,16 +87,14 @@ public class E2ETests {
         JavaCallResults jcr = new JavaCallResults();
 
         given().body(jcr).post(EndPointURL + "call").then().statusCode(404).and().assertThat()
-                .body(Matchers.startsWith(IntegroAPI.ERROR_JSON_TRANSFORMATION));
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JSON_TRANSFORMATION))
+                .body("detail", Matchers.startsWith(
+                        "Unrecognized field \"callDurations\" (class com.adobe.campaign.tests.bridge.service.JavaCalls), not marked as ignorable"))
+                .body("code", Matchers.equalTo(404))
+                .body("bridgeServiceException", Matchers.equalTo(UnrecognizedPropertyException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
     }
 
-    @Test(groups = "E2E")
-    public void testTestAccess() {
-        JavaCallResults jcr = new JavaCallResults();
-
-        given().body(jcr).post(EndPointURL + "call").then().statusCode(404).and().assertThat()
-                .body(Matchers.startsWith(IntegroAPI.ERROR_JSON_TRANSFORMATION));
-    }
 
     @Test(groups = "E2E")
     public void testCheckConnectivity() {
@@ -123,8 +123,13 @@ public class E2ETests {
                 new Object[] { 7, 7 });
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).contentType("application/problem+json").body(
-                Matchers.containsString("We do not allow numbers that are equal."));
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).contentType(IntegroAPI.ERROR_CONTENT_TYPE)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALLING_JAVA_METHOD))
+                .body("detail", Matchers.containsString(
+                        "We do not allow numbers that are equal."))
+                .body("code", Matchers.equalTo(500))
+                .body("bridgeServiceException", Matchers.equalTo(TargetJavaMethodCallException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(IllegalArgumentException.class.getTypeName()));
 
     }
 
@@ -143,8 +148,13 @@ public class E2ETests {
                 new Object[] { "plop" });
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
-                Matchers.containsString(IntegroAPI.ERROR_AMBIGUOUS_METHOD));
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_AMBIGUOUS_METHOD))
+                .body("detail", Matchers.containsString(
+                        "We could not find a unique method for"))
+                .body("code", Matchers.equalTo(404))
+                .body("bridgeServiceException", Matchers.equalTo(AmbiguousMethodException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
     }
 
     /**
@@ -169,9 +179,15 @@ public class E2ETests {
 
         l_call.setEnvironmentVariables(l_envVars);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).body(
-                Matchers.containsString(IntegroAPI.ERROR_IBS_CONFIG));
-
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_CONFIG))
+                .body("detail", Matchers.containsString(
+                        "The given environment value handler"))
+                .body("detail", Matchers.containsString(
+                        "could not be found."))
+                .body("code", Matchers.equalTo(500))
+                .body("bridgeServiceException", Matchers.equalTo(IBSConfigurationException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(NonExistentJavaObjectException.class.getTypeName()));
     }
 
     /**
@@ -187,8 +203,14 @@ public class E2ETests {
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
-                Matchers.containsString(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND));
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND))
+                .body("detail", Matchers.containsString(
+                        "The given class com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExisting could not be found."))
+                .body("code", Matchers.equalTo(404))
+                .body("bridgeServiceException", Matchers.equalTo(NonExistentJavaObjectException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
+
     }
 
     /**
@@ -204,8 +226,8 @@ public class E2ETests {
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
-                Matchers.containsString(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND));
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404)
+                .body("bridgeServiceException", Matchers.equalTo(NonExistentJavaObjectException.class.getTypeName()));
     }
 
     /**
@@ -231,8 +253,8 @@ public class E2ETests {
                         + "    }\n"
                         + "}";
 
-        given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(404).body(
-                Matchers.containsString(IntegroAPI.ERROR_JSON_TRANSFORMATION));
+        given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(404)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JSON_TRANSFORMATION));
 
     }
 
@@ -358,9 +380,16 @@ public class E2ETests {
         cc1.setArgs(new Object[] { l_sleepDuration + 100 });
         jc.getCallContent().put("call1", cc1);
 
-        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(408).body(
-                Matchers.containsString(IntegroAPI.ERROR_CALL_TIMEOUT));
+        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(408)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALL_TIMEOUT))
+                .body("detail", Matchers.containsString(
+                        "took longer than the set time limit of"))
+                .body("code", Matchers.equalTo(408))
+                .body("bridgeServiceException", Matchers.equalTo(IBSTimeOutException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE))
+                .body("originalMessage", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
     }
+
 
     @Test(groups = "E2E")
     public void testTimeOutCalls_overridePass() {
@@ -396,8 +425,8 @@ public class E2ETests {
         cc1.setArgs(new Object[] { l_sleepDuration - 100 });
         jc.getCallContent().put("call1", cc1);
 
-        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(408).body(
-                Matchers.containsString(IntegroAPI.ERROR_CALL_TIMEOUT));
+        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(408)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALL_TIMEOUT));
     }
 
     /**
@@ -407,24 +436,25 @@ public class E2ETests {
     @Test(groups = "E2E")
     public void testIssue34Manual() {
         //long before = MemoryTools.fetchMemory();
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
+
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         //Call 1
         CallContent l_cc1 = new CallContent();
-        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1");
         l_cc1.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call1", l_cc1);
 
         //Call 2
         CallContent l_cc2 = new CallContent();
-        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2");
         l_cc2.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
 
         /* Problem disappears*/
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(CalledClass1.class.getPackageName()+","+CalledClass2.class.getPackageName()+","+
-                MiddleManClassFactory.class.getPackageName());
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.,com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.");
 
 
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
@@ -443,19 +473,18 @@ public class E2ETests {
 
         //Call 1
         CallContent l_cc1 = new CallContent();
-        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1");
         l_cc1.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call1", l_cc1);
 
         //Call 2
         CallContent l_cc2 = new CallContent();
-        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2");
         l_cc2.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
 
         /* Problem disappears*/
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(CalledClass1.class.getPackageName()+","+CalledClass2.class.getPackageName()+","+
-                MiddleManClassFactory.class.getPackageName());
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.,com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.");
 
 
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
@@ -463,9 +492,46 @@ public class E2ETests {
 
         //long after = MemoryTools.fetchMemory();
         //System.out.println(before+";"+after+";"+(after-before));
-
     }
 
+    /**
+     * This exception is a little tricky as the message changes depending on the number of executions in a session. The
+     * first time, you get: <br/>
+     * <i>loader constraint violation: loader 'app' </i>
+     * <br/> The second time you get: <br/>
+     * <i>loader constraint violation: when resolving method</i>
+     * <br/> This is prevalent only when you run all tests in one go.
+     */
+    @Test(groups = "E2E")
+    public void testIssue34Manual_Negative() {
+        //long before = MemoryTools.fetchMemory();
+        ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1");
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        //Call 1
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1");
+        l_cc1.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call1", l_cc1);
+
+        //Call 2
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2");
+        l_cc2.setMethodName("calledMethod");
+        l_myJavaCalls.getCallContent().put("call2", l_cc2);
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(500).
+                body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_CONFIG))
+                .body("code", Matchers.equalTo(500))
+                .body("detail", Matchers.startsWith("Linkage Error detected."))
+                .body("bridgeServiceException", Matchers.equalTo(IBSConfigurationException.class.getTypeName()))
+                .body("originalException", Matchers.equalTo(LinkageError.class.getTypeName()))
+                .body("originalMessage", Matchers.startsWith("loader constraint violation:"));
+
+
+
+    }
 
     @Test(groups = "E2E")
     public void test_issue35_callToClassWithNoModifiers() {
@@ -476,7 +542,7 @@ public class E2ETests {
         jc.getCallContent().put("one", l_cc);
 
         given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(500).
-                body(Matchers.containsString(IntegroAPI.ERROR_IBS_RUNTIME));
+                body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME));
     }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)

@@ -18,6 +18,7 @@ import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
@@ -1800,5 +1801,6 @@ public class TestFetchCalls {
         Assert.assertThrows(IBSRunTimeException.class, () -> jc.submitCalls());
 
     }
+
 }
 

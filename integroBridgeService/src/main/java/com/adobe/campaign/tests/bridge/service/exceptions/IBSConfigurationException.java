@@ -20,4 +20,8 @@ public class IBSConfigurationException extends RuntimeException {
     public IBSConfigurationException(String message, Throwable original) {
         super(message,original);
     }
+
+    public IBSConfigurationException(String message) {
+        super(message);
+    }
 }

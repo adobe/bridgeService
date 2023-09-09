@@ -59,4 +59,46 @@ public class BridgeServiceFactory {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(in_callResults);
     }
+
+    /**
+     * Transforms the results of the TEST call to a JSON
+     * @param in_testPayLoad The results of the service check
+     * @return A string representation of the results
+     * @throws JsonProcessingException thrown when the service call results could not be parsed
+     */
+    public static String transformMapTosResult(Map<String, String> in_testPayLoad)
+            throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(in_testPayLoad);
+    }
+
+    /**
+     * Extracted the information related to the exceptions caused by the application
+     * @param in_errorObject The code of the exception
+     * @return A string that represents the error payload
+     */
+    public static String createExceptionPayLoad(ErrorObject in_errorObject) {
+
+
+        return getErrorPayloadAdString(in_errorObject);
+    }
+
+    //Calls the testable getPayloadAdString
+    private static String getErrorPayloadAdString(ErrorObject in_errorObject) {
+        return getErrorPayloadAdString(new ObjectMapper(), in_errorObject);
+    }
+
+    /**
+     * Creates a JSON from the given map
+     * @param o an Object mapper object
+     * @param in_errorObject The  payload of error data
+     * @return the error as a payload
+     */
+    protected static String getErrorPayloadAdString(ObjectMapper o, ErrorObject in_errorObject) {
+        try {
+            return o.writeValueAsString(in_errorObject);
+        } catch (JsonProcessingException e) {
+            return "Problem creating error payload. Original error is " + in_errorObject.getTitle();
+        }
+    }
 }

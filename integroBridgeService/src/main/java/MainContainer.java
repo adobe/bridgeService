@@ -19,6 +19,7 @@ public class MainContainer {
     public static void main(String[] args) {
 
         if (args.length == 0) {
+            //TODO instead you args[0].equalsIgnoreCase("prod")
             log.info("In Prod Mode - SSL");
             System.setProperty("https.protocols", "TLSv1.2");
 

@@ -11,11 +11,8 @@ package com.adobe.campaign.tests.bridge.service;
 import com.adobe.campaign.tests.bridge.service.data.MyPropertiesHandler;
 import com.adobe.campaign.tests.bridge.service.exceptions.ClassLoaderConflictException;
 import com.adobe.campaign.tests.bridge.service.exceptions.IBSConfigurationException;
-import com.adobe.campaign.tests.bridge.service.exceptions.NonExistentJavaObjectException;
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1;
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2;
-import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.MiddleMan;
-import com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory;
 import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterClass;
@@ -25,7 +22,7 @@ import org.testng.annotations.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class IBSClassLoaderTests {
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     @AfterClass
     public void reset() {
         ConfigValueHandlerIBS.resetAllValues();
@@ -92,7 +89,7 @@ public class IBSClassLoaderTests {
 
     @Test
     public void testLoadClass_negativeNonexistantClassManual1() throws ClassNotFoundException {
-        String l_nonExistantNormalClass = CalledClass1.class.getTypeName()+"NonExistant";
+        String l_nonExistantNormalClass = "com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.NonExistant";
 
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
         Exception caughtException=null;
@@ -126,7 +123,7 @@ public class IBSClassLoaderTests {
 
     @Test
     public void testsearchClass_negativeNonexistantClassManual2_usingJavaClass() throws ClassNotFoundException {
-        String l_nonExistantNormalClass = CalledClass1.class.getTypeName() + "NonExistant";
+        String l_nonExistantNormalClass = "com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1NonExistant";
 
         IntegroBridgeClassLoader ibscl = new IntegroBridgeClassLoader();
         assertThat("This class should not andd cannot be loaded" ,Matchers.not(ibscl.isClassLoaded(l_nonExistantNormalClass)));
@@ -140,21 +137,21 @@ public class IBSClassLoaderTests {
 
         //Call 1
         CallContent l_cc1 = new CallContent();
-        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1");
         l_cc1.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call1", l_cc1);
 
         //Call 2
         CallContent l_cc2 = new CallContent();
-        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2");
         l_cc2.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
 
         l_myJavaCalls.submitCalls();
 
-        assertThat("The called class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(CalledClass1.class.getTypeName()));
-        assertThat("The MiddleMan class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(MiddleMan.class.getTypeName()));
-        assertThat("The MiddleManFactory class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(MiddleManClassFactory.class.getTypeName()));
+        assertThat("The called class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1"));
+        assertThat("The MiddleMan class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.MiddleMan"));
+        assertThat("The MiddleManFactory class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory"));
 
     }
 
@@ -166,39 +163,38 @@ public class IBSClassLoaderTests {
 
         //Call 1
         CallContent l_cc1 = new CallContent();
-        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1");
         l_cc1.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call1", l_cc1);
 
         //Call 2
         CallContent l_cc2 = new CallContent();
-        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2");
         l_cc2.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
 
         l_myJavaCalls.submitCalls();
 
-        assertThat("The called class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(CalledClass1.class.getTypeName()));
-        assertThat("The MiddleMan class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(MiddleMan.class.getTypeName()));
-        assertThat("The MiddleManFactory class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(MiddleManClassFactory.class.getTypeName()));
+        assertThat("The called class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1"));
+        assertThat("The MiddleMan class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.MiddleMan"));
+        assertThat("The MiddleManFactory class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory"));
 
     }
 
     @Test
     public void testIssue34ManualLoading_case1Negative()  {
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("semi-manual");
-        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate("60000");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         //Call 1
         CallContent l_cc1 = new CallContent();
-        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1");
         l_cc1.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call1", l_cc1);
 
         //Call 2
         CallContent l_cc2 = new CallContent();
-        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2");
         l_cc2.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
         Exception caughtException = null;
@@ -208,40 +204,39 @@ public class IBSClassLoaderTests {
             caughtException=e;
 
         }
-        assertThat("We should have thrown an excption", caughtException, Matchers.notNullValue());
+        assertThat("We should have thrown an exception", caughtException, Matchers.notNullValue());
 
-        assertThat("We should have thrown an excption", caughtException, Matchers.instanceOf(IBSConfigurationException.class));
-        assertThat("We should have thrown an excption", caughtException.getCause(), Matchers.instanceOf(ClassLoaderConflictException.class));
-        assertThat("We should have thrown an excption", caughtException.getCause().getCause(), Matchers.instanceOf(LinkageError.class));
+        assertThat("We should have thrown an exception", caughtException, Matchers.instanceOf(IBSConfigurationException.class));
+        assertThat("We should have thrown an exception", caughtException.getCause(), Matchers.instanceOf(ClassLoaderConflictException.class));
+        assertThat("We should have thrown an exception", caughtException.getCause().getCause(), Matchers.instanceOf(LinkageError.class));
 
     }
 
     @Test
     public void testIssue34ManualLoading_case2()  {
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
-        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate("60000");
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(MiddleManClassFactory.class.getPackageName()+","+MiddleMan.class.getPackageName());
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.,com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         //Call 1
         CallContent l_cc1 = new CallContent();
-        l_cc1.setClassName(CalledClass1.class.getTypeName());
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1");
         l_cc1.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call1", l_cc1);
 
         //Call 2
         CallContent l_cc2 = new CallContent();
-        l_cc2.setClassName(CalledClass2.class.getTypeName());
+        l_cc2.setClassName("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2");
         l_cc2.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
 
         //Setting paths
 
         l_myJavaCalls.submitCalls();
-        assertThat("The called class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(CalledClass1.class.getTypeName()));
-        assertThat("The MiddleMan class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(MiddleMan.class.getTypeName()));
-        assertThat("The MiddleManFactory class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded(MiddleManClassFactory.class.getTypeName()));
+        assertThat("The called class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1"));
+        assertThat("The MiddleMan class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.MiddleMan"));
+        assertThat("The MiddleManFactory class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory"));
 
     }
 

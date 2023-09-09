@@ -40,7 +40,7 @@ public class E2EPortCheck {
 
     @Test
     public void testMainHelloWorld() {
-        Assert.assertThrows(IBSConfigurationException.class, () ->IntegroAPI.startServices(port1));
+        Assert.assertThrows(IBSConfigurationException.class, () -> IntegroAPI.startServices(port1));
     }
 
     @AfterClass(alwaysRun = true)

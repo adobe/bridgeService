@@ -1,4 +1,4 @@
-# Integro Bridge Service - RELEASE NOTES
+# Bridge Service - RELEASE NOTES
 ## 2.11.11 (SNAPSHOT)
 This is the first version that is on the public github. Hence we have the issue numbers being reset.
 * [#43 Introduce automatic loading of classes](https://github.com/adobe/bridgeService/issues/43): Instead of selectively loading classes from designated packages, we now load all needed classes in the class loader.
@@ -7,6 +7,7 @@ This is the first version that is on the public github. Hence we have the issue 
 * [#35 When calling a class with no modifiers we do not get enough information](https://github.com/adobe/bridgeService/issues/35)
 * [#37 Better error formatting](https://github.com/adobe/bridgeService/issues/37) We now end errors as a JSON data including errors and messages.
 * [#36 Make the /test endpoint return a JSON](https://github.com/adobe/bridgeService/issues/37) By sending the /test data as json we make it more legible.
+* [#38 Better information if the deployment port is already in use ](https://github.com/adobe/bridgeService/issues/38) Whenever we are starting the bridgeService on a port that is already in use, we throw a IBSConfigurationException exception.
 
 
 ## 2.11.10

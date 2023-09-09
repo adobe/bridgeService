@@ -9,6 +9,7 @@
 package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
+import com.adobe.campaign.tests.bridge.service.utils.ServiceTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
@@ -37,6 +38,10 @@ public class IntegroAPI {
     }
 
     public static void startServices(int port) {
+
+        if (!ServiceTools.isPortFree(port)) {
+            throw new IBSConfigurationException("The port "+port+" is not currently free.");
+        }
 
         if (Boolean.parseBoolean(ConfigValueHandlerIBS.SSL_ACTIVE.fetchValue())) {
             File l_file = new File(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue());

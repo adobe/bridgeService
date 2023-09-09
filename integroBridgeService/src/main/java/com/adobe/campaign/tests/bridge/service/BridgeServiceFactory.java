@@ -61,6 +61,18 @@ public class BridgeServiceFactory {
     }
 
     /**
+     * Transforms the results of the TEST call to a JSON
+     * @param in_testPayLoad The results of the service check
+     * @return A string representation of the results
+     * @throws JsonProcessingException thrown when the service call results could not be parsed
+     */
+    public static String transformMapTosResult(Map<String, String> in_testPayLoad)
+            throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(in_testPayLoad);
+    }
+
+    /**
      * Extracted the information related to the exceptions caused by the application
      * @param in_errorObject The code of the exception
      * @return A string that represents the error payload

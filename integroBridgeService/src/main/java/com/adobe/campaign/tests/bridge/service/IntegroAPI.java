@@ -11,7 +11,6 @@ package com.adobe.campaign.tests.bridge.service;
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.adobe.campaign.tests.bridge.service.utils.ServiceTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -55,18 +54,16 @@ public class IntegroAPI {
 
         get("/test", (req, res) -> {
             res.type("application/json");
-            ObjectMapper mapper = new ObjectMapper();
             Map<String, String> status = new HashMap<>();
             status.put("overALLSystemState",SYSTEM_UP_MESSAGE);
             status.put("deploymentMode", ConfigValueHandlerIBS.DEPLOYMENT_MODEL.fetchValue());
-                    //mapper.readValue(in_requestJSON, Map.class);
 
             status.put("bridgeServiceVersion", ConfigValueHandlerIBS.PRODUCT_VERSION.fetchValue());
             if (ConfigValueHandlerIBS.PRODUCT_USER_VERSION.isSet()) {
                 status.put("hostVersion", ConfigValueHandlerIBS.PRODUCT_USER_VERSION.fetchValue());
             }
 
-            return mapper.writeValueAsString(status);
+            return BridgeServiceFactory.transformMapTosResult(status);
         });
 
         post("/service-check", (req, res) -> {

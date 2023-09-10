@@ -68,7 +68,7 @@ The following dependency needs to be added to your pom file:
  <dependency>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <version>2.11.10</version>
+    <version>2.11.11</version>
 </dependency>
 ```
 
@@ -341,7 +341,7 @@ One of our main concerns has been the management of static variables. For the sa
 #### Session Scopes
 For now our approach is that two distinct calls to the same Bridge Service node, should share little or no variables. Another way of defining this is that two calls should not interfere with one another. In a Session Context we have two use cases:
 
-We have covered all the use cases in the document [Managing Contexts and Static Variables](docs/Context.md).
+We have covered all the use cases in the document [Managing Contexts and Static Variables](./docs/Technical.md#managing-contexts-and-static-variables).
 
 #### Product Scope
 Although we do not, yet, provide tools for managing variables that are valid for all calls to the IBS, we can define a series or local environment variables are deployment of the service. This can be done in two ways:

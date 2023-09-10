@@ -16,7 +16,7 @@ In some cases we want to have control over the classes and packages that are loa
 
 Semi-Manual Loading will statically load the classes you call.
 
-## Managing Environment Variables and Calls 
+### Managing Environment Variables and Calls 
 This page describes the state of how Calls access static variables. The structure is the following:
 1. Environment Variable Setting
 2. Calling Java

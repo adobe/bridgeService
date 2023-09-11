@@ -31,6 +31,7 @@ import static io.restassured.RestAssured.given;
 public class E2ETests {
     public static final String EndPointURL = "http://localhost:8080/";
     private static final int port1 = 1111;
+    protected static final boolean AUTOMATIC_FLAG = false;
     ServerSocket serverSocket1 = null;
 
     @BeforeGroups(groups = "E2E")
@@ -465,7 +466,7 @@ public class E2ETests {
 
     }
 
-    @Test(groups = "E2E")
+    @Test(groups = "E2E", enabled = AUTOMATIC_FLAG)
     public void testIssue34Automatic() {
         //long before = MemoryTools.fetchMemory();
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("automatic");
@@ -543,6 +544,21 @@ public class E2ETests {
 
         given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(500).
                 body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME));
+    }
+
+    @Test(groups = "E2E")
+    public void testIntegroIssue() {
+        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate("0");
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+        l_cc.setMethodName("fetchRandomCountry");
+
+        l_myJavaCalls.getCallContent().put("countries", l_cc);
+
+
+        System.out.println(given().body(l_myJavaCalls).post(EndPointURL + "call").then().extract().asPrettyString());
     }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)

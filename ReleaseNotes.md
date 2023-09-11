@@ -1,4 +1,8 @@
 # Bridge Service - RELEASE NOTES
+
+## 2.11.12
+* Disabled automatic mode as discovered some issues with the loading (Issue #55).
+
 ## 2.11.11
 * [#43 Introduce automatic loading of classes](https://github.com/adobe/bridgeService/issues/43): Instead of selectively loading classes from designated packages, we now load all needed classes in the class loader.
 * [#34 java.lang.LinkageError: loader constraint violation: loader 'app' (instance of jdk.internal.loader.ClassLoaders](https://github.com/adobe/bridgeService/issues/34): Discovered a problem with Linkage error when using the traditional class loader. We now load everything locally, this means that all static variables are stored in the context (Issue #43).

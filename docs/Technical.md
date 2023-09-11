@@ -12,13 +12,13 @@ We currently manage the following error types.
 
 ## Managing Contexts and Static Variables
 We have three modes of Integrity management :
-* Automatic
+* Automatic (disabled for now)
 * Semi-Manual
 * Manual
 
 These modes can be set by changing the system property `IBS.CLASSLOADER.AUTOMATIC.INTEGRITY.INJECTION`.
 
-### Automatic Loading
+### Automatic Loading (Disabled for now)
 Automatic loading assumes that all classes that are accessed by the called system should be loaded in the context. In this case we do not need to specify what should be managed by the local class loader and what by the standard loader. The drawback of this is that some more memory will be needed (5%).
 
 This is the default behavior, and it kicks in even when a wrong value is given for the execution property `IBS.CLASSLOADER.AUTOMATIC.INTEGRITY.INJECTION`.

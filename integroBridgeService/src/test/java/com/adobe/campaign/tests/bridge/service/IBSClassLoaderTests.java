@@ -15,6 +15,7 @@ import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1;
 import com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass2;
 import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import org.hamcrest.Matchers;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -130,7 +131,7 @@ public class IBSClassLoaderTests {
     }
 
 
-    @Test
+    @Test(enabled = E2ETests.AUTOMATIC_FLAG)
     public void testIssue34AutomaticLoading()  {
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("automatic");
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -173,12 +174,12 @@ public class IBSClassLoaderTests {
         l_cc2.setMethodName("calledMethod");
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
 
-        l_myJavaCalls.submitCalls();
-
+        Assert.assertThrows(IBSConfigurationException.class, () -> l_myJavaCalls.submitCalls());
+        /* Related to issue #55
         assertThat("The called class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.CalledClass1"));
         assertThat("The MiddleMan class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.MiddleMan"));
         assertThat("The MiddleManFactory class should be loaded.", l_myJavaCalls.getLocalClassLoader().isClassLoaded("com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory"));
-
+        */
     }
 
     @Test

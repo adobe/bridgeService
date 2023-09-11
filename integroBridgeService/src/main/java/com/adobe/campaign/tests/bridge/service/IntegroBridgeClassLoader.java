@@ -96,10 +96,12 @@ public class IntegroBridgeClassLoader extends ClassLoader {
             if (isClassAmongPackagePaths(in_classFullPath)) {
                 return getClass(in_classFullPath);
             }
-        } else if (!in_classFullPath.startsWith("java")) {
+        }
+        /* Removing until issue ##5 is resolved
+        else if (!in_classFullPath.startsWith("java")) {
             return getClass(in_classFullPath);
         }
-
+        */
         return super.loadClass(in_classFullPath);
 
     }

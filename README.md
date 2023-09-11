@@ -402,7 +402,7 @@ Problems with payload. Check the passed environment variables.
 java.lang.LinkageError: loader  constraint violation: when resolving method "com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.MiddleManClassFactory.getMarketingInstance()Lcom/adobe/campaign/tests/bridge/testdata/issue34/pckg1/MiddleMan;" the class loader com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader @697a1a68 (instance of com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader, child of 'app' jdk.internal.loader.ClassLoaders$AppClassLoader) of the current class, com/adobe/campaign/tests/bridge/testdata/issue34/pckg1/CalledClass2, and the class loader 'app' (instance of jdk.internal.loader.ClassLoaders$AppClassLoader) for the method's defining class, com/adobe/campaign/tests/bridge/testdata/issue34/pckg2/MiddleManClassFactory, have different Class objects for the type com/adobe/campaign/tests/bridge/testdata/issue34/pckg1/MiddleMan used in the signature
 ```
 
-This usually means that some additional packages need to be included in the environment variable: `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES`, or you can simply use the "automatic mode".
+This usually means that some additional packages need to be included in the environment variable: `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES`.
 
 
 ## Known Issues and Limitations

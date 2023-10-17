@@ -1,5 +1,8 @@
 # Bridge Service - RELEASE NOTES
 
+## 2.11.13 In-Progress
+* [#61 Allowing Map/JSON return type](https://github.com/adobe/bridgeService/issues/61). Until recently we were not able to correctly accept map and JSON Objects.
+
 ## 2.11.12
 * Disabled automatic mode as discovered some issues with the loading (Issue #55).
 

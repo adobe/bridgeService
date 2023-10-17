@@ -1856,6 +1856,26 @@ public class TestFetchCalls {
     }
 
     @Test
+    public void testExtractingMapLvl_2_mapOfMap() {
+        Map mapOfString = ComplexObjects.returnMap();
+        Map<String,String> l_mapValues = new HashMap<>();
+        l_mapValues.put("object5","value5");
+        l_mapValues.put("object6","value6");
+        mapOfString.put("object2", l_mapValues);
+
+        Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
+
+        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3", "object2"));
+        assertThat("We should have the correct values", oneResultMap.get("object1"), Matchers.equalTo("value1"));
+        assertThat("We should have the correct values", oneResultMap.get("object3"), Matchers.equalTo("value3"));
+        assertThat("We should be able to access the data of the map", oneResultMap.get("object2"), Matchers.instanceOf(Map.class));
+        Map<String,String> l_nestedMap = (Map<String, String>) oneResultMap.get("object2");
+        assertThat("We should have the correct values", l_nestedMap.keySet(), Matchers.containsInAnyOrder("object5","object6"));
+        assertThat("We should have the correct values", l_nestedMap.get("object6"), Matchers.equalTo("value6"));
+
+    }
+
+    @Test
     public void testExtractingMapIntegerLvl_2() {
         Map mapOfIntegerString = new HashMap();
         mapOfIntegerString.put(1, "value1");

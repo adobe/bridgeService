@@ -34,9 +34,9 @@ public class E2EPortCheck {
 
     @BeforeMethod
     public void cleanCache() throws IOException {
-        //port1 = ServiceTools.fetchNextFreePortNumber();
+        port1 = ServiceTools.fetchNextFreePortNumber();
         ConfigValueHandlerIBS.resetAllValues();
-        //Block the socker
+        //Block the socket
         serverSocket1 = new ServerSocket(port1);
 
     }
@@ -49,6 +49,8 @@ public class E2EPortCheck {
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
         ConfigValueHandlerIBS.resetAllValues();
+
+        //release socket
         serverSocket1.close();
     }
 }

@@ -8,7 +8,8 @@
  */
 package com.adobe.campaign.tests.bridge.testdata.one;
 
-//import io.restassured.path.json.JsonPath;
+import io.restassured.path.json.JsonPath;
+
 import org.json.simple.JSONObject;
 
 import java.util.HashMap;
@@ -16,16 +17,10 @@ import java.util.Map;
 
 public class ComplexObjects {
 
-    /*
-    public static JsonPath returnJSONPath() {
-        String jsonString = "{\r\n" +
-                "  \"firstName\": \"Amod\",\r\n" +
-                "  \"lastName\": \"Mahajan\"\r\n" +
-                "}";
-
-        return  JsonPath.from(jsonString);
+    public static ClassWithGet returnClassWithGet() {
+        return  new ClassWithGet();
     }
-     */
+
 
     public static Map returnMap() {
         Map mapOfString = new HashMap();

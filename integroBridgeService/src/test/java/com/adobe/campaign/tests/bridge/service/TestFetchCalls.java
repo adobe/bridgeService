@@ -387,6 +387,12 @@ public class TestFetchCalls {
 
         assertThat("We should get the expected field", MetaUtils.extractFieldName("fetchValue"),
                 Matchers.equalTo("fetchValue"));
+
+        assertThat("We should get the expected field", MetaUtils.extractFieldName("fetchValue"),
+                Matchers.equalTo("fetchValue"));
+
+        assertThat("We should get the expected field", MetaUtils.extractFieldName("get"),
+                Matchers.nullValue());
     }
 
     @Test

@@ -80,12 +80,12 @@ public class BridgeServiceFactory {
     public static String createExceptionPayLoad(ErrorObject in_errorObject) {
 
 
-        return getErrorPayloadAdString(in_errorObject);
+        return getErrorPayloadAsString(in_errorObject);
     }
 
     //Calls the testable getPayloadAdString
-    private static String getErrorPayloadAdString(ErrorObject in_errorObject) {
-        return getErrorPayloadAdString(new ObjectMapper(), in_errorObject);
+    private static String getErrorPayloadAsString(ErrorObject in_errorObject) {
+        return getErrorPayloadAsString(new ObjectMapper(), in_errorObject);
     }
 
     /**
@@ -94,7 +94,7 @@ public class BridgeServiceFactory {
      * @param in_errorObject The  payload of error data
      * @return the error as a payload
      */
-    protected static String getErrorPayloadAdString(ObjectMapper o, ErrorObject in_errorObject) {
+    protected static String getErrorPayloadAsString(ObjectMapper o, ErrorObject in_errorObject) {
         try {
             return o.writeValueAsString(in_errorObject);
         } catch (JsonProcessingException e) {

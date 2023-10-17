@@ -8,8 +8,6 @@
  */
 package com.adobe.campaign.tests.bridge.testdata.one;
 
-import io.restassured.path.json.JsonPath;
-
 import org.json.simple.JSONObject;
 
 import java.util.HashMap;

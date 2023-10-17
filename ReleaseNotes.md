@@ -2,6 +2,7 @@
 
 ## 2.11.13 In-Progress
 * [#61 Allowing Map/JSON return type](https://github.com/adobe/bridgeService/issues/61). Until recently we were not able to correctly accept map and JSON Objects.
+* [#63 Fixedf bug when return object has methd called get](https://github.com/adobe/bridgeService/issues/63). Corrected bug related to classes that have a method called get. In these cases we have a 500 error. We have now added an error category which is internal.
 
 ## 2.11.12
 * Disabled automatic mode as discovered some issues with the loading (Issue #55).

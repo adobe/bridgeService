@@ -573,25 +573,21 @@ public class E2ETests {
          */
     }
 
-    /*
     @Test(groups = "E2E")
-    public void testRestAssuredIssue() {
-        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate("0");
+    public void testIssueWithInternalError() {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
 
         l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ComplexObjects");
-        l_cc.setMethodName("returnJSONPath");
-        l_myJavaCalls.getCallContent().put("call1",l_cc);
+        l_cc.setMethodName("returnClassWithGet");
+        l_myJavaCalls.getCallContent().put("call1", l_cc);
 
-        System.out.println(given().body(l_myJavaCalls).post(EndPointURL + "call").then().extract().asPrettyString());
-
-        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).body("firstName", Matchers.equalTo(
-                "Amod"));
-
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200)
+                .body("returnValues.call1.this", Matchers.equalTo(
+                        "5"));
     }
-    */
+
 
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {

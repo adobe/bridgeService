@@ -89,7 +89,7 @@ public class BridgeServiceFactory {
     }
 
     /**
-     * Creates a JSON from the given map
+     * Creates a JSON from the given error object
      * @param o an Object mapper object
      * @param in_errorObject The  payload of error data
      * @return the error as a payload

@@ -30,6 +30,10 @@ public class MetaUtils {
         //Remove "get"
         String l_step1Transformation = in_methodName.startsWith("get") ? in_methodName.substring(3) : in_methodName;
 
+        if (l_step1Transformation.isEmpty()) {
+            return null;
+        }
+
         //Transform first character to lower
         StringBuilder sb = new StringBuilder();
         sb.append(Character.toLowerCase(l_step1Transformation.charAt(0)));
@@ -99,7 +103,7 @@ public class MetaUtils {
 
                         //TODO Add option with null values (extract null)
                         if (lt_returnValue != null) {
-                            lr_value.put(extractFieldName(lt_m.getName()),lt_returnValue);
+                            lr_value.put(Optional.ofNullable(extractFieldName(lt_m.getName())).orElse("this"),lt_returnValue);
                             log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue);
                         }
                     } catch (IllegalAccessException | InvocationTargetException e) {

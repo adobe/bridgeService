@@ -1876,6 +1876,23 @@ public class TestFetchCalls {
     }
 
     @Test
+    public void testExtractingMapLvl_2_negative_mapOfNull() {
+        Map mapOfString = ComplexObjects.returnMap();
+
+        mapOfString.put("object2", null);
+
+        Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
+
+        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3", "object2"));
+        assertThat("We should have the correct values", oneResultMap.get("object1"), Matchers.equalTo("value1"));
+        assertThat("We should have the correct values", oneResultMap.get("object3"), Matchers.equalTo("value3"));
+        assertThat("We should be able to access the data of the map", oneResultMap.get("object2"), Matchers.instanceOf(Map.class));
+        Map<String,String> l_nestedMap = (Map<String, String>) oneResultMap.get("object2");
+        assertThat("We should have an empty set of values", l_nestedMap.isEmpty());
+
+    }
+
+    @Test
     public void testExtractingMapIntegerLvl_2() {
         Map mapOfIntegerString = new HashMap();
         mapOfIntegerString.put(1, "value1");

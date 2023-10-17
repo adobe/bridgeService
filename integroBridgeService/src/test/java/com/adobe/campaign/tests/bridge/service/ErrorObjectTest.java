@@ -115,7 +115,7 @@ public class ErrorObjectTest {
         ObjectMapper omMock = Mockito.mock(ObjectMapper.class);
         Mockito.when(omMock.writeValueAsString(Mockito.any())).thenThrow(JsonProcessingException.class);
         assertThat("When a JSON processing exception is thrown we return a String",
-                BridgeServiceFactory.getErrorPayloadAdString(omMock,
+                BridgeServiceFactory.getErrorPayloadAsString(omMock,
                         new ErrorObject(new ClassNotFoundException(), "A", 404)),
                 Matchers.equalTo("Problem creating error payload. Original error is " + "A"));
     }

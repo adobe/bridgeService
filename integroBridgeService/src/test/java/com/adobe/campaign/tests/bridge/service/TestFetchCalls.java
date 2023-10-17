@@ -10,15 +10,11 @@ package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.data.MyPropertiesHandler;
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
-import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
-import com.adobe.campaign.tests.bridge.testdata.one.Instantiable;
-import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
-import com.adobe.campaign.tests.bridge.testdata.one.StaticType;
+import com.adobe.campaign.tests.bridge.testdata.one.*;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
-import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
@@ -1800,6 +1796,101 @@ public class TestFetchCalls {
         assertThat("We should have thrown an exception here", expectedException, Matchers.notNullValue());
         Assert.assertThrows(IBSRunTimeException.class, () -> jc.submitCalls());
 
+    }
+
+    @Test
+    public void testExtractingMapTop() {
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ComplexObjects");
+        l_cc.setMethodName("returnMap");
+        jc.getCallContent().put("one", l_cc);
+
+        JavaCallResults result = jc.submitCalls();
+
+        Object oneResultRaw = result.getReturnValues().get("one");
+        assertThat("We should be able to access the data of the map", oneResultRaw, Matchers.instanceOf(Map.class));
+
+        Map<String, Object>  oneResultMap = (Map<String, Object>) oneResultRaw;
+
+        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3"));
+    }
+
+    @Test
+    public void testExtractingMapLvl_1() {
+        Map mapOfString = ComplexObjects.returnMap();
+
+
+        Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromObject(mapOfString);
+
+
+        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3"));
+    }
+
+    @Test
+    public void testExtractingMapLvl_2() {
+        Map mapOfString = ComplexObjects.returnMap();
+
+        Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
+
+        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3"));
+        assertThat("We should have the correct values", oneResultMap.get("object1"), Matchers.equalTo("value1"));
+        assertThat("We should have the correct values", oneResultMap.get("object3"), Matchers.equalTo("value3"));
+    }
+
+    @Test
+    public void testExtractingMapLvl_2_mapOfList() {
+        Map mapOfString = ComplexObjects.returnMap();
+        List<String> l_listValues = Arrays.asList("a","b","c");
+        mapOfString.put("object2", l_listValues);
+
+        Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
+
+        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3", "object2"));
+        assertThat("We should have the correct values", oneResultMap.get("object1"), Matchers.equalTo("value1"));
+        assertThat("We should have the correct values", oneResultMap.get("object3"), Matchers.equalTo("value3"));
+        assertThat("We should be able to access the data of the map", oneResultMap.get("object2"), Matchers.instanceOf(List.class));
+        List<String> l_nestedList = (List<String>) oneResultMap.get("object2");
+        assertThat("We should have the correct values", l_nestedList, Matchers.containsInAnyOrder("a","b","c"));
+
+    }
+
+    @Test
+    public void testExtractingMapIntegerLvl_2() {
+        Map mapOfIntegerString = new HashMap();
+        mapOfIntegerString.put(1, "value1");
+        mapOfIntegerString.put(2, "value3");
+
+        Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfIntegerString);
+
+        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder(1, 2));
+        assertThat("We should have the correct values", oneResultMap.get(1), Matchers.equalTo("value1"));
+        assertThat("We should have the correct values", oneResultMap.get(2), Matchers.equalTo("value3"));
+    }
+
+    @Test
+    public void testExtractingMapIntegerIntegerLvl_2() {
+        Map mapOfIntegerString = new HashMap();
+        mapOfIntegerString.put(1, 13);
+        mapOfIntegerString.put(2, 17);
+
+        Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfIntegerString);
+
+        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder(1, 2));
+        assertThat("We should have the correct values", oneResultMap.get(1), Matchers.equalTo(13));
+        assertThat("We should have the correct values", oneResultMap.get(2), Matchers.equalTo(17));
+    }
+
+
+    @Test
+    public void testExtractingJSONLvl_2() {
+        Map mapOfString = ComplexObjects.returnJSONSimple();
+
+        Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
+
+        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3"));
+        assertThat("We should have the correct values", oneResultMap.get("object1"), Matchers.equalTo("value1"));
+        assertThat("We should have the correct values", oneResultMap.get("object3"), Matchers.equalTo("value3"));
     }
 
 }

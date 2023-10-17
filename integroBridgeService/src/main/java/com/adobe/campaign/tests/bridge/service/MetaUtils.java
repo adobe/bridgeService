@@ -84,6 +84,8 @@ public class MetaUtils {
             return in_object;
         } else if (in_object instanceof Collection) {
             return extractValuesFromList((Collection) in_object);
+        } else if (in_object instanceof Map) {
+            return extractValuesFromMap((Map) in_object);
         }
 
         for (Method lt_m : Arrays.stream(in_object.getClass().getMethods()).filter(MetaUtils::isExtractable).collect(
@@ -111,5 +113,14 @@ public class MetaUtils {
         return lr_value;
     }
 
-
+    /**
+     * Used for deserializing Maps of unserializable objects.
+     * @param in_object A collection of complex objects
+     * @return A Map of serialized Objects
+     */
+    public static Map extractValuesFromMap(Map in_object) {
+        Map<Object, Object> lr_returnObject = new HashMap<>();
+        in_object.forEach((k,v) -> lr_returnObject.put(k, extractValuesFromObject(v)));
+        return lr_returnObject;
+    }
 }

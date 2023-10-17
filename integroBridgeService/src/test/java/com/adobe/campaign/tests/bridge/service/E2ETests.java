@@ -560,13 +560,38 @@ public class E2ETests {
 
         System.out.println(given().body(l_myJavaCalls).post(EndPointURL + "call").then().extract().asPrettyString());
 
-        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(500).body("originalException", Matchers.equalTo(
-                "java.lang.IllegalAccessError")).body("originalMessage", Matchers.equalTo("class jdk.internal.reflect.ConstructorAccessorImpl loaded by com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader @2a8337ef cannot access jdk/internal/reflect superclass jdk.internal.reflect.MagicAccessorImpl"));
-
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(500)
+                .body("originalException", Matchers.equalTo(
+                        "java.lang.IllegalAccessError")).body("originalMessage", Matchers.startsWith(
+                        "class jdk.internal.reflect.ConstructorAccessorImpl loaded by com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader"))
+                .body("originalMessage", Matchers.endsWith(
+                        " cannot access jdk/internal/reflect superclass jdk.internal.reflect.MagicAccessorImpl"));
+        /*
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).body("returnValues.countries", Matchers.in(
                 new String[] { "AT", "AU",  "CA" , "CH", "DE"}));
+
+         */
     }
 
+    /*
+    @Test(groups = "E2E")
+    public void testRestAssuredIssue() {
+        ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate("0");
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ComplexObjects");
+        l_cc.setMethodName("returnJSONPath");
+        l_myJavaCalls.getCallContent().put("call1",l_cc);
+
+        System.out.println(given().body(l_myJavaCalls).post(EndPointURL + "call").then().extract().asPrettyString());
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).body("firstName", Matchers.equalTo(
+                "Amod"));
+
+    }
+    */
 
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {

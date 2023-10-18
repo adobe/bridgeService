@@ -32,7 +32,7 @@ public class IntegroAPI {
     public static final String ERROR_CONTENT_TYPE = "application/problem+json";
     protected static final String ERROR_AMBIGUOUS_METHOD = "No unique method could be identified that matches your request.";
     public static final String SYSTEM_UP_MESSAGE = "All systems up";
-    public static final String ERROR_IBS_INTERNAL = "Internal IBS error. Please debug using the parameter debug=true. Please report this to the maintainer.";
+    //public static final String ERROR_IBS_INTERNAL = "Internal IBS error. Please debug using the parameter debug=true. Please report this to the maintainer.";
     protected enum DeploymentMode {
             TEST, PRODUCTION
     }
@@ -139,6 +139,7 @@ public class IntegroAPI {
             res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_CALL_TIMEOUT, statusCode)));
         });
         //Internal exception
+        /*
         exception(Exception.class, (e, req, res) -> {
             int statusCode = 500;
             res.status(statusCode);
@@ -146,6 +147,6 @@ public class IntegroAPI {
 
             res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_INTERNAL, statusCode)));
         });
-
+*/
     }
 }

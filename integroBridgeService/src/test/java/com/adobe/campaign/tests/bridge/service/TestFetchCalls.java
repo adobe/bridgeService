@@ -1808,8 +1808,8 @@ public class TestFetchCalls {
     public void testExtractingMapTop() {
         JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ComplexObjects");
-        l_cc.setMethodName("returnMap");
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
+        l_cc.setMethodName("methodReturningMap");
         jc.getCallContent().put("one", l_cc);
 
         JavaCallResults result = jc.submitCalls();
@@ -1824,7 +1824,7 @@ public class TestFetchCalls {
 
     @Test
     public void testExtractingMapLvl_1() {
-        Map mapOfString = ComplexObjects.returnMap();
+        Map mapOfString = SimpleStaticMethods.methodReturningMap();
 
 
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromObject(mapOfString);
@@ -1835,7 +1835,7 @@ public class TestFetchCalls {
 
     @Test
     public void testExtractingMapLvl_2() {
-        Map mapOfString = ComplexObjects.returnMap();
+        Map mapOfString = SimpleStaticMethods.methodReturningMap();
 
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
 
@@ -1846,7 +1846,7 @@ public class TestFetchCalls {
 
     @Test
     public void testExtractingMapLvl_2_mapOfList() {
-        Map mapOfString = ComplexObjects.returnMap();
+        Map mapOfString = SimpleStaticMethods.methodReturningMap();
         List<String> l_listValues = Arrays.asList("a","b","c");
         mapOfString.put("object2", l_listValues);
 
@@ -1863,7 +1863,7 @@ public class TestFetchCalls {
 
     @Test
     public void testExtractingMapLvl_2_mapOfMap() {
-        Map mapOfString = ComplexObjects.returnMap();
+        Map mapOfString = SimpleStaticMethods.methodReturningMap();
         Map<String,String> l_mapValues = new HashMap<>();
         l_mapValues.put("object5","value5");
         l_mapValues.put("object6","value6");
@@ -1883,7 +1883,7 @@ public class TestFetchCalls {
 
     @Test
     public void testExtractingMapLvl_2_negative_mapOfNull() {
-        Map mapOfString = ComplexObjects.returnMap();
+        Map mapOfString = SimpleStaticMethods.methodReturningMap();
 
         mapOfString.put("object2", null);
 
@@ -1927,7 +1927,7 @@ public class TestFetchCalls {
 
     @Test
     public void testExtractingJSONLvl_2() {
-        Map mapOfString = ComplexObjects.returnJSONSimple();
+        Map mapOfString = SimpleStaticMethods.returnJSONSimple();
 
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
 

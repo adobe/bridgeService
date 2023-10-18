@@ -31,7 +31,6 @@ import static io.restassured.RestAssured.given;
 public class E2ETests {
     public static final String EndPointURL = "http://localhost:8080/";
     private static final int port1 = 1111;
-    protected static final boolean AUTOMATIC_FLAG = false;
     ServerSocket serverSocket1 = null;
 
     @BeforeGroups(groups = "E2E")
@@ -96,7 +95,6 @@ public class E2ETests {
                 .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
     }
 
-
     @Test(groups = "E2E")
     public void testCheckConnectivity() {
 
@@ -124,7 +122,8 @@ public class E2ETests {
                 new Object[] { 7, 7 });
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).contentType(IntegroAPI.ERROR_CONTENT_TYPE)
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
+                .contentType(IntegroAPI.ERROR_CONTENT_TYPE)
                 .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALLING_JAVA_METHOD))
                 .body("detail", Matchers.containsString(
                         "We do not allow numbers that are equal."))
@@ -391,7 +390,6 @@ public class E2ETests {
                 .body("originalMessage", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
     }
 
-
     @Test(groups = "E2E")
     public void testTimeOutCalls_overridePass() {
         String l_expectedDuration = "300";
@@ -439,7 +437,8 @@ public class E2ETests {
         //long before = MemoryTools.fetchMemory();
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
 
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
+                "com.adobe.campaign.tests.bridge.testdata.issue34.pckg1");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         //Call 1
@@ -455,8 +454,8 @@ public class E2ETests {
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
 
         /* Problem disappears*/
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.,com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.");
-
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
+                "com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.,com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.");
 
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
                 body("returnValues.call2", Matchers.equalTo("Whatever"));
@@ -466,7 +465,7 @@ public class E2ETests {
 
     }
 
-    @Test(groups = "E2E", enabled = AUTOMATIC_FLAG)
+    @Test(groups = "E2E")
     public void testIssue34Automatic() {
         //long before = MemoryTools.fetchMemory();
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("automatic");
@@ -485,8 +484,8 @@ public class E2ETests {
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
 
         /* Problem disappears*/
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.,com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.");
-
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
+                "com.adobe.campaign.tests.bridge.testdata.issue34.pckg1.,com.adobe.campaign.tests.bridge.testdata.issue34.pckg2.");
 
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).
                 body("returnValues.call2", Matchers.equalTo("Whatever"));
@@ -507,7 +506,8 @@ public class E2ETests {
     public void testIssue34Manual_Negative() {
         //long before = MemoryTools.fetchMemory();
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
-        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate("com.adobe.campaign.tests.bridge.testdata.issue34.pckg1");
+        ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(
+                "com.adobe.campaign.tests.bridge.testdata.issue34.pckg1");
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         //Call 1
@@ -530,8 +530,6 @@ public class E2ETests {
                 .body("originalException", Matchers.equalTo(LinkageError.class.getTypeName()))
                 .body("originalMessage", Matchers.startsWith("loader constraint violation:"));
 
-
-
     }
 
     @Test(groups = "E2E")
@@ -552,13 +550,54 @@ public class E2ETests {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ClassWithLogger");
         l_cc.setMethodName("fetchRandomCountry");
 
         l_myJavaCalls.getCallContent().put("countries", l_cc);
 
-
         System.out.println(given().body(l_myJavaCalls).post(EndPointURL + "call").then().extract().asPrettyString());
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(500)
+                .body("originalException", Matchers.equalTo(
+                        "java.lang.IllegalAccessError")).body("originalMessage", Matchers.startsWith(
+                        "class jdk.internal.reflect.ConstructorAccessorImpl loaded by com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader"))
+                .body("originalMessage", Matchers.endsWith(
+                        " cannot access jdk/internal/reflect superclass jdk.internal.reflect.MagicAccessorImpl"));
+    }
+
+    @Test(groups = "E2E")
+    public void testIssueWithInternalError() {
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
+        l_cc.setMethodName("returnClassWithGet");
+        l_myJavaCalls.getCallContent().put("call1", l_cc);
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200)
+                .body("returnValues.call1.this", Matchers.equalTo(
+                        "5"));
+    }
+
+
+    @Test(groups = "E2E")
+    public void testInternalErrorCall() {
+
+        ConfigValueHandlerIBS.TEMP_INTERNAL_ERROR_MODE.activate("active");
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
+        myContent.setMethodName("methodReturningMap");
+        myContent.setReturnType("java.lang.String");
+        l_call.getCallContent().put("call1PL", myContent);
+
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).body("title",
+                Matchers.equalTo(
+                        "Internal IBS error. Please file a bug report with the project and provide this JSON in the report."));
+
     }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)

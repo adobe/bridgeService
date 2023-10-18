@@ -8,6 +8,7 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.service.exceptions.IBSTestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,6 +30,10 @@ public class MetaUtils {
     public static String extractFieldName(String in_methodName) {
         //Remove "get"
         String l_step1Transformation = in_methodName.startsWith("get") ? in_methodName.substring(3) : in_methodName;
+
+        if (l_step1Transformation.isEmpty()) {
+            return null;
+        }
 
         //Transform first character to lower
         StringBuilder sb = new StringBuilder();
@@ -84,6 +89,8 @@ public class MetaUtils {
             return in_object;
         } else if (in_object instanceof Collection) {
             return extractValuesFromList((Collection) in_object);
+        } else if (in_object instanceof Map) {
+            return extractValuesFromMap((Map) in_object);
         }
 
         for (Method lt_m : Arrays.stream(in_object.getClass().getMethods()).filter(MetaUtils::isExtractable).collect(
@@ -97,7 +104,7 @@ public class MetaUtils {
 
                         //TODO Add option with null values (extract null)
                         if (lt_returnValue != null) {
-                            lr_value.put(extractFieldName(lt_m.getName()),lt_returnValue);
+                            lr_value.put(Optional.ofNullable(extractFieldName(lt_m.getName())).orElse("this"),lt_returnValue);
                             log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue);
                         }
                     } catch (IllegalAccessException | InvocationTargetException e) {
@@ -111,5 +118,22 @@ public class MetaUtils {
         return lr_value;
     }
 
+    /**
+     * Used for deserializing Maps of unserializable objects.
+     * @param in_object A collection of complex objects
+     * @return A Map of serialized Objects
+     */
+    public static Map extractValuesFromMap(Map in_object) {
+        Map<Object, Object> lr_returnObject = new HashMap<>();
+        in_object.forEach((k,v) -> lr_returnObject.put(k, extractValuesFromObject(v)));
 
+        //Just for testing internal issues
+        if (ConfigValueHandlerIBS.TEMP_INTERNAL_ERROR_MODE.fetchValue().equals("active")) {
+            log.warn("We are now in the intrnal error mode. This mode is not to be used in production");
+            ConfigValueHandlerIBS.TEMP_INTERNAL_ERROR_MODE.reset();
+
+            throw new IBSTestException("Just for testing");
+        }
+        return lr_returnObject;
+    }
 }

@@ -9,6 +9,7 @@
 package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
+import com.adobe.campaign.tests.bridge.service.utils.ServiceTools;
 import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
@@ -27,15 +28,17 @@ import java.util.Properties;
 import static io.restassured.RestAssured.given;
 
 public class E2EPortCheck {
-    public static final String EndPointURL = "http://localhost:8080/";
-    private static final int port1 = 8080;
+    private static int port1 = 8080;
     ServerSocket serverSocket1 = null;
 
 
-    @BeforeClass
+    @BeforeMethod
     public void cleanCache() throws IOException {
-        serverSocket1 = new ServerSocket(port1);
+        port1 = ServiceTools.fetchNextFreePortNumber();
         ConfigValueHandlerIBS.resetAllValues();
+        //Block the socket
+        serverSocket1 = new ServerSocket(port1);
+
     }
 
     @Test
@@ -43,10 +46,11 @@ public class E2EPortCheck {
         Assert.assertThrows(IBSConfigurationException.class, () -> IntegroAPI.startServices(port1));
     }
 
-    @AfterClass(alwaysRun = true)
+    @AfterMethod(alwaysRun = true)
     public void tearDown() throws IOException {
         ConfigValueHandlerIBS.resetAllValues();
-        Spark.stop();
+
+        //release socket
         serverSocket1.close();
     }
 }

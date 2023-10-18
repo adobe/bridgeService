@@ -8,6 +8,7 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.service.exceptions.IBSTestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -125,6 +126,14 @@ public class MetaUtils {
     public static Map extractValuesFromMap(Map in_object) {
         Map<Object, Object> lr_returnObject = new HashMap<>();
         in_object.forEach((k,v) -> lr_returnObject.put(k, extractValuesFromObject(v)));
+
+        //Just for testing internal issues
+        if (ConfigValueHandlerIBS.TEMP_INTERNAL_ERROR_MODE.fetchValue().equals("active")) {
+            log.warn("We are now in the intrnal error mode. This mode is not to be used in production");
+            ConfigValueHandlerIBS.TEMP_INTERNAL_ERROR_MODE.reset();
+
+            throw new IBSTestException("Just for testing");
+        }
         return lr_returnObject;
     }
 }

@@ -8,8 +8,12 @@
  */
 package com.adobe.campaign.tests.bridge.testdata.one;
 
+import org.json.simple.JSONObject;
+
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SimpleStaticMethods {
 
@@ -21,6 +25,28 @@ public class SimpleStaticMethods {
 
     public static List<String> methodReturningList() {
         return Arrays.asList("NA1", "NA2", "NA3", "NA4");
+    }
+
+    //This method returns a class with a method called get. This was causing issue #63
+    public static ClassWithGet returnClassWithGet() {
+        return  new ClassWithGet();
+    }
+
+
+    public static Map methodReturningMap() {
+        Map mapOfString = new HashMap();
+        mapOfString.put("object1", "value1");
+        mapOfString.put("object3", "value3");
+
+        return  mapOfString;
+    }
+
+    public static JSONObject returnJSONSimple() {
+        JSONObject jsonOfString = new JSONObject();
+        jsonOfString.put("object1", "value1");
+        jsonOfString.put("object3", "value3");
+
+        return  jsonOfString;
     }
 
     public static String methodAcceptingStringArgument(String in_stringArgument) {

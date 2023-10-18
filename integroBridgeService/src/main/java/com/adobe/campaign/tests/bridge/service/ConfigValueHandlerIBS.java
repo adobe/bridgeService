@@ -54,7 +54,7 @@ public enum ConfigValueHandlerIBS {
                 System.setProperty(this.systemName, in_value);
             }
         }
-    };
+    }, TEMP_INTERNAL_ERROR_MODE("TMP.INTERNAL.ERROR.MODE", "off", false, "This is a temporary variable for testing purposes only.");
 
 
     public final String systemName;

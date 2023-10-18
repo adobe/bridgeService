@@ -163,7 +163,7 @@ public class CallContent {
                 lr_object = l_constructor.newInstance(expandArgs(iClassLoader));
             } else {
                 Method l_method = fetchMethod(ourClass);
-                //Arrays.stream(e.getTargetException().getStackTrace()).sequential().forEach(t -> response.append(t).append("\n"));
+
                 Object ourInstance = (l_instanceObject == null) ? ourClass.getDeclaredConstructor().newInstance() : l_instanceObject;
                 lr_object = l_method.invoke(ourInstance, expandArgs(iClassLoader));
             }

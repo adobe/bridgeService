@@ -46,11 +46,11 @@ public enum ConfigValueHandlerIBS {
             "IBS.CLASSLOADER.INTEGRITY.MODE","semi-manual", false,
             "This value defined the injection mode of packages and classes. We have three modes: automatic, manual, semi-automatic"),*/
     INTEGRITY_PACKAGE_INJECTION_MODE(
-            "IBS.CLASSLOADER.INTEGRITY.MODE","automatic", false,
+            "IBS.CLASSLOADER.INTEGRITY.MODE","semi-manual", false,
                     "This value defined the injection mode of packages and classes. We have three modes: automatic, manual, semi-automatic") {
         public void activate(String in_value) {
             //Use default if value is not in range
-            if (Arrays.asList("manual","semi-manual","automatic").contains(in_value.toLowerCase())) {
+            if (Arrays.asList("manual","semi-manual").contains(in_value.toLowerCase())) {
                 System.setProperty(this.systemName, in_value);
             }
         }

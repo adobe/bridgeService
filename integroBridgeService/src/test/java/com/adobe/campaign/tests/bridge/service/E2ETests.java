@@ -564,11 +564,6 @@ public class E2ETests {
                         "class jdk.internal.reflect.ConstructorAccessorImpl loaded by com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader"))
                 .body("originalMessage", Matchers.endsWith(
                         " cannot access jdk/internal/reflect superclass jdk.internal.reflect.MagicAccessorImpl"));
-        /*
-        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).body("returnValues.countries", Matchers.in(
-                new String[] { "AT", "AU",  "CA" , "CH", "DE"}));
-
-         */
     }
 
     @Test(groups = "E2E")
@@ -585,6 +580,7 @@ public class E2ETests {
                 .body("returnValues.call1.this", Matchers.equalTo(
                         "5"));
     }
+
 
     @Test(groups = "E2E")
     public void testInternalErrorCall() {

@@ -8,6 +8,10 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * This class is meant to contain the error payload in care of exceptions
  */
@@ -21,6 +25,9 @@ public class ErrorObject {
     private String originalException;
     private String originalMessage;
 
+    private List<String> stackTrace;
+
+
     public ErrorObject(Exception in_exception, String in_title, int in_errorCode) {
         this.setTitle(in_title);
         this.setCode(in_errorCode);
@@ -31,6 +38,9 @@ public class ErrorObject {
                 (originalExceptionClass==null) ? STD_NOT_APPLICABLE : originalExceptionClass.getClass().getTypeName());
         this.setOriginalMessage(
                 (originalExceptionClass==null) ? STD_NOT_APPLICABLE : originalExceptionClass.getMessage());
+
+        this.setStackTrace(new ArrayList<>());
+        Arrays.stream(in_exception.getStackTrace()).forEach(i -> this.stackTrace.add(i.toString()));
     }
 
     /**
@@ -111,4 +121,13 @@ public class ErrorObject {
     public void setOriginalMessage(String originalMessage) {
         this.originalMessage = originalMessage;
     }
+
+    public List<String> getStackTrace() {
+        return stackTrace;
+    }
+
+    public void setStackTrace(List<String> stackTrace) {
+        this.stackTrace = stackTrace;
+    }
+
 }

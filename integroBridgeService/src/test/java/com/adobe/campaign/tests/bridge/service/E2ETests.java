@@ -31,7 +31,6 @@ import static io.restassured.RestAssured.given;
 public class E2ETests {
     public static final String EndPointURL = "http://localhost:8080/";
     private static final int port1 = 1111;
-    protected static final boolean AUTOMATIC_FLAG = false;
     ServerSocket serverSocket1 = null;
 
     @BeforeGroups(groups = "E2E")
@@ -466,7 +465,7 @@ public class E2ETests {
 
     }
 
-    @Test(groups = "E2E", enabled = AUTOMATIC_FLAG)
+    @Test(groups = "E2E")
     public void testIssue34Automatic() {
         //long before = MemoryTools.fetchMemory();
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("automatic");
@@ -552,14 +551,43 @@ public class E2ETests {
         JavaCalls l_myJavaCalls = new JavaCalls();
 
         CallContent l_cc = new CallContent();
-        l_cc.setClassName("com.adobe.campaign.tests.integro.tools.RandomManager");
+
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ClassWithLogger");
         l_cc.setMethodName("fetchRandomCountry");
 
         l_myJavaCalls.getCallContent().put("countries", l_cc);
 
 
         System.out.println(given().body(l_myJavaCalls).post(EndPointURL + "call").then().extract().asPrettyString());
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(500)
+                .body("originalException", Matchers.equalTo(
+                        "java.lang.IllegalAccessError")).body("originalMessage", Matchers.startsWith(
+                        "class jdk.internal.reflect.ConstructorAccessorImpl loaded by com.adobe.campaign.tests.bridge.service.IntegroBridgeClassLoader"))
+                .body("originalMessage", Matchers.endsWith(
+                        " cannot access jdk/internal/reflect superclass jdk.internal.reflect.MagicAccessorImpl"));
+        /*
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200).body("returnValues.countries", Matchers.in(
+                new String[] { "AT", "AU",  "CA" , "CH", "DE"}));
+
+         */
     }
+
+    @Test(groups = "E2E")
+    public void testIssueWithInternalError() {
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ComplexObjects");
+        l_cc.setMethodName("returnClassWithGet");
+        l_myJavaCalls.getCallContent().put("call1", l_cc);
+
+        given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(200)
+                .body("returnValues.call1.this", Matchers.equalTo(
+                        "5"));
+    }
+
 
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {

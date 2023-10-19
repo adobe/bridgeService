@@ -1,10 +1,13 @@
 # Bridge Service - RELEASE NOTES
 
-## 2.11.13
+## 2.11.14
 * [#61 Allowing Map/JSON return type](https://github.com/adobe/bridgeService/issues/61). Until recently we were not able to correctly accept map and JSON Objects.
 * [#63 Fixed bug when return object has methd called get](https://github.com/adobe/bridgeService/issues/63). Corrected bug related to classes that have a method called get. In these cases we have a 500 error. We have now added an error category which is internal.
 * [#9 Include error stack trace](https://github.com/adobe/bridgeService/issues/9). The stack trace is part of the error object. We have decided not tolter, and simply add the error stadk trace.
 * [#64 Managing internal errors better](https://github.com/adobe/bridgeService/issues/64). We now deal with ibs-internal error so that we can better debug them.
+
+## 2.11.13
+DEPRECATED due to false merge
 
 ## 2.11.12
 * Disabled automatic mode as discovered some issues with the loading (Issue #55).

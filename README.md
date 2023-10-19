@@ -68,7 +68,7 @@ The following dependency needs to be added to your pom file:
  <dependency>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <version>2.11.13</version>
+    <version>2.11.14</version>
 </dependency>
 ```
 
@@ -121,7 +121,7 @@ All you need to do is to call :
 If all is good you should get:
 ```
 All systems up - in production
-Version : 2.11.13
+Version : 2.11.14
 Product user version : 7.0
 ```
 

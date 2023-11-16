@@ -117,21 +117,25 @@ public class E2ETests {
         JavaCalls l_call = new JavaCalls();
         CallContent myContent = new CallContent();
         myContent.setClassName(SimpleStaticMethods.class.getTypeName());
-        myContent.setMethodName("methodThrowingException");
+        final String l_calledMethod = "methodThrowingException";
+        myContent.setMethodName(l_calledMethod);
         myContent.setReturnType("java.lang.String");
         myContent.setArgs(
                 new Object[] { 7, 7 });
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
+        String result = given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
                 .contentType(IntegroAPI.ERROR_CONTENT_TYPE)
                 .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALLING_JAVA_METHOD))
                 .body("detail", Matchers.containsString(
                         "We do not allow numbers that are equal."))
                 .body("code", Matchers.equalTo(500))
                 .body("bridgeServiceException", Matchers.equalTo(TargetJavaMethodCallException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo(IllegalArgumentException.class.getTypeName()));
+                .body("originalException", Matchers.equalTo(IllegalArgumentException.class.getTypeName()))
+                .body("stackTrace[0]", Matchers.startsWith(SimpleStaticMethods.class.getTypeName()+"."+ l_calledMethod))
+                .extract().asPrettyString();
 
+        System.out.println(result);
     }
 
     /**

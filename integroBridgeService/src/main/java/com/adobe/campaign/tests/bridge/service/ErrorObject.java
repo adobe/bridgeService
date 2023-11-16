@@ -27,20 +27,27 @@ public class ErrorObject {
 
     private List<String> stackTrace;
 
-
     public ErrorObject(Exception in_exception, String in_title, int in_errorCode) {
         this.setTitle(in_title);
         this.setCode(in_errorCode);
         this.setDetail(in_exception.getMessage());
         this.setBridgeServiceException(in_exception.getClass().getTypeName());
         Throwable originalExceptionClass = extractOriginalException(in_exception);
-        this.setOriginalException(
-                (originalExceptionClass==null) ? STD_NOT_APPLICABLE : originalExceptionClass.getClass().getTypeName());
-        this.setOriginalMessage(
-                (originalExceptionClass==null) ? STD_NOT_APPLICABLE : originalExceptionClass.getMessage());
 
         this.setStackTrace(new ArrayList<>());
-        Arrays.stream(in_exception.getStackTrace()).forEach(i -> this.stackTrace.add(i.toString()));
+
+        //Check if we have a different root cause
+        if (originalExceptionClass==null) {
+            this.setOriginalException(STD_NOT_APPLICABLE );
+            this.setOriginalMessage(STD_NOT_APPLICABLE);
+            Arrays.stream(in_exception.getStackTrace()).forEach(i -> this.stackTrace.add(i.toString()));
+        } else {
+            //Fetch the data from the root cause
+            this.setOriginalException(originalExceptionClass.getClass().getTypeName());
+            this.setOriginalMessage(originalExceptionClass.getMessage());
+            Arrays.stream(originalExceptionClass.getStackTrace()).forEach(i -> this.stackTrace.add(i.toString()));
+        }
+
     }
 
     /**

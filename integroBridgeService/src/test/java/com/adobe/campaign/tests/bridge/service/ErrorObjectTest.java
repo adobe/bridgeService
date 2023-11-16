@@ -8,6 +8,7 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
@@ -104,10 +105,71 @@ public class ErrorObjectTest {
                 ErrorObject.extractOriginalException(exc3),
                 Matchers.equalTo(exc2));
 
-        ErrorObject l_errorObject = new ErrorObject(exc3,"some title", 343);
-        assertThat("We should have extracted the correct ibs message", l_errorObject.getDetail(), Matchers.equalTo(bottomException));
+        ErrorObject l_errorObject = new ErrorObject(exc3, "some title", 343);
+        assertThat("We should have extracted the correct ibs message", l_errorObject.getDetail(),
+                Matchers.equalTo(bottomException));
 
-        assertThat("We should have extracted the correct original message", l_errorObject.getOriginalMessage(), Matchers.equalTo(middleException));
+        assertThat("We should have extracted the correct original message", l_errorObject.getOriginalMessage(),
+                Matchers.equalTo(middleException));
+        assertThat("The stack trace may not be empty", l_errorObject.getStackTrace(), Matchers.notNullValue());
+        assertThat("The stack trace needs to include the original stack trace as well",
+                l_errorObject.getStackTrace().get(0), Matchers.startsWith(
+                        "com.adobe.campaign.tests.bridge.service.ErrorObjectTest.chainedExceptionRepetition"));
+
+    }
+
+    @Test
+    public void callingRealNested() {
+
+        Exception l_testedException = null;
+        try {
+            SimpleStaticMethods.methodCallingMethodThrowingException();
+        } catch (Exception e) {
+            l_testedException = e;
+        }
+
+        assertThat("We should have thrown an exception", l_testedException, Matchers.notNullValue());
+
+        ErrorObject l_errorObject = new ErrorObject(l_testedException, "some title", 343);
+
+        assertThat("The stack trace needs to include the original stack trace as well",
+                l_errorObject.getStackTrace().get(0), Matchers.startsWith(
+                        SimpleStaticMethods.class.getTypeName() + ".methodThrowsException"));
+
+        assertThat("The stack trace needs to include the original stack trace as well",
+                l_errorObject.getStackTrace().get(1), Matchers.startsWith(
+                        SimpleStaticMethods.class.getTypeName() + ".methodCallingMethodThrowingException"));
+
+    }
+
+    @Test
+    public void callingRealNestedException() {
+
+        Exception l_testedException = null;
+        try {
+            SimpleStaticMethods.methodCallingMethodThrowingExceptionAndPackingIt();
+        } catch (Exception e) {
+            l_testedException = e;
+        }
+
+        assertThat("We should have thrown an exception", l_testedException, Matchers.notNullValue());
+
+        ErrorObject l_errorObject = new ErrorObject(l_testedException, "some title", 343);
+        assertThat("We should have correctly detected the top exception", l_testedException,
+                Matchers.instanceOf(IllegalStateException.class));
+
+        assertThat("We should have caught the original error",
+                ErrorObject.extractOriginalException(l_testedException),
+                Matchers.instanceOf(IllegalArgumentException.class));
+
+        assertThat("The stack trace needs to include the original stack trace as well",
+                l_errorObject.getStackTrace().get(0), Matchers.startsWith(
+                        SimpleStaticMethods.class.getTypeName() + ".methodThrowsException"));
+
+        assertThat("The stack trace needs to include the original stack trace as well",
+                l_errorObject.getStackTrace().get(1), Matchers.startsWith(
+                        SimpleStaticMethods.class.getTypeName() + ".methodCallingMethodThrowingException"));
+
     }
 
     @Test

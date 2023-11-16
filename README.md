@@ -381,7 +381,11 @@ When using the bridge service, we also include additional info:
   "detail": "We experienced an exception when calling the provided method com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowingException.\nProvided error message : java.lang.IllegalArgumentException: We do not allow numbers that are equal.",
   "bridgeServiceException": "com.adobe.campaign.tests.bridge.service.exceptions.TargetJavaMethodCallException",
   "originalException": "java.lang.IllegalArgumentException",
-  "originalMessage": "We do not allow numbers that are equal."
+  "originalMessage": "We do not allow numbers that are equal.",
+  "stackTrace": [
+                "ClassA.methodA",
+                "ClassB.methodB"
+                ]
 }
 ```
 

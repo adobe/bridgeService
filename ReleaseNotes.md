@@ -1,5 +1,9 @@
 # Bridge Service - RELEASE NOTES
 
+## 2.11.15 - SNAPSHOT
+* [#72 Sending root stack trace](https://github.com/adobe/bridgeService/issues/72). With issue #9 we discovered that the stack trace should be that of the original cause.
+
+
 ## 2.11.14
 * [#61 Allowing Map/JSON return type](https://github.com/adobe/bridgeService/issues/61). Until recently we were not able to correctly accept map and JSON Objects.
 * [#63 Fixed bug when return object has methd called get](https://github.com/adobe/bridgeService/issues/63). Corrected bug related to classes that have a method called get. In these cases we have a 500 error. We have now added an error category which is internal.

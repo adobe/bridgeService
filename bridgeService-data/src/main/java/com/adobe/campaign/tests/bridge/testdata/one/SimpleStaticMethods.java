@@ -65,6 +65,10 @@ public class SimpleStaticMethods {
         throw new IllegalArgumentException("Will always throw this");
     }
 
+    public static String methodCallingMethodThrowingException() {
+        return methodThrowsException();
+    }
+
     public static String usesEnvironmentVariables() {
         return EnvironmentVariableHandler.getCacheProperty("ENVVAR1") + "_"
                 + EnvironmentVariableHandler.getCacheProperty("ENVVAR2");
@@ -105,5 +109,13 @@ public class SimpleStaticMethods {
     //Issue #34
     public static void methodThrowingLinkageError() {
         throw new LinkageError("This is for tests");
+    }
+
+    public static void methodCallingMethodThrowingExceptionAndPackingIt() {
+        try {
+            methodThrowsException();
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Got that one", e);
+        }
     }
 }

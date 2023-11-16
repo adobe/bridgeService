@@ -124,7 +124,7 @@ public class E2ETests {
                 new Object[] { 7, 7 });
         l_call.getCallContent().put("call1PL", myContent);
 
-        String result = given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
                 .contentType(IntegroAPI.ERROR_CONTENT_TYPE)
                 .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALLING_JAVA_METHOD))
                 .body("detail", Matchers.containsString(
@@ -132,10 +132,8 @@ public class E2ETests {
                 .body("code", Matchers.equalTo(500))
                 .body("bridgeServiceException", Matchers.equalTo(TargetJavaMethodCallException.class.getTypeName()))
                 .body("originalException", Matchers.equalTo(IllegalArgumentException.class.getTypeName()))
-                .body("stackTrace[0]", Matchers.startsWith(SimpleStaticMethods.class.getTypeName()+"."+ l_calledMethod))
-                .extract().asPrettyString();
+                .body("stackTrace[0]", Matchers.startsWith(SimpleStaticMethods.class.getTypeName()+"."+ l_calledMethod));
 
-        System.out.println(result);
     }
 
     /**

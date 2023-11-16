@@ -57,22 +57,6 @@ public class ErrorObjectTest {
     }
 
     @Test
-    public void simpleChainedException() {
-        //Simple with Cause
-        String originalDetail = "illegal detail2";
-        IllegalArgumentException iae2 = new IllegalArgumentException(originalDetail);
-
-        String detail2 = "DEF";
-        ClassNotFoundException cnfe2 = new ClassNotFoundException(detail2, iae2);
-
-        assertThat("In a simple case where cause is null we should have null of N/A", cnfe2.getCause(),
-                Matchers.equalTo(iae2));
-        assertThat("In a simple case where cause is null we should have null of N/A",
-                ErrorObject.extractOriginalException(cnfe2),
-                Matchers.equalTo(iae2));
-    }
-
-    @Test
     public void chainedException() {
         //Simple with Cause
         String originalDetail = "exc 1";

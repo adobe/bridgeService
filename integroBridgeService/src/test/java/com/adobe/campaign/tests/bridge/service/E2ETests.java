@@ -544,8 +544,9 @@ public class E2ETests {
         l_cc.setMethodName("hello");
         jc.getCallContent().put("one", l_cc);
 
-        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(500).
-                body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME));
+        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(500)
+        .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
+                .body("detail", Matchers.startsWith("java.lang.RuntimeException: We do not have the right to execute the given class."));
     }
 
     @Test(groups = "E2E", enabled = false)

@@ -2,6 +2,7 @@
 
 ## 2.11.15 - SNAPSHOT
 * [#72 Sending root stack trace](https://github.com/adobe/bridgeService/issues/72). With issue #9 we discovered that the stack trace should be that of the original cause.
+* [#74 Trimming error messages](https://github.com/adobe/bridgeService/issues/74). We now trim the error messages. 
 
 
 ## 2.11.14

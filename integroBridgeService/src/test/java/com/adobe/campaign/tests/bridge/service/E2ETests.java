@@ -30,8 +30,8 @@ import static io.restassured.RestAssured.given;
 
 public class E2ETests {
     public static final String EndPointURL = "http://localhost:8080/";
-    private static final int port1 = 1111;
     protected static final boolean AUTOMATIC_FLAG = false;
+    private static final int port1 = 1111;
     ServerSocket serverSocket1 = null;
 
     @BeforeGroups(groups = "E2E")
@@ -132,7 +132,8 @@ public class E2ETests {
                 .body("code", Matchers.equalTo(500))
                 .body("bridgeServiceException", Matchers.equalTo(TargetJavaMethodCallException.class.getTypeName()))
                 .body("originalException", Matchers.equalTo(IllegalArgumentException.class.getTypeName()))
-                .body("stackTrace[0]", Matchers.startsWith(SimpleStaticMethods.class.getTypeName()+"."+ l_calledMethod));
+                .body("stackTrace[0]",
+                        Matchers.startsWith(SimpleStaticMethods.class.getTypeName() + "." + l_calledMethod));
 
     }
 
@@ -558,7 +559,6 @@ public class E2ETests {
 
         l_myJavaCalls.getCallContent().put("countries", l_cc);
 
-
         System.out.println(given().body(l_myJavaCalls).post(EndPointURL + "call").then().extract().asPrettyString());
 
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(500)
@@ -584,7 +584,6 @@ public class E2ETests {
                         "5"));
     }
 
-
     @Test(groups = "E2E")
     public void testInternalErrorCall() {
 
@@ -600,6 +599,27 @@ public class E2ETests {
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500).body("title",
                 Matchers.equalTo(
                         "Internal IBS error. Please file a bug report with the project and provide this JSON in the report."));
+
+    }
+
+    @Test(groups = "E2E")
+    public void testExternalErrorCall() {
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
+        myContent.setMethodName("methodCallingMethodThrowingExceptionAndPackingIt");
+        myContent.setReturnType("java.lang.String");
+        l_call.getCallContent().put("call1PL", myContent);
+
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
+                .body("title",
+                        Matchers.equalTo(
+                                "Error during call of target Java Class and Method."))
+                .body("originalException", Matchers.equalTo("java.lang.IllegalArgumentException"))
+                .body("originalMessage", Matchers.equalTo("Will always throw this"))
+                .body("stackTrace[0]", Matchers.equalTo(
+                        "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowsException(SimpleStaticMethods.java:65)"));
 
     }
 

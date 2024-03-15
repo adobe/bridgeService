@@ -11,6 +11,7 @@ package com.adobe.campaign.tests.bridge.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This class is meant to contain the error payload in care of exceptions
@@ -86,7 +87,7 @@ public class ErrorObject {
     }
 
     public void setTitle(String title) {
-        this.title = title;
+        this.title = Optional.ofNullable(title).orElse("").trim();
     }
 
     public int getCode() {
@@ -102,7 +103,7 @@ public class ErrorObject {
     }
 
     public void setDetail(String detail) {
-        this.detail = detail;
+        this.detail = Optional.ofNullable(detail).orElse("").trim();
     }
 
     public String getBridgeServiceException() {
@@ -126,7 +127,7 @@ public class ErrorObject {
     }
 
     public void setOriginalMessage(String originalMessage) {
-        this.originalMessage = originalMessage;
+        this.originalMessage = Optional.ofNullable(originalMessage).orElse("").trim();
     }
 
     public List<String> getStackTrace() {

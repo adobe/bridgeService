@@ -44,6 +44,26 @@ public class ErrorObjectTest {
     }
 
     @Test
+    public void testErrorObjectCreationTrimmed() {
+        String detail = "     ABC                             ";
+        ClassNotFoundException cnfe = new ClassNotFoundException(detail);
+        String message = "     Highlevel message                              ";
+        int errorCode = 404;
+
+        ErrorObject eo = new ErrorObject(cnfe, message, errorCode);
+        eo.setOriginalMessage("       o-except                    ");
+
+        assertThat("We should have the correct title", eo.getTitle(), Matchers.equalTo(message.trim()));
+        assertThat("We should have the correct error code", eo.getCode(), Matchers.equalTo(errorCode));
+        assertThat("We should have the correct error code", eo.getDetail(), Matchers.equalTo(detail.trim()));
+        assertThat("We should have the correct top exception", eo.getBridgeServiceException(),
+                Matchers.equalTo(ClassNotFoundException.class.getTypeName()));
+        assertThat("We should have the correct top exception", eo.getOriginalException(), Matchers.equalTo("Not Set"));
+        assertThat("We should have the correct top exception message", eo.getOriginalMessage(), Matchers.equalTo("o-except"));
+
+    }
+
+    @Test
     public void getOriginalException() {
         //case 1 simple object
         String detail = "ABC";
@@ -95,6 +115,39 @@ public class ErrorObjectTest {
 
         assertThat("We should have extracted the correct original message", l_errorObject.getOriginalMessage(),
                 Matchers.equalTo(middleException));
+        assertThat("The stack trace may not be empty", l_errorObject.getStackTrace(), Matchers.notNullValue());
+        assertThat("The stack trace needs to include the original stack trace as well",
+                l_errorObject.getStackTrace().get(0), Matchers.startsWith(
+                        "com.adobe.campaign.tests.bridge.service.ErrorObjectTest.chainedExceptionRepetition"));
+
+    }
+
+    @Test
+    public void chainedExceptionRepetitionTrimming() {
+        //Simple with Cause
+        String originalDetail = "exc 1";
+        ClassNotFoundException exc1 = new ClassNotFoundException(originalDetail);
+
+        String middleExceptionMessage = "   exc 2                      ";
+        ClassNotFoundException exc2 = new ClassNotFoundException(middleExceptionMessage, exc1);
+
+        String bottomException = "    exc 3         ";
+        RuntimeException exc3 = new RuntimeException(bottomException, exc2);
+
+        assertThat("In a simple case where cause is null we should have null of N/A",
+                ErrorObject.extractOriginalException(exc3),
+                Matchers.equalTo(exc2));
+
+        assertThat("In a simple case where cause is null we should have null of N/A",
+                ErrorObject.extractOriginalException(exc3).getMessage(),
+                Matchers.equalTo(middleExceptionMessage));
+
+        ErrorObject l_errorObject = new ErrorObject(exc3, "some title", 343);
+        assertThat("We should have extracted the correct ibs message", l_errorObject.getDetail(),
+                Matchers.equalTo("exc 3"));
+
+        assertThat("We should have extracted the correct original message", l_errorObject.getOriginalMessage(),
+                Matchers.equalTo("exc 2"));
         assertThat("The stack trace may not be empty", l_errorObject.getStackTrace(), Matchers.notNullValue());
         assertThat("The stack trace needs to include the original stack trace as well",
                 l_errorObject.getStackTrace().get(0), Matchers.startsWith(

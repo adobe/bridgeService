@@ -8,7 +8,14 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import org.testng.Assert;
+import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import spark.Spark;
+
+import java.io.IOException;
 
 public class LogManagementTest {
 
@@ -17,5 +24,12 @@ public class LogManagementTest {
         LogManagement lm = new LogManagement();
         assert LogManagement.STD_CURRENT_STEP.equals("currentStep");
     }
+
+    @BeforeMethod
+    public void cleanCache() {
+        ConfigValueHandlerIBS.resetAllValues();
+    }
+
+
 
 }

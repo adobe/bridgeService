@@ -382,6 +382,7 @@ When using the bridge service, we also include additional info:
   "bridgeServiceException": "com.adobe.campaign.tests.bridge.service.exceptions.TargetJavaMethodCallException",
   "originalException": "java.lang.IllegalArgumentException",
   "originalMessage": "We do not allow numbers that are equal.",
+  "failureAtStep": "step1",
   "stackTrace": [
                 "ClassA.methodA",
                 "ClassB.methodB"

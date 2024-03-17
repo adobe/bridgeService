@@ -23,11 +23,11 @@ public class ErrorObject {
 
     private String title;
     private int code;
+    private String failureAtStep;
     private String detail;
     private String bridgeServiceException;
     private String originalException;
     private String originalMessage;
-    private String failureAtStep;
 
     private List<String> stackTrace;
 

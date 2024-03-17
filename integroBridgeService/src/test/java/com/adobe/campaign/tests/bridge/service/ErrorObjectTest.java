@@ -11,11 +11,14 @@ package com.adobe.campaign.tests.bridge.service;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.ThreadContext;
 import org.hamcrest.Matchers;
 import org.mockito.Mockito;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -41,6 +44,27 @@ public class ErrorObjectTest {
         assertThat("We should have the correct top exception", eo.getBridgeServiceException(),
                 Matchers.equalTo(ClassNotFoundException.class.getTypeName()));
         assertThat("We should have the correct top exception", eo.getOriginalException(), Matchers.equalTo("Not Set"));
+        assertThat("We should have the correct step definition", eo.getFailureAtStep(), Matchers.equalTo("Not in a Step"));
+    }
+
+    @Test
+    public void testErrorObjectCreationWithStepInfo() {
+        String randomString = UUID.randomUUID().toString();
+        ThreadContext.put("currentStep", randomString);
+        String detail = "ABC";
+        ClassNotFoundException cnfe = new ClassNotFoundException(detail);
+        String message = "Highlevel message";
+        int errorCode = 404;
+
+        ErrorObject eo = new ErrorObject(cnfe, message, errorCode);
+
+        assertThat("We should have the correct title", eo.getTitle(), Matchers.equalTo(message));
+        assertThat("We should have the correct error code", eo.getCode(), Matchers.equalTo(errorCode));
+        assertThat("We should have the correct error code", eo.getDetail(), Matchers.equalTo(detail));
+        assertThat("We should have the correct top exception", eo.getBridgeServiceException(),
+                Matchers.equalTo(ClassNotFoundException.class.getTypeName()));
+        assertThat("We should have the correct top exception", eo.getOriginalException(), Matchers.equalTo("Not Set"));
+        assertThat("We should have the correct step definition", eo.getFailureAtStep(), Matchers.equalTo(randomString));
     }
 
     @Test

@@ -10,6 +10,9 @@ package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -18,10 +21,10 @@ import java.util.stream.Collectors;
 public class JavaCalls {
 
     private Long timeout;
-
     private Map<String, CallContent> callContent;
-
     private Properties environmentVariables;
+
+    private static final Logger log = LogManager.getLogger();
 
     @JsonIgnore
     private IntegroBridgeClassLoader localClassLoader;
@@ -88,12 +91,14 @@ public class JavaCalls {
     public JavaCallResults submitCalls() {
 
         if (!getEnvironmentVariables().isEmpty()) {
+            ThreadContext.put("git ", "environmentSetting");
             updateEnvironmentVariables();
         }
 
         JavaCallResults lr_returnObject = new JavaCallResults();
 
         for (String lt_key : this.getCallContent().keySet()) {
+            ThreadContext.put("currentStep", lt_key);
 
             long l_startOfCall = System.currentTimeMillis();
             Object callResult = this.call(lt_key);
@@ -103,6 +108,7 @@ public class JavaCalls {
             lr_returnObject.addResult(lt_key, MetaUtils.extractValuesFromObject(callResult), l_endOfCall - l_startOfCall);
         }
 
+        ThreadContext.put("currentStep", "resultReturn");
         return lr_returnObject;
     }
 

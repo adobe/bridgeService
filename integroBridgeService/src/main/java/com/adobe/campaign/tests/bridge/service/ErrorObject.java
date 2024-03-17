@@ -8,6 +8,8 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import org.apache.logging.log4j.ThreadContext;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +27,7 @@ public class ErrorObject {
     private String bridgeServiceException;
     private String originalException;
     private String originalMessage;
+    private String failureAtStep;
 
     private List<String> stackTrace;
 
@@ -34,6 +37,7 @@ public class ErrorObject {
         this.setDetail(in_exception.getMessage());
         this.setBridgeServiceException(in_exception.getClass().getTypeName());
         Throwable originalExceptionClass = extractOriginalException(in_exception);
+        this.failureAtStep = Optional.ofNullable(ThreadContext.get("currentStep")).orElse("Not in a Step");
 
         this.setStackTrace(new ArrayList<>());
 
@@ -49,6 +53,10 @@ public class ErrorObject {
             Arrays.stream(originalExceptionClass.getStackTrace()).forEach(i -> this.stackTrace.add(i.toString()));
         }
 
+    }
+
+    public ErrorObject(Exception in_exception) {
+        this(in_exception, "Not Set", -1);
     }
 
     /**
@@ -138,4 +146,11 @@ public class ErrorObject {
         this.stackTrace = stackTrace;
     }
 
+    public String getFailureAtStep() {
+        return failureAtStep;
+    }
+
+    public void setFailureAtStep(String failureAtStep) {
+        this.failureAtStep = failureAtStep;
+    }
 }

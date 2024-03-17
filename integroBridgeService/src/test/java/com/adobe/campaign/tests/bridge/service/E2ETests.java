@@ -624,6 +624,60 @@ public class E2ETests {
 
     }
 
+    //Testing Error Step detection
+    @Test(groups = "E2E")
+    public void correctlyDetectErrorSteps() {
+        //Method 1   throws exception
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ClassWithNoModifiers");
+        l_cc1.setMethodName("hello");
+
+        //Method 2
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc2.setMethodName("methodAcceptingStringArgument");
+        l_cc2.setArgs(new Object[] { "A" });
+
+        JavaCalls l_call1 = new JavaCalls();
+        l_call1.getCallContent().put("step1", l_cc1);
+        l_call1.getCallContent().put("step2", l_cc2);
+
+        JavaCalls l_call2 = new JavaCalls();
+        l_call2.getCallContent().put("step1", l_cc2);
+        l_call2.getCallContent().put("step2", l_cc1);
+
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                given().body(l_call1).post(EndPointURL + "call").then().assertThat().statusCode(500)
+                        .body("title",
+                                Matchers.equalTo(
+                                        "Problems with payload."))
+                        .statusCode(500)
+                        .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
+                        .body("failureAtStep", Matchers.equalTo("step1"));
+            }
+        });
+
+        Thread t2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                given().body(l_call2).post(EndPointURL + "call").then().assertThat().statusCode(500)
+                        .body("title",
+                                Matchers.equalTo(
+                                        "Problems with payload."))
+                        .statusCode(500)
+                        .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
+                        .body("failureAtStep", Matchers.equalTo("step2"));
+            }
+        });
+
+        t1.start();
+        t2.start();
+    }
+
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {
         ConfigValueHandlerIBS.resetAllValues();

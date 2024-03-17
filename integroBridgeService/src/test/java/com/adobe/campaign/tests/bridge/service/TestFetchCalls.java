@@ -10,7 +10,10 @@ package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.data.MyPropertiesHandler;
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
-import com.adobe.campaign.tests.bridge.testdata.one.*;
+import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
+import com.adobe.campaign.tests.bridge.testdata.one.Instantiable;
+import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
+import com.adobe.campaign.tests.bridge.testdata.one.StaticType;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,7 +68,8 @@ public class TestFetchCalls {
                 Matchers.equalTo("methodReturningString"));
         assertThat("We should access our calls correctly", l_myJavaCalls.getCallContent().get("fetchString").getArgs(),
                 Matchers.arrayContainingInAnyOrder("A"));
-        assertThat("We should now have a timeout", l_myJavaCalls.getTimeout(), Matchers.equalTo(Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue())));
+        assertThat("We should now have a timeout", l_myJavaCalls.getTimeout(),
+                Matchers.equalTo(Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue())));
 
         l_myJavaCalls.getCallContent().get("fetchString").setArgs(new Object[] {});
 
@@ -243,7 +247,7 @@ public class TestFetchCalls {
         CallContent l_cc = new CallContent();
         l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
         l_cc.setMethodName("complexMethodAcceptor");
-        l_cc.setArgs(new Object[] {"HI"});
+        l_cc.setArgs(new Object[] { "HI" });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
         Assert.assertThrows(NonExistentJavaObjectException.class, () -> l_cc.call(iClassLoader));
@@ -369,10 +373,13 @@ public class TestFetchCalls {
 
         JavaCallResults l_returnValue = fetchedFromJSON.submitCalls();
 
-        assertThat("The retun value should be of a correct format", l_returnValue.getReturnValues().containsKey("call1"));
-        assertThat("The retun value should be of a correct format", l_returnValue.getReturnValues().get("call1").toString(),
+        assertThat("The retun value should be of a correct format",
+                l_returnValue.getReturnValues().containsKey("call1"));
+        assertThat("The retun value should be of a correct format",
+                l_returnValue.getReturnValues().get("call1").toString(),
                 Matchers.startsWith("A"));
-        assertThat("The retun value should be of a correct format", l_returnValue.getReturnValues().get("call1").toString(),
+        assertThat("The retun value should be of a correct format",
+                l_returnValue.getReturnValues().get("call1").toString(),
                 Matchers.endsWith(SimpleStaticMethods.SUCCESS_VAL));
 
     }
@@ -564,9 +571,9 @@ public class TestFetchCalls {
     }
 
     /**
-     * Integrity Tests - Here all calls and env vars are in the package path. In this case each call has its own env vars
-     * In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 1 The envvars
-     * of calls do not interfere with the others
+     * Integrity Tests - Here all calls and env vars are in the package path. In this case each call has its own env
+     * vars In issue https://git.corp.adobe.com/AdobeCampaignQE/integroBridgeService/issues/48 this is : Case 1 The
+     * envvars of calls do not interfere with the others
      */
     @Test
     public void testIntegrityEnvVars_case1_allPathsSet_manualMode() {
@@ -970,7 +977,8 @@ public class TestFetchCalls {
 
         assertThat("We should not have the envvars integrity path set",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
-                        .noneMatch(x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+                        .noneMatch(
+                                x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
 
         assertThat("We should get a good answer back from the call",
                 returnedValueA.getReturnValues().get("call1PL").toString(),
@@ -980,7 +988,6 @@ public class TestFetchCalls {
                 Matchers.endsWith("@boom.com"));
 
     }
-
 
     /**
      * In this case the packages of the SystemValueHandler are added at the constructor time of Java calls. However, we
@@ -1125,7 +1132,8 @@ public class TestFetchCalls {
 
         assertThat("We should not have the envvars integrity path set",
                 l_myJavaCalls.getLocalClassLoader().getPackagePaths().stream()
-                        .noneMatch(x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
+                        .noneMatch(
+                                x -> ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.fetchValue().startsWith(x)));
 
         assertThat("We should get a good answer back from the call",
                 returnedValueA.getReturnValues().get("call1PL").toString(),
@@ -1263,14 +1271,13 @@ public class TestFetchCalls {
         assertThat("We should only find one method", l_methods.size(), Matchers.equalTo(1));
     }
 
-
     @Test
     public void testIssue34LinkageError() throws ClassNotFoundException {
         JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
         l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
         l_cc.setMethodName("methodThrowingLinkageError");
-        jc.getCallContent().put("firstCall",l_cc);
+        jc.getCallContent().put("firstCall", l_cc);
         Assert.assertThrows(ClassLoaderConflictException.class, () -> l_cc.call(jc.getLocalClassLoader()));
 
         Assert.assertThrows(IBSConfigurationException.class, () -> jc.submitCalls());
@@ -1773,14 +1780,12 @@ public class TestFetchCalls {
         l_cc.setClassName(Instantiable.class.getTypeName());
         l_cc.setArgs(new Object[] { "3" });
 
-
         CallContent l_cc2 = new CallContent();
         l_cc2.setClassName(Instantiable.class.getTypeName());
         l_cc2.setArgs(new Object[] { "5" });
 
         assertThat("Hashes are different", l_cc.hashCode(), Matchers.not(Matchers.equalTo(l_cc2.hashCode())));
     }
-
 
     @Test
     public void test_issue35_callToClassWithNoModifiers() {
@@ -1817,20 +1822,20 @@ public class TestFetchCalls {
         Object oneResultRaw = result.getReturnValues().get("one");
         assertThat("We should be able to access the data of the map", oneResultRaw, Matchers.instanceOf(Map.class));
 
-        Map<String, Object>  oneResultMap = (Map<String, Object>) oneResultRaw;
+        Map<String, Object> oneResultMap = (Map<String, Object>) oneResultRaw;
 
-        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3"));
+        assertThat("We should have the map keys", oneResultMap.keySet(),
+                Matchers.containsInAnyOrder("object1", "object3"));
     }
 
     @Test
     public void testExtractingMapLvl_1() {
         Map mapOfString = SimpleStaticMethods.methodReturningMap();
 
-
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromObject(mapOfString);
 
-
-        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3"));
+        assertThat("We should have the map keys", oneResultMap.keySet(),
+                Matchers.containsInAnyOrder("object1", "object3"));
     }
 
     @Test
@@ -1839,7 +1844,8 @@ public class TestFetchCalls {
 
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
 
-        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3"));
+        assertThat("We should have the map keys", oneResultMap.keySet(),
+                Matchers.containsInAnyOrder("object1", "object3"));
         assertThat("We should have the correct values", oneResultMap.get("object1"), Matchers.equalTo("value1"));
         assertThat("We should have the correct values", oneResultMap.get("object3"), Matchers.equalTo("value3"));
     }
@@ -1847,36 +1853,41 @@ public class TestFetchCalls {
     @Test
     public void testExtractingMapLvl_2_mapOfList() {
         Map mapOfString = SimpleStaticMethods.methodReturningMap();
-        List<String> l_listValues = Arrays.asList("a","b","c");
+        List<String> l_listValues = Arrays.asList("a", "b", "c");
         mapOfString.put("object2", l_listValues);
 
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
 
-        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3", "object2"));
+        assertThat("We should have the map keys", oneResultMap.keySet(),
+                Matchers.containsInAnyOrder("object1", "object3", "object2"));
         assertThat("We should have the correct values", oneResultMap.get("object1"), Matchers.equalTo("value1"));
         assertThat("We should have the correct values", oneResultMap.get("object3"), Matchers.equalTo("value3"));
-        assertThat("We should be able to access the data of the map", oneResultMap.get("object2"), Matchers.instanceOf(List.class));
+        assertThat("We should be able to access the data of the map", oneResultMap.get("object2"),
+                Matchers.instanceOf(List.class));
         List<String> l_nestedList = (List<String>) oneResultMap.get("object2");
-        assertThat("We should have the correct values", l_nestedList, Matchers.containsInAnyOrder("a","b","c"));
+        assertThat("We should have the correct values", l_nestedList, Matchers.containsInAnyOrder("a", "b", "c"));
 
     }
 
     @Test
     public void testExtractingMapLvl_2_mapOfMap() {
         Map mapOfString = SimpleStaticMethods.methodReturningMap();
-        Map<String,String> l_mapValues = new HashMap<>();
-        l_mapValues.put("object5","value5");
-        l_mapValues.put("object6","value6");
+        Map<String, String> l_mapValues = new HashMap<>();
+        l_mapValues.put("object5", "value5");
+        l_mapValues.put("object6", "value6");
         mapOfString.put("object2", l_mapValues);
 
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
 
-        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3", "object2"));
+        assertThat("We should have the map keys", oneResultMap.keySet(),
+                Matchers.containsInAnyOrder("object1", "object3", "object2"));
         assertThat("We should have the correct values", oneResultMap.get("object1"), Matchers.equalTo("value1"));
         assertThat("We should have the correct values", oneResultMap.get("object3"), Matchers.equalTo("value3"));
-        assertThat("We should be able to access the data of the map", oneResultMap.get("object2"), Matchers.instanceOf(Map.class));
-        Map<String,String> l_nestedMap = (Map<String, String>) oneResultMap.get("object2");
-        assertThat("We should have the correct values", l_nestedMap.keySet(), Matchers.containsInAnyOrder("object5","object6"));
+        assertThat("We should be able to access the data of the map", oneResultMap.get("object2"),
+                Matchers.instanceOf(Map.class));
+        Map<String, String> l_nestedMap = (Map<String, String>) oneResultMap.get("object2");
+        assertThat("We should have the correct values", l_nestedMap.keySet(),
+                Matchers.containsInAnyOrder("object5", "object6"));
         assertThat("We should have the correct values", l_nestedMap.get("object6"), Matchers.equalTo("value6"));
 
     }
@@ -1889,11 +1900,13 @@ public class TestFetchCalls {
 
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
 
-        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3", "object2"));
+        assertThat("We should have the map keys", oneResultMap.keySet(),
+                Matchers.containsInAnyOrder("object1", "object3", "object2"));
         assertThat("We should have the correct values", oneResultMap.get("object1"), Matchers.equalTo("value1"));
         assertThat("We should have the correct values", oneResultMap.get("object3"), Matchers.equalTo("value3"));
-        assertThat("We should be able to access the data of the map", oneResultMap.get("object2"), Matchers.instanceOf(Map.class));
-        Map<String,String> l_nestedMap = (Map<String, String>) oneResultMap.get("object2");
+        assertThat("We should be able to access the data of the map", oneResultMap.get("object2"),
+                Matchers.instanceOf(Map.class));
+        Map<String, String> l_nestedMap = (Map<String, String>) oneResultMap.get("object2");
         assertThat("We should have an empty set of values", l_nestedMap.isEmpty());
 
     }
@@ -1924,16 +1937,96 @@ public class TestFetchCalls {
         assertThat("We should have the correct values", oneResultMap.get(2), Matchers.equalTo(17));
     }
 
-
     @Test
     public void testExtractingJSONLvl_2() {
         Map mapOfString = SimpleStaticMethods.returnJSONSimple();
 
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
 
-        assertThat("We should have the map keys", oneResultMap.keySet(), Matchers.containsInAnyOrder("object1", "object3"));
+        assertThat("We should have the map keys", oneResultMap.keySet(),
+                Matchers.containsInAnyOrder("object1", "object3"));
         assertThat("We should have the correct values", oneResultMap.get("object1"), Matchers.equalTo("value1"));
         assertThat("We should have the correct values", oneResultMap.get("object3"), Matchers.equalTo("value3"));
+    }
+
+    //////////////////// Step Name in error
+    @Test
+    public void testErrorStepDetection() {
+        //Method 1   throws exception
+        JavaCalls l_myJavaCalls1 = new JavaCalls();
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ClassWithNoModifiers");
+        l_cc1.setMethodName("hello");
+        l_myJavaCalls1.getCallContent().put("call1", l_cc1);
+
+        //Method 2
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc2.setMethodName("methodAcceptingStringArgument");
+        l_cc2.setArgs(new Object[] { "A" });
+        l_myJavaCalls1.getCallContent().put("call2", l_cc2);
+
+        //Error at step1
+        try {
+            l_myJavaCalls1.submitCalls();
+            Assert.assertTrue(false, "We should not reach here");
+        } catch (Exception e) {
+            ErrorObject eo = new ErrorObject(e);
+            assertThat("We should detect that the error is at the first call", eo.getFailureAtStep(),
+                    Matchers.equalTo("call1"));
+
+        }
+
+        l_myJavaCalls1.getCallContent().put("call1", l_cc2);
+        l_myJavaCalls1.getCallContent().put("call2", l_cc1);
+
+        //Error at step2
+        try {
+            l_myJavaCalls1.submitCalls();
+            Assert.assertTrue(false, "We should not reach here");
+        } catch (Exception e) {
+            ErrorObject eo = new ErrorObject(e);
+            assertThat("We should detect that the error is at the second call", eo.getFailureAtStep(),
+                    Matchers.equalTo("call2"));
+
+        }
+    }
+
+    @Test
+    public void testWithErrorAtEnvironmentValue() {
+        //Method 1   throws exception
+        JavaCalls l_myJavaCalls1 = new JavaCalls();
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ClassWithNoModifiers");
+        l_cc1.setMethodName("hello");
+        l_myJavaCalls1.getCallContent().put("call1", l_cc1);
+
+        //Method 2
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc2.setMethodName("methodAcceptingStringArgument");
+        l_cc2.setArgs(new Object[] { "A" });
+        l_myJavaCalls1.getCallContent().put("call2", l_cc2);
+
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(MyPropertiesHandler.class.getTypeName());
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.activate("fillMeUpNonExisting");
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("AC.UITEST.SMS.PORT", "234");
+
+        l_myJavaCalls1.setEnvironmentVariables(l_envVars);
+
+        //Error at step2
+        try {
+            l_myJavaCalls1.submitCalls();
+            Assert.assertTrue(false, "We should not reach here");
+        } catch (Exception e) {
+            ErrorObject eo = new ErrorObject(e);
+            assertThat("We should detect that the error is at the calling of the environment variables",
+                    eo.getFailureAtStep(),
+                    Matchers.equalTo("environmentSetting"));
+
+        }
     }
 
 }

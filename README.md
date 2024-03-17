@@ -418,8 +418,8 @@ Today, in order to simply the call model, we have chosen not to specify the argu
 ### Only simple arguments
 Since this is a REST call we can only correctly manage simple arguments in the payload. One workaround is to use Call Dependencies in Call Chaining (see above). I.e. you can pass simple arguments to one method, and use the complex results of that method as an argument for the following java call.  
 
-### Complex Non-Serialisable Return Objects
-In many cases the object a method returns is not rerializable. If that is the case we mine the object, and extract all simple values from the object.
+### Complex Non-Serializable Return Objects
+In many cases the object a method returns is not serializable. If that is the case we mine the object, and extract all simple values from the object.
 
 ### Calling Enum Methods
 We are currently unable to call enums with the Bridge Service.

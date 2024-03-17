@@ -2024,7 +2024,7 @@ public class TestFetchCalls {
             ErrorObject eo = new ErrorObject(e);
             assertThat("We should detect that the error is at the calling of the environment variables",
                     eo.getFailureAtStep(),
-                    Matchers.equalTo("environmentSetting"));
+                    Matchers.equalTo(LogManagement.STD_STEPS.ENVVARS.value));
 
         }
     }

@@ -12,7 +12,6 @@ import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.ThreadContext;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -86,19 +85,19 @@ public class JavaCalls {
     /**
      * Calls all the call definitions in this class
      *
-     * @return a map with the key whoch is the same as the call keys
+     * @return a map with the key which is the same as the call keys
      */
     public JavaCallResults submitCalls() {
 
         if (!getEnvironmentVariables().isEmpty()) {
-            ThreadContext.put("currentStep", "environmentSetting");
+            LogManagement.logStep(LogManagement.STD_STEPS.ENVVARS);
             updateEnvironmentVariables();
         }
 
         JavaCallResults lr_returnObject = new JavaCallResults();
 
         for (String lt_key : this.getCallContent().keySet()) {
-            ThreadContext.put("currentStep", lt_key);
+            LogManagement.logStep(lt_key);
 
             long l_startOfCall = System.currentTimeMillis();
             Object callResult = this.call(lt_key);
@@ -108,7 +107,7 @@ public class JavaCalls {
             lr_returnObject.addResult(lt_key, MetaUtils.extractValuesFromObject(callResult), l_endOfCall - l_startOfCall);
         }
 
-        ThreadContext.put("currentStep", "resultReturn");
+        LogManagement.logStep(LogManagement.STD_STEPS.SEND_RESULT);
         return lr_returnObject;
     }
 

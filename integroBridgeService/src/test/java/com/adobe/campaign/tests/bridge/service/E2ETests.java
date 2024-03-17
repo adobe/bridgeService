@@ -545,8 +545,9 @@ public class E2ETests {
         jc.getCallContent().put("one", l_cc);
 
         given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(500)
-        .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
-                .body("detail", Matchers.startsWith("java.lang.RuntimeException: We do not have the right to execute the given class."));
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
+                .body("detail", Matchers.startsWith(
+                        "java.lang.RuntimeException: We do not have the right to execute the given class."));
     }
 
     @Test(groups = "E2E", enabled = false)
@@ -646,36 +647,22 @@ public class E2ETests {
         l_call2.getCallContent().put("step1", l_cc2);
         l_call2.getCallContent().put("step2", l_cc1);
 
-        Thread t1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
+        given().body(l_call1).post(EndPointURL + "call").then().assertThat().statusCode(500)
+                .body("title",
+                        Matchers.equalTo(
+                                "Problems with payload."))
+                .statusCode(500)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
+                .body("failureAtStep", Matchers.equalTo("step1"));
 
-                given().body(l_call1).post(EndPointURL + "call").then().assertThat().statusCode(500)
-                        .body("title",
-                                Matchers.equalTo(
-                                        "Problems with payload."))
-                        .statusCode(500)
-                        .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
-                        .body("failureAtStep", Matchers.equalTo("step1"));
-            }
-        });
+        given().body(l_call2).post(EndPointURL + "call").then().assertThat().statusCode(500)
+                .body("title",
+                        Matchers.equalTo(
+                                "Problems with payload."))
+                .statusCode(500)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
+                .body("failureAtStep", Matchers.equalTo("step2"));
 
-        Thread t2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                given().body(l_call2).post(EndPointURL + "call").then().assertThat().statusCode(500)
-                        .body("title",
-                                Matchers.equalTo(
-                                        "Problems with payload."))
-                        .statusCode(500)
-                        .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
-                        .body("failureAtStep", Matchers.equalTo("step2"));
-            }
-        });
-
-        t1.start();
-        t2.start();
     }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)

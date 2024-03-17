@@ -2,7 +2,7 @@
 
 ## 2.11.15 - SNAPSHOT
 * [#71 Adding step name when throwing exceptions](https://github.com/adobe/bridgeService/issues/71). When an exception happens, include the step in which it occurred.
-* [#72 Sending root stack trace](https://github.com/adobe/bridgeService/issues/72). With issue #9 we discovered that the stack trace should be that of the original cause.
+* [#72 Provide the stack trace of the root cause of the errors](https://github.com/adobe/bridgeService/issues/72). With issue #9 we discovered that the stack trace should be that of the original cause.
 * [#78 Trimming error messages](https://github.com/adobe/bridgeService/issues/78). We now trim the error messages.
 * [#80 Removing stack trace for certain errors](https://github.com/adobe/bridgeService/issues/80). We removed the stack trace for errors, where the method or class cannot be found or accessed.
 

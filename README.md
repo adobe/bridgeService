@@ -376,13 +376,13 @@ When using the bridge service, we also include additional info:
 
 ```JSON
 {
-  "title": "Error during call of target Java Class and Method.",
+  "title": "A title describing the exception",
   "code": 500,
-  "detail": "We experienced an exception when calling the provided method com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowingException.\nProvided error message : java.lang.IllegalArgumentException: We do not allow numbers that are equal.",
+  "detail": "A detailed description of the problem",
   "bridgeServiceException": "com.adobe.campaign.tests.bridge.service.exceptions.TargetJavaMethodCallException",
   "originalException": "java.lang.IllegalArgumentException",
-  "originalMessage": "We do not allow numbers that are equal.",
-  "failureAtStep": "step1",
+  "originalMessage": "The message of the originating exception",
+  "failureAtStep": "Step name",
   "stackTrace": [
                 "ClassA.methodA",
                 "ClassB.methodB"
@@ -390,7 +390,14 @@ When using the bridge service, we also include additional info:
 }
 ```
 
-The BridgeService exception is how the bridgeService manages underlying errors. However we also share the background, originating exception and message in order to help.
+The BridgeService exception is how the bridgeService manages underlying errors. However, we also share the:
+* The title of the failure
+* The error code
+* The bridgeService error category
+* The Originating exception
+* The Originating exception message
+* The step at which the error occured
+* The stack trace of the originating exception
 
 ## Contribution
 There are two main docs for contributing:

@@ -23,14 +23,21 @@ public class ErrorObject {
 
     private String title;
     private int code;
-    private String failureAtStep;
     private String detail;
     private String bridgeServiceException;
     private String originalException;
     private String originalMessage;
-
+    private String failureAtStep;
     private List<String> stackTrace;
 
+    /**
+     * The main constructor for ErrorObject
+     *
+     * @param in_exception The exception we throw
+     * @param in_title The title of the error
+     * @param in_errorCode The error code we return
+     * @param in_includeStackTrace A flag to tell us if we should include the stack trace.
+     */
     public ErrorObject(Exception in_exception, String in_title, int in_errorCode, boolean in_includeStackTrace) {
         this.setTitle(in_title);
         this.setCode(in_errorCode);
@@ -59,6 +66,13 @@ public class ErrorObject {
         this(in_exception, "Not Set", -1);
     }
 
+    /**
+     * The constructor for ErrorObject
+     *
+     * @param in_exception The exception we throw
+     * @param in_title The title of the error
+     * @param in_errorCode The error code we return
+     */
     public ErrorObject(Exception in_exception, String in_title, int in_errorCode) {
         this(in_exception, in_title, in_errorCode, true);
     }

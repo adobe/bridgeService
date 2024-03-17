@@ -37,7 +37,7 @@ public class ErrorObject {
         this.setDetail(in_exception.getMessage());
         this.setBridgeServiceException(in_exception.getClass().getTypeName());
         Throwable originalExceptionClass = extractOriginalException(in_exception);
-        this.failureAtStep = LogManagement.fetchCurrentStep();
+        this.setFailureAtStep(LogManagement.fetchCurrentStep());
 
         this.setStackTrace(new ArrayList<>());
 

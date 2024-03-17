@@ -12,4 +12,9 @@ import org.testng.annotations.Test;
 
 public class LogManagementTest {
 
+    @Test
+    public void testLogManagement() {
+        assert LogManagement.STD_CURRENT_STEP.equals("currentStep");
+    }
+
 }

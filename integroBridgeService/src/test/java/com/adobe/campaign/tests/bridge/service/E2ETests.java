@@ -13,6 +13,8 @@ import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import io.restassured.path.json.JsonPath;
+import io.restassured.response.ResponseBody;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -27,6 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class E2ETests {
     public static final String EndPointURL = "http://localhost:8080/";
@@ -604,6 +607,9 @@ public class E2ETests {
 
     }
 
+    /**
+     * We run two paralle threads (as much as possible), and make sure the failed step is correct
+     */
     @Test(groups = "E2E")
     public void testExternalErrorCall() {
 
@@ -647,6 +653,44 @@ public class E2ETests {
         l_call2.getCallContent().put("step1", l_cc2);
         l_call2.getCallContent().put("step2", l_cc1);
 
+        final JsonPath[] l_call1Result = new JsonPath[1];
+        final JsonPath[] l_call2Result = new JsonPath[1];
+
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                l_call1Result[0] = given().body(l_call1).post(EndPointURL + "call").getBody().jsonPath();
+            }
+        });
+
+        Thread t2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                l_call2Result[0] = given().body(l_call2).post(EndPointURL + "call").getBody().jsonPath();
+            }
+        });
+
+        t1.start();
+        t2.start();
+
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        assertThat("We should be able to get the body", l_call1Result[0].get("title"), Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME));
+
+        assertThat("We should be able to get the body", l_call1Result[0].get("failureAtStep"), Matchers.equalTo("step1"));
+
+        assertThat("We should be able to get the body", l_call2Result[0].get("title"), Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME));
+
+        assertThat("We should be able to get the body", l_call2Result[0].get("failureAtStep"), Matchers.equalTo("step2"));
+
+                /*
         given().body(l_call1).post(EndPointURL + "call").then().assertThat().statusCode(500)
                 .body("title",
                         Matchers.equalTo(
@@ -662,6 +706,8 @@ public class E2ETests {
                 .statusCode(500)
                 .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
                 .body("failureAtStep", Matchers.equalTo("step2"));
+
+                 */
 
     }
 

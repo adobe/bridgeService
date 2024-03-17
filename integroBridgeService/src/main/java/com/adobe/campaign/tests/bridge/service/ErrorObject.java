@@ -61,7 +61,7 @@ public class ErrorObject {
     }
 
     public ErrorObject(Exception in_exception) {
-        this(in_exception, "Not Set", -1);
+        this(in_exception, STD_NOT_APPLICABLE, -1);
     }
 
     /**

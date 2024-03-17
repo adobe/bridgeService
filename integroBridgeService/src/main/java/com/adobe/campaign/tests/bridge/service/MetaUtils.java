@@ -36,11 +36,7 @@ public class MetaUtils {
         }
 
         //Transform first character to lower
-        StringBuilder sb = new StringBuilder();
-        sb.append(Character.toLowerCase(l_step1Transformation.charAt(0)));
-        sb.append(l_step1Transformation.substring(1));
-
-        return sb.toString();
+        return Character.toLowerCase(l_step1Transformation.charAt(0)) + l_step1Transformation.substring(1);
     }
 
     /**

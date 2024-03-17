@@ -8,14 +8,13 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-
-import com.adobe.campaign.tests.bridge.service.exceptions.NonExistentJavaObjectException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class IntegroBridgeClassLoader extends ClassLoader {
     private static final Logger log = LogManager.getLogger();

@@ -52,7 +52,7 @@ public class LogManagement {
         ANALYZING_PAYLOAD("Analyzing Payload"),
         GENERATING_RESPONSE("Generating Response");
 
-        protected String value;
+        final String value;
 
         STD_STEPS(String in_value) {
             this.value = in_value;

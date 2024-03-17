@@ -129,6 +129,6 @@ public enum ConfigValueHandlerIBS {
      */
     public boolean is(String... in_values) {
 
-        return Arrays.stream(in_values).anyMatch(item -> this.is(item));
+        return Arrays.stream(in_values).anyMatch(this::is);
     }
 }

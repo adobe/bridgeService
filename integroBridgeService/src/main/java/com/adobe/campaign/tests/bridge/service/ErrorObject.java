@@ -8,8 +8,6 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
-import org.apache.logging.log4j.ThreadContext;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

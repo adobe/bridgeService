@@ -10,6 +10,8 @@ package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -18,10 +20,10 @@ import java.util.stream.Collectors;
 public class JavaCalls {
 
     private Long timeout;
-
     private Map<String, CallContent> callContent;
-
     private Properties environmentVariables;
+
+    private static final Logger log = LogManager.getLogger();
 
     @JsonIgnore
     private IntegroBridgeClassLoader localClassLoader;
@@ -70,6 +72,9 @@ public class JavaCalls {
                 throw new TargetJavaMethodCallException(e.getCause().getMessage(), e.getCause().getCause());
             } else if (e.getCause() instanceof ClassLoaderConflictException) {
                 throw new IBSConfigurationException(e.getCause().getMessage(), e.getCause());
+            } else if (e.getCause() instanceof JavaObjectInaccessibleException) {
+                throw new JavaObjectInaccessibleException(e.getCause().getMessage(), e.getCause().getCause());
+
             } else {
                 throw new IBSRunTimeException(e.getMessage());
             }
@@ -83,17 +88,19 @@ public class JavaCalls {
     /**
      * Calls all the call definitions in this class
      *
-     * @return a map with the key whoch is the same as the call keys
+     * @return a map with the key which is the same as the call keys
      */
     public JavaCallResults submitCalls() {
 
         if (!getEnvironmentVariables().isEmpty()) {
+            LogManagement.logStep(LogManagement.STD_STEPS.ENVVARS);
             updateEnvironmentVariables();
         }
 
         JavaCallResults lr_returnObject = new JavaCallResults();
 
         for (String lt_key : this.getCallContent().keySet()) {
+            LogManagement.logStep(lt_key);
 
             long l_startOfCall = System.currentTimeMillis();
             Object callResult = this.call(lt_key);
@@ -103,6 +110,7 @@ public class JavaCalls {
             lr_returnObject.addResult(lt_key, MetaUtils.extractValuesFromObject(callResult), l_endOfCall - l_startOfCall);
         }
 
+        LogManagement.logStep(LogManagement.STD_STEPS.SEND_RESULT);
         return lr_returnObject;
     }
 

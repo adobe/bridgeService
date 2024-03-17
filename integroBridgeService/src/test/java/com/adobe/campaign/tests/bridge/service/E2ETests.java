@@ -13,6 +13,7 @@ import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import io.restassured.path.json.JsonPath;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class E2ETests {
     public static final String EndPointURL = "http://localhost:8080/";
@@ -61,6 +63,19 @@ public class E2ETests {
                 .body("bridgeServiceVersion", Matchers.equalTo(
                         bridgeServiceVersion))
                 .body("hostVersion", Matchers.equalTo(l_hostVersion));
+
+    }
+
+    @Test(groups = "E2E")
+    public void testWorkingWithNoProductVersion() {
+        String bridgeServiceVersion = "101";
+        ConfigValueHandlerIBS.PRODUCT_VERSION.activate(bridgeServiceVersion);
+
+        given().when().get(EndPointURL + "test").then().assertThat()
+                .body("overALLSystemState", Matchers.equalTo(IntegroAPI.SYSTEM_UP_MESSAGE))
+                .body("deploymentMode", Matchers.equalTo(IntegroAPI.DeploymentMode.TEST.toString()))
+                .body("bridgeServiceVersion", Matchers.equalTo(
+                        bridgeServiceVersion));
 
     }
 
@@ -158,7 +173,8 @@ public class E2ETests {
                         "We could not find a unique method for"))
                 .body("code", Matchers.equalTo(404))
                 .body("bridgeServiceException", Matchers.equalTo(AmbiguousMethodException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE))
+                .body("stackTrace", Matchers.empty());
     }
 
     /**
@@ -213,7 +229,8 @@ public class E2ETests {
                         "The given class com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExisting could not be found."))
                 .body("code", Matchers.equalTo(404))
                 .body("bridgeServiceException", Matchers.equalTo(NonExistentJavaObjectException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE))
+                .body("stackTrace", Matchers.empty());
 
     }
 
@@ -258,7 +275,8 @@ public class E2ETests {
                         + "}";
 
         given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(404)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JSON_TRANSFORMATION));
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JSON_TRANSFORMATION))
+                .body("failureAtStep", Matchers.equalTo(LogManagement.STD_STEPS.ANALYZING_PAYLOAD.value));
 
     }
 
@@ -544,8 +562,13 @@ public class E2ETests {
         l_cc.setMethodName("hello");
         jc.getCallContent().put("one", l_cc);
 
-        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(500).
-                body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME));
+        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(404)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE))
+                .body("bridgeServiceException", Matchers.equalTo(JavaObjectInaccessibleException.class.getTypeName()))
+                .body("detail", Matchers.startsWith(
+                        "We do not have the right to execute the given class."))
+                .body("originalMessage", Matchers.startsWith(
+                        "class com.adobe.campaign.tests.bridge.service.CallContent cannot access a member of class"));
     }
 
     @Test(groups = "E2E", enabled = false)
@@ -603,6 +626,23 @@ public class E2ETests {
     }
 
     @Test(groups = "E2E")
+    public void testIBSInternalErrorCall() {
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
+        myContent.setMethodName("hkjdhghj");
+        myContent.setReturnType("java.lang.String");
+        l_call.getCallContent().put("call1PL", myContent);
+
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body("title",
+                        Matchers.equalTo(
+                                "Could not find the given class or method."))
+                .body("stackTrace", Matchers.empty());
+
+    }
+
+    @Test(groups = "E2E")
     public void testExternalErrorCall() {
 
         JavaCalls l_call = new JavaCalls();
@@ -621,6 +661,73 @@ public class E2ETests {
                 .body("stackTrace[0]", Matchers.equalTo(
                         "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowsException(SimpleStaticMethods.java:65)"));
 
+    }
+
+    //Testing Error Step detection
+
+    /**
+     * We run two parallel threads (as much as possible), and make sure the failed step is correct
+     */
+    @Test(groups = "E2E")
+    public void correctlyDetectErrorSteps() {
+        //Method 1   throws exception
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.one.ClassWithNoModifiers");
+        l_cc1.setMethodName("hello");
+
+        //Method 2
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc2.setMethodName("methodAcceptingStringArgument");
+        l_cc2.setArgs(new Object[] { "A" });
+
+        JavaCalls l_call1 = new JavaCalls();
+        l_call1.getCallContent().put("step1", l_cc1);
+        l_call1.getCallContent().put("step2", l_cc2);
+
+        JavaCalls l_call2 = new JavaCalls();
+        l_call2.getCallContent().put("step1", l_cc2);
+        l_call2.getCallContent().put("step2", l_cc1);
+
+        final JsonPath[] l_call1Result = new JsonPath[1];
+        final JsonPath[] l_call2Result = new JsonPath[1];
+
+        //Define two threads to execute in parallel
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                l_call1Result[0] = given().body(l_call1).post(EndPointURL + "call").getBody().jsonPath();
+            }
+        });
+
+        Thread t2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                l_call2Result[0] = given().body(l_call2).post(EndPointURL + "call").getBody().jsonPath();
+            }
+        });
+
+        //Start threads and wait till they finish
+        t1.start();
+        t2.start();
+
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        assertThat("We should be able to get the body", l_call1Result[0].get("title"),
+                Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE));
+        assertThat("We should be able to get the body", l_call1Result[0].get("failureAtStep"),
+                Matchers.equalTo("step1"));
+        assertThat("We should be able to get the body", l_call2Result[0].get("title"),
+                Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE));
+        assertThat("We should be able to get the body", l_call2Result[0].get("failureAtStep"),
+                Matchers.equalTo("step2"));
     }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)

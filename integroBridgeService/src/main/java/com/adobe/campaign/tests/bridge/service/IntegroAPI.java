@@ -21,45 +21,45 @@ import java.util.Map;
 import static spark.Spark.*;
 
 public class IntegroAPI {
-    private static final Logger log = LogManager.getLogger();
-
+    public static final String ERROR_CALL_TIMEOUT = "The call you made exceeds the set timeout limit.";
+    public static final String ERROR_CONTENT_TYPE = "application/problem+json";
+    public static final String SYSTEM_UP_MESSAGE = "All systems up";
+    public static final String ERROR_IBS_INTERNAL = "Internal IBS error. Please file a bug report with the project and provide this JSON in the report.";
     protected static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
     protected static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
     protected static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
     protected static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
     protected static final String ERROR_IBS_RUNTIME = "Problems with payload.";
-    public static final String ERROR_CALL_TIMEOUT = "The call you made exceeds the set timeout limit.";
-    public static final String ERROR_CONTENT_TYPE = "application/problem+json";
     protected static final String ERROR_AMBIGUOUS_METHOD = "No unique method could be identified that matches your request.";
-    public static final String SYSTEM_UP_MESSAGE = "All systems up";
-    public static final String ERROR_IBS_INTERNAL = "Internal IBS error. Please file a bug report with the project and provide this JSON in the report.";
-    protected enum DeploymentMode {
-            TEST, PRODUCTION
-    }
+    private static final Logger log = LogManager.getLogger();
+    protected static final String ERROR_JAVA_OBJECT_NOT_ACCESSIBLE = "The java object you want to call is inaccessible. This is very possibly a scope problem.";
 
     public static void startServices(int port) {
 
         if (!ServiceTools.isPortFree(port)) {
-            throw new IBSConfigurationException("The port "+port+" is not currently free.");
+            throw new IBSConfigurationException("The port " + port + " is not currently free.");
         }
 
         if (Boolean.parseBoolean(ConfigValueHandlerIBS.SSL_ACTIVE.fetchValue())) {
             File l_file = new File(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue());
-            log.info("Keystore file was found? {}", l_file.exists());
-            secure(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue(), ConfigValueHandlerIBS.SSL_KEYSTORE_PASSWORD.fetchValue(),
-                    ConfigValueHandlerIBS.SSL_TRUSTSTORE_PATH.fetchValue(), ConfigValueHandlerIBS.SSL_TRUSTSTORE_PASSWORD.fetchValue());
-        }
-        else {
+            if (!l_file.exists()) {
+                log.error("Could not find the Keystore file path {}", l_file.getAbsolutePath());
+            }
+            secure(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue(),
+                    ConfigValueHandlerIBS.SSL_KEYSTORE_PASSWORD.fetchValue(),
+                    ConfigValueHandlerIBS.SSL_TRUSTSTORE_PATH.fetchValue(),
+                    ConfigValueHandlerIBS.SSL_TRUSTSTORE_PASSWORD.fetchValue());
+        } else {
             port(port);
         }
 
         get("/test", (req, res) -> {
             res.type("application/json");
             Map<String, String> status = new HashMap<>();
-            status.put("overALLSystemState",SYSTEM_UP_MESSAGE);
+            status.put("overALLSystemState", SYSTEM_UP_MESSAGE);
             status.put("deploymentMode", ConfigValueHandlerIBS.DEPLOYMENT_MODEL.fetchValue());
-
             status.put("bridgeServiceVersion", ConfigValueHandlerIBS.PRODUCT_VERSION.fetchValue());
+
             if (ConfigValueHandlerIBS.PRODUCT_USER_VERSION.isSet()) {
                 status.put("hostVersion", ConfigValueHandlerIBS.PRODUCT_USER_VERSION.fetchValue());
             }
@@ -69,7 +69,9 @@ public class IntegroAPI {
 
         post("/service-check", (req, res) -> {
             ServiceAccess l_serviceAccess = BridgeServiceFactory.createServiceAccess(req.body());
-            return BridgeServiceFactory.transformServiceAccessResult(l_serviceAccess.checkAccessibilityOfExternalResources());
+
+            return BridgeServiceFactory.transformServiceAccessResult(
+                    l_serviceAccess.checkAccessibilityOfExternalResources());
         });
 
         post("/call", (req, res) -> {
@@ -93,14 +95,13 @@ public class IntegroAPI {
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
             res.body(BridgeServiceFactory.createExceptionPayLoad(
-                    new ErrorObject(e, ERROR_AMBIGUOUS_METHOD, statusCode)));
+                    new ErrorObject(e, ERROR_AMBIGUOUS_METHOD, statusCode,false)));
         });
 
         exception(IBSConfigurationException.class, (e, req, res) -> {
             int statusCode = 500;
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
-
             res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_CONFIG, statusCode)));
         });
 
@@ -108,16 +109,13 @@ public class IntegroAPI {
             int statusCode = 500;
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
-
             res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_RUNTIME, statusCode)));
-
         });
 
         exception(TargetJavaMethodCallException.class, (e, req, res) -> {
             int statusCode = 500;
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
-
             res.body(BridgeServiceFactory.createExceptionPayLoad(
                     new ErrorObject(e, ERROR_CALLING_JAVA_METHOD, statusCode)));
         });
@@ -126,18 +124,25 @@ public class IntegroAPI {
             int statusCode = 404;
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
-
             res.body(BridgeServiceFactory.createExceptionPayLoad(
-                    new ErrorObject(e, ERROR_JAVA_OBJECT_NOT_FOUND, statusCode)));
+                    new ErrorObject(e, ERROR_JAVA_OBJECT_NOT_FOUND, statusCode, false)));
+        });
+
+        exception(JavaObjectInaccessibleException.class, (e, req, res) -> {
+            int statusCode = 404;
+            res.status(statusCode);
+            res.type(ERROR_CONTENT_TYPE);
+            res.body(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_JAVA_OBJECT_NOT_ACCESSIBLE, statusCode, false)));
         });
 
         exception(IBSTimeOutException.class, (e, req, res) -> {
             int statusCode = 408;
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
-
-            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_CALL_TIMEOUT, statusCode)));
+            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_CALL_TIMEOUT, statusCode, false)));
         });
+
         //Internal exception
         exception(Exception.class, (e, req, res) -> {
             int statusCode = 500;
@@ -145,6 +150,10 @@ public class IntegroAPI {
             res.type(ERROR_CONTENT_TYPE);
             res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_INTERNAL, statusCode)));
         });
-
     }
+
+    protected enum DeploymentMode {
+        TEST, PRODUCTION
+    }
+
 }

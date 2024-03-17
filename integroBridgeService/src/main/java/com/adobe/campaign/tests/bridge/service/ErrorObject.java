@@ -11,6 +11,7 @@ package com.adobe.campaign.tests.bridge.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This class is meant to contain the error payload in care of exceptions
@@ -24,30 +25,54 @@ public class ErrorObject {
     private String bridgeServiceException;
     private String originalException;
     private String originalMessage;
-
+    private String failureAtStep;
     private List<String> stackTrace;
 
-    public ErrorObject(Exception in_exception, String in_title, int in_errorCode) {
+    /**
+     * The main constructor for ErrorObject
+     *
+     * @param in_exception The exception we throw
+     * @param in_title The title of the error
+     * @param in_errorCode The error code we return
+     * @param in_includeStackTrace A flag to tell us if we should include the stack trace.
+     */
+    public ErrorObject(Exception in_exception, String in_title, int in_errorCode, boolean in_includeStackTrace) {
         this.setTitle(in_title);
         this.setCode(in_errorCode);
         this.setDetail(in_exception.getMessage());
         this.setBridgeServiceException(in_exception.getClass().getTypeName());
         Throwable originalExceptionClass = extractOriginalException(in_exception);
+        this.setFailureAtStep(LogManagement.fetchCurrentStep());
 
         this.setStackTrace(new ArrayList<>());
 
         //Check if we have a different root cause
-        if (originalExceptionClass==null) {
-            this.setOriginalException(STD_NOT_APPLICABLE );
-            this.setOriginalMessage(STD_NOT_APPLICABLE);
-            Arrays.stream(in_exception.getStackTrace()).forEach(i -> this.stackTrace.add(i.toString()));
-        } else {
-            //Fetch the data from the root cause
-            this.setOriginalException(originalExceptionClass.getClass().getTypeName());
-            this.setOriginalMessage(originalExceptionClass.getMessage());
-            Arrays.stream(originalExceptionClass.getStackTrace()).forEach(i -> this.stackTrace.add(i.toString()));
+        this.setOriginalException((originalExceptionClass != null) ? originalExceptionClass.getClass()
+                .getTypeName() : STD_NOT_APPLICABLE);
+        this.setOriginalMessage(
+                (originalExceptionClass != null) ? originalExceptionClass.getMessage() : STD_NOT_APPLICABLE);
+
+        if (in_includeStackTrace) {
+            Arrays.stream(Optional.ofNullable(originalExceptionClass).orElse(in_exception).getStackTrace())
+                    .forEach(i -> this.stackTrace.add(i.toString()));
         }
 
+
+    }
+
+    public ErrorObject(Exception in_exception) {
+        this(in_exception, STD_NOT_APPLICABLE, -1);
+    }
+
+    /**
+     * The constructor for ErrorObject
+     *
+     * @param in_exception The exception we throw
+     * @param in_title The title of the error
+     * @param in_errorCode The error code we return
+     */
+    public ErrorObject(Exception in_exception, String in_title, int in_errorCode) {
+        this(in_exception, in_title, in_errorCode, true);
     }
 
     /**
@@ -86,7 +111,7 @@ public class ErrorObject {
     }
 
     public void setTitle(String title) {
-        this.title = title;
+        this.title = Optional.ofNullable(title).orElse("").trim();
     }
 
     public int getCode() {
@@ -102,7 +127,7 @@ public class ErrorObject {
     }
 
     public void setDetail(String detail) {
-        this.detail = detail;
+        this.detail = Optional.ofNullable(detail).orElse("").trim();
     }
 
     public String getBridgeServiceException() {
@@ -126,7 +151,7 @@ public class ErrorObject {
     }
 
     public void setOriginalMessage(String originalMessage) {
-        this.originalMessage = originalMessage;
+        this.originalMessage = Optional.ofNullable(originalMessage).orElse("").trim();
     }
 
     public List<String> getStackTrace() {
@@ -137,4 +162,11 @@ public class ErrorObject {
         this.stackTrace = stackTrace;
     }
 
+    public String getFailureAtStep() {
+        return failureAtStep;
+    }
+
+    public void setFailureAtStep(String failureAtStep) {
+        this.failureAtStep = failureAtStep;
+    }
 }

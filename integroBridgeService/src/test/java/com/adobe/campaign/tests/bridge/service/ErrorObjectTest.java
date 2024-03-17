@@ -11,11 +11,14 @@ package com.adobe.campaign.tests.bridge.service;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.ThreadContext;
 import org.hamcrest.Matchers;
 import org.mockito.Mockito;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -41,6 +44,47 @@ public class ErrorObjectTest {
         assertThat("We should have the correct top exception", eo.getBridgeServiceException(),
                 Matchers.equalTo(ClassNotFoundException.class.getTypeName()));
         assertThat("We should have the correct top exception", eo.getOriginalException(), Matchers.equalTo("Not Set"));
+        assertThat("We should have the correct step definition", eo.getFailureAtStep(), Matchers.equalTo("Not in a Step"));
+    }
+
+    @Test
+    public void testErrorObjectCreationWithStepInfo() {
+        String randomString = UUID.randomUUID().toString();
+        ThreadContext.put("currentStep", randomString);
+        String detail = "ABC";
+        ClassNotFoundException cnfe = new ClassNotFoundException(detail);
+        String message = "Highlevel message";
+        int errorCode = 404;
+
+        ErrorObject eo = new ErrorObject(cnfe, message, errorCode);
+
+        assertThat("We should have the correct title", eo.getTitle(), Matchers.equalTo(message));
+        assertThat("We should have the correct error code", eo.getCode(), Matchers.equalTo(errorCode));
+        assertThat("We should have the correct error code", eo.getDetail(), Matchers.equalTo(detail));
+        assertThat("We should have the correct top exception", eo.getBridgeServiceException(),
+                Matchers.equalTo(ClassNotFoundException.class.getTypeName()));
+        assertThat("We should have the correct top exception", eo.getOriginalException(), Matchers.equalTo("Not Set"));
+        assertThat("We should have the correct step definition", eo.getFailureAtStep(), Matchers.equalTo(randomString));
+    }
+
+    @Test
+    public void testErrorObjectCreationTrimmed() {
+        String detail = "     ABC                             ";
+        ClassNotFoundException cnfe = new ClassNotFoundException(detail);
+        String message = "     Highlevel message                              ";
+        int errorCode = 404;
+
+        ErrorObject eo = new ErrorObject(cnfe, message, errorCode);
+        eo.setOriginalMessage("       o-except                    ");
+
+        assertThat("We should have the correct title", eo.getTitle(), Matchers.equalTo(message.trim()));
+        assertThat("We should have the correct error code", eo.getCode(), Matchers.equalTo(errorCode));
+        assertThat("We should have the correct error code", eo.getDetail(), Matchers.equalTo(detail.trim()));
+        assertThat("We should have the correct top exception", eo.getBridgeServiceException(),
+                Matchers.equalTo(ClassNotFoundException.class.getTypeName()));
+        assertThat("We should have the correct top exception", eo.getOriginalException(), Matchers.equalTo("Not Set"));
+        assertThat("We should have the correct top exception message", eo.getOriginalMessage(), Matchers.equalTo("o-except"));
+
     }
 
     @Test
@@ -95,6 +139,39 @@ public class ErrorObjectTest {
 
         assertThat("We should have extracted the correct original message", l_errorObject.getOriginalMessage(),
                 Matchers.equalTo(middleException));
+        assertThat("The stack trace may not be empty", l_errorObject.getStackTrace(), Matchers.notNullValue());
+        assertThat("The stack trace needs to include the original stack trace as well",
+                l_errorObject.getStackTrace().get(0), Matchers.startsWith(
+                        "com.adobe.campaign.tests.bridge.service.ErrorObjectTest.chainedExceptionRepetition"));
+
+    }
+
+    @Test
+    public void chainedExceptionRepetitionTrimming() {
+        //Simple with Cause
+        String originalDetail = "exc 1";
+        ClassNotFoundException exc1 = new ClassNotFoundException(originalDetail);
+
+        String middleExceptionMessage = "   exc 2                      ";
+        ClassNotFoundException exc2 = new ClassNotFoundException(middleExceptionMessage, exc1);
+
+        String bottomException = "    exc 3         ";
+        RuntimeException exc3 = new RuntimeException(bottomException, exc2);
+
+        assertThat("In a simple case where cause is null we should have null of N/A",
+                ErrorObject.extractOriginalException(exc3),
+                Matchers.equalTo(exc2));
+
+        assertThat("In a simple case where cause is null we should have null of N/A",
+                ErrorObject.extractOriginalException(exc3).getMessage(),
+                Matchers.equalTo(middleExceptionMessage));
+
+        ErrorObject l_errorObject = new ErrorObject(exc3, "some title", 343);
+        assertThat("We should have extracted the correct ibs message", l_errorObject.getDetail(),
+                Matchers.equalTo("exc 3"));
+
+        assertThat("We should have extracted the correct original message", l_errorObject.getOriginalMessage(),
+                Matchers.equalTo("exc 2"));
         assertThat("The stack trace may not be empty", l_errorObject.getStackTrace(), Matchers.notNullValue());
         assertThat("The stack trace needs to include the original stack trace as well",
                 l_errorObject.getStackTrace().get(0), Matchers.startsWith(
@@ -164,5 +241,20 @@ public class ErrorObjectTest {
                 BridgeServiceFactory.getErrorPayloadAsString(omMock,
                         new ErrorObject(new ClassNotFoundException(), "A", 404)),
                 Matchers.equalTo("Problem creating error payload. Original error is " + "A"));
+    }
+
+    @Test
+    public void testDiscardingStackTraceInInternalIssues() {
+        String detail = "ABC";
+        ClassNotFoundException cnfe = new ClassNotFoundException(detail);
+        String message = "Highlevel message";
+        int errorCode = 404;
+
+        ErrorObject eo = new ErrorObject(cnfe, message, errorCode, false);
+        assertThat("We should not have a stracktrace", eo.getStackTrace().size(), Matchers.equalTo(0));
+
+        ErrorObject eo2 = new ErrorObject(cnfe, message, errorCode, true);
+        assertThat("We should not have a stracktrace", eo2.getStackTrace().size(), Matchers.greaterThan(0));
+
     }
 }

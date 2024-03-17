@@ -91,7 +91,7 @@ public class JavaCalls {
     public JavaCallResults submitCalls() {
 
         if (!getEnvironmentVariables().isEmpty()) {
-            ThreadContext.put("git ", "environmentSetting");
+            ThreadContext.put("currentStep", "environmentSetting");
             updateEnvironmentVariables();
         }
 

@@ -14,7 +14,6 @@ import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import io.restassured.path.json.JsonPath;
-import io.restassured.response.ResponseBody;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -64,6 +63,19 @@ public class E2ETests {
                 .body("bridgeServiceVersion", Matchers.equalTo(
                         bridgeServiceVersion))
                 .body("hostVersion", Matchers.equalTo(l_hostVersion));
+
+    }
+
+    @Test(groups = "E2E")
+    public void testWorkingWithNoProductVersion() {
+        String bridgeServiceVersion = "101";
+        ConfigValueHandlerIBS.PRODUCT_VERSION.activate(bridgeServiceVersion);
+
+        given().when().get(EndPointURL + "test").then().assertThat()
+                .body("overALLSystemState", Matchers.equalTo(IntegroAPI.SYSTEM_UP_MESSAGE))
+                .body("deploymentMode", Matchers.equalTo(IntegroAPI.DeploymentMode.TEST.toString()))
+                .body("bridgeServiceVersion", Matchers.equalTo(
+                        bridgeServiceVersion));
 
     }
 
@@ -656,6 +668,7 @@ public class E2ETests {
         final JsonPath[] l_call1Result = new JsonPath[1];
         final JsonPath[] l_call2Result = new JsonPath[1];
 
+        //Define two threads to execute in parallel
         Thread t1 = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -672,6 +685,7 @@ public class E2ETests {
             }
         });
 
+        //Start threads and wait till they finish
         t1.start();
         t2.start();
 
@@ -683,32 +697,9 @@ public class E2ETests {
         }
 
         assertThat("We should be able to get the body", l_call1Result[0].get("title"), Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME));
-
         assertThat("We should be able to get the body", l_call1Result[0].get("failureAtStep"), Matchers.equalTo("step1"));
-
         assertThat("We should be able to get the body", l_call2Result[0].get("title"), Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME));
-
         assertThat("We should be able to get the body", l_call2Result[0].get("failureAtStep"), Matchers.equalTo("step2"));
-
-                /*
-        given().body(l_call1).post(EndPointURL + "call").then().assertThat().statusCode(500)
-                .body("title",
-                        Matchers.equalTo(
-                                "Problems with payload."))
-                .statusCode(500)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
-                .body("failureAtStep", Matchers.equalTo("step1"));
-
-        given().body(l_call2).post(EndPointURL + "call").then().assertThat().statusCode(500)
-                .body("title",
-                        Matchers.equalTo(
-                                "Problems with payload."))
-                .statusCode(500)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
-                .body("failureAtStep", Matchers.equalTo("step2"));
-
-                 */
-
     }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)

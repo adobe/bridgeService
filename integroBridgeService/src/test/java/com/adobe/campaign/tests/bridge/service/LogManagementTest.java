@@ -14,6 +14,7 @@ public class LogManagementTest {
 
     @Test
     public void testLogManagement() {
+        LogManagement lm = new LogManagement();
         assert LogManagement.STD_CURRENT_STEP.equals("currentStep");
     }
 

@@ -41,7 +41,9 @@ public class IntegroAPI {
 
         if (Boolean.parseBoolean(ConfigValueHandlerIBS.SSL_ACTIVE.fetchValue())) {
             File l_file = new File(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue());
-            log.info("Keystore file was found? {}", l_file.exists());
+            if (!l_file.exists()) {
+                log.error("Could not find the Keystore file path {}", l_file.getAbsolutePath());
+            }
             secure(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue(),
                     ConfigValueHandlerIBS.SSL_KEYSTORE_PASSWORD.fetchValue(),
                     ConfigValueHandlerIBS.SSL_TRUSTSTORE_PATH.fetchValue(),

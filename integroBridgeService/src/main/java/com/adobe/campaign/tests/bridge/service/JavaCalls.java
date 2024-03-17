@@ -72,6 +72,9 @@ public class JavaCalls {
                 throw new TargetJavaMethodCallException(e.getCause().getMessage(), e.getCause().getCause());
             } else if (e.getCause() instanceof ClassLoaderConflictException) {
                 throw new IBSConfigurationException(e.getCause().getMessage(), e.getCause());
+            } else if (e.getCause() instanceof JavaObjectInaccessibleException) {
+                throw new JavaObjectInaccessibleException(e.getCause().getMessage(), e.getCause().getCause());
+
             } else {
                 throw new IBSRunTimeException(e.getMessage());
             }

@@ -173,7 +173,8 @@ public class E2ETests {
                         "We could not find a unique method for"))
                 .body("code", Matchers.equalTo(404))
                 .body("bridgeServiceException", Matchers.equalTo(AmbiguousMethodException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE))
+                .body("stackTrace", Matchers.empty());
     }
 
     /**
@@ -228,7 +229,8 @@ public class E2ETests {
                         "The given class com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExisting could not be found."))
                 .body("code", Matchers.equalTo(404))
                 .body("bridgeServiceException", Matchers.equalTo(NonExistentJavaObjectException.class.getTypeName()))
-                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE));
+                .body("originalException", Matchers.equalTo(ErrorObject.STD_NOT_APPLICABLE))
+                .body("stackTrace", Matchers.empty());
 
     }
 
@@ -273,7 +275,8 @@ public class E2ETests {
                         + "}";
 
         given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(404)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JSON_TRANSFORMATION));
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JSON_TRANSFORMATION))
+                .body("failureAtStep", Matchers.equalTo(LogManagement.STD_STEPS.ANALYZING_PAYLOAD.value));
 
     }
 
@@ -559,10 +562,13 @@ public class E2ETests {
         l_cc.setMethodName("hello");
         jc.getCallContent().put("one", l_cc);
 
-        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(500)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME))
+        given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(404)
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE))
+                .body("bridgeServiceException", Matchers.equalTo(JavaObjectInaccessibleException.class.getTypeName()))
                 .body("detail", Matchers.startsWith(
-                        "java.lang.RuntimeException: We do not have the right to execute the given class."));
+                        "We do not have the right to execute the given class."))
+                .body("originalMessage", Matchers.startsWith(
+                        "class com.adobe.campaign.tests.bridge.service.CallContent cannot access a member of class"));
     }
 
     @Test(groups = "E2E", enabled = false)
@@ -619,9 +625,23 @@ public class E2ETests {
 
     }
 
-    /**
-     * We run two paralle threads (as much as possible), and make sure the failed step is correct
-     */
+    @Test(groups = "E2E")
+    public void testIBSInternalErrorCall() {
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName("com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods");
+        myContent.setMethodName("hkjdhghj");
+        myContent.setReturnType("java.lang.String");
+        l_call.getCallContent().put("call1PL", myContent);
+
+        given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404).body("title",
+                        Matchers.equalTo(
+                                "Could not find the given class or method."))
+                .body("stackTrace", Matchers.empty());
+
+    }
+
     @Test(groups = "E2E")
     public void testExternalErrorCall() {
 
@@ -644,6 +664,10 @@ public class E2ETests {
     }
 
     //Testing Error Step detection
+
+    /**
+     * We run two parallel threads (as much as possible), and make sure the failed step is correct
+     */
     @Test(groups = "E2E")
     public void correctlyDetectErrorSteps() {
         //Method 1   throws exception
@@ -696,10 +720,14 @@ public class E2ETests {
             e.printStackTrace();
         }
 
-        assertThat("We should be able to get the body", l_call1Result[0].get("title"), Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME));
-        assertThat("We should be able to get the body", l_call1Result[0].get("failureAtStep"), Matchers.equalTo("step1"));
-        assertThat("We should be able to get the body", l_call2Result[0].get("title"), Matchers.equalTo(IntegroAPI.ERROR_IBS_RUNTIME));
-        assertThat("We should be able to get the body", l_call2Result[0].get("failureAtStep"), Matchers.equalTo("step2"));
+        assertThat("We should be able to get the body", l_call1Result[0].get("title"),
+                Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE));
+        assertThat("We should be able to get the body", l_call1Result[0].get("failureAtStep"),
+                Matchers.equalTo("step1"));
+        assertThat("We should be able to get the body", l_call2Result[0].get("title"),
+                Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE));
+        assertThat("We should be able to get the body", l_call2Result[0].get("failureAtStep"),
+                Matchers.equalTo("step2"));
     }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)

@@ -242,4 +242,19 @@ public class ErrorObjectTest {
                         new ErrorObject(new ClassNotFoundException(), "A", 404)),
                 Matchers.equalTo("Problem creating error payload. Original error is " + "A"));
     }
+
+    @Test
+    public void testDiscardingStackTraceInInternalIssues() {
+        String detail = "ABC";
+        ClassNotFoundException cnfe = new ClassNotFoundException(detail);
+        String message = "Highlevel message";
+        int errorCode = 404;
+
+        ErrorObject eo = new ErrorObject(cnfe, message, errorCode, false);
+        assertThat("We should not have a stracktrace", eo.getStackTrace().size(), Matchers.equalTo(0));
+
+        ErrorObject eo2 = new ErrorObject(cnfe, message, errorCode, true);
+        assertThat("We should not have a stracktrace", eo2.getStackTrace().size(), Matchers.greaterThan(0));
+
+    }
 }

@@ -31,7 +31,7 @@ public class ErrorObject {
 
     private List<String> stackTrace;
 
-    public ErrorObject(Exception in_exception, String in_title, int in_errorCode) {
+    public ErrorObject(Exception in_exception, String in_title, int in_errorCode, boolean in_includeStackTrace) {
         this.setTitle(in_title);
         this.setCode(in_errorCode);
         this.setDetail(in_exception.getMessage());
@@ -42,21 +42,25 @@ public class ErrorObject {
         this.setStackTrace(new ArrayList<>());
 
         //Check if we have a different root cause
-        if (originalExceptionClass==null) {
-            this.setOriginalException(STD_NOT_APPLICABLE );
-            this.setOriginalMessage(STD_NOT_APPLICABLE);
-            Arrays.stream(in_exception.getStackTrace()).forEach(i -> this.stackTrace.add(i.toString()));
-        } else {
-            //Fetch the data from the root cause
-            this.setOriginalException(originalExceptionClass.getClass().getTypeName());
-            this.setOriginalMessage(originalExceptionClass.getMessage());
-            Arrays.stream(originalExceptionClass.getStackTrace()).forEach(i -> this.stackTrace.add(i.toString()));
+        this.setOriginalException((originalExceptionClass != null) ? originalExceptionClass.getClass()
+                .getTypeName() : STD_NOT_APPLICABLE);
+        this.setOriginalMessage(
+                (originalExceptionClass != null) ? originalExceptionClass.getMessage() : STD_NOT_APPLICABLE);
+
+        if (in_includeStackTrace) {
+            Arrays.stream(Optional.ofNullable(originalExceptionClass).orElse(in_exception).getStackTrace())
+                    .forEach(i -> this.stackTrace.add(i.toString()));
         }
+
 
     }
 
     public ErrorObject(Exception in_exception) {
         this(in_exception, "Not Set", -1);
+    }
+
+    public ErrorObject(Exception in_exception, String in_title, int in_errorCode) {
+        this(in_exception, in_title, in_errorCode, true);
     }
 
     /**

@@ -8,10 +8,7 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
-import com.adobe.campaign.tests.bridge.service.exceptions.AmbiguousMethodException;
-import com.adobe.campaign.tests.bridge.service.exceptions.ClassLoaderConflictException;
-import com.adobe.campaign.tests.bridge.service.exceptions.NonExistentJavaObjectException;
-import com.adobe.campaign.tests.bridge.service.exceptions.TargetJavaMethodCallException;
+import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -173,7 +170,7 @@ public class CallContent {
                     "The given method " + this.getFullName() + " could not accept the given arguments..");
 
         } catch (IllegalAccessException e) {
-            throw new RuntimeException("We do not have the right to execute the given class. Original message : "+e.getMessage(), e);
+            throw new JavaObjectInaccessibleException("We do not have the right to execute the given class. Original message : "+e.getMessage(), e);
         } catch (InvocationTargetException e) {
             if (e.getCause() instanceof LinkageError) {
                 throw new ClassLoaderConflictException("Linkage Error detected. This can be corrected by enriching the "+ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.systemName+" property", e.getCause());

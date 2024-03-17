@@ -20,6 +20,7 @@ public class BridgeServiceFactory {
      * @return A Java Call Object
      */
     public static JavaCalls createJavaCalls(String in_requestJSON) throws JsonProcessingException {
+        LogManagement.logStep(LogManagement.STD_STEPS.ANALYZING_PAYLOAD);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(in_requestJSON, JavaCalls.class);
     }
@@ -31,6 +32,8 @@ public class BridgeServiceFactory {
      * @throws JsonProcessingException when failing to parse the JavaCallResults object
      */
     public static String transformJavaCallResultsToJSON(JavaCallResults in_callResults) throws JsonProcessingException {
+        LogManagement.logStep(LogManagement.STD_STEPS.GENERATING_RESPONSE);
+
         ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(in_callResults);
     }
@@ -41,6 +44,7 @@ public class BridgeServiceFactory {
      * @return A Service Access Object
      */
     public static ServiceAccess createServiceAccess(String in_requestJSON) throws JsonProcessingException {
+        LogManagement.logStep(LogManagement.STD_STEPS.ANALYZING_PAYLOAD);
         ObjectMapper mapper = new ObjectMapper();
         Map<String, String> serviceMap = mapper.readValue(in_requestJSON, Map.class);
         ServiceAccess lr_sa = new ServiceAccess();
@@ -56,6 +60,7 @@ public class BridgeServiceFactory {
      */
     public static String transformServiceAccessResult(Map<String, Boolean> in_callResults)
             throws JsonProcessingException {
+        LogManagement.logStep(LogManagement.STD_STEPS.GENERATING_RESPONSE);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(in_callResults);
     }
@@ -78,8 +83,6 @@ public class BridgeServiceFactory {
      * @return A string that represents the error payload
      */
     public static String createExceptionPayLoad(ErrorObject in_errorObject) {
-
-
         return getErrorPayloadAsString(in_errorObject);
     }
 

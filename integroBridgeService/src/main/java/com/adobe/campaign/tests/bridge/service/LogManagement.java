@@ -46,7 +46,11 @@ public class LogManagement {
     }
 
     protected enum STD_STEPS {
-        ENVVARS("Setting Environment Variables"), SEND_RESULT("Returning result"), NOT_IN_A_STEP("Not in a Step");
+        ENVVARS("Setting Environment Variables"),
+        SEND_RESULT("Returning result"),
+        NOT_IN_A_STEP("Not in a Step"),
+        ANALYZING_PAYLOAD("Analyzing Payload"),
+        GENERATING_RESPONSE("Generating Response");
 
         protected String value;
 

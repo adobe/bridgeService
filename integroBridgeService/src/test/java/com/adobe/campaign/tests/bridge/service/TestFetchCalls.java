@@ -1805,7 +1805,7 @@ public class TestFetchCalls {
                     IllegalAccessException.class));
         }
         assertThat("We should have thrown an exception here", expectedException, Matchers.notNullValue());
-        Assert.assertThrows(IBSRunTimeException.class, () -> jc.submitCalls());
+        Assert.assertThrows(JavaObjectInaccessibleException.class, () -> jc.submitCalls());
 
     }
 

@@ -68,7 +68,7 @@ The following dependency needs to be added to your pom file:
  <dependency>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <version>2.11.14</version>
+    <version>2.11.15</version>
 </dependency>
 ```
 
@@ -121,10 +121,11 @@ All you need to do is to call :
 If all is good you should get:
 ```
 All systems up - in production
-Version : 2.11.14
+Version : 2.11.15
 Product user version : 7.0
 ```
 
+Note: _The 'Product user version' is a value that you set in the environment variables, and is intended for the consumers._
 
 ## Testing That all External Dervices can be Accessed
 One of the added values of this service is to create a single point of access for external dependencies. However, this needs to be checked, before using this service. In order to do this you need to the following POST call:

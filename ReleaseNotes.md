@@ -5,7 +5,9 @@
 * [#72 Provide the stack trace of the root cause of the errors](https://github.com/adobe/bridgeService/issues/72). With issue #9 we discovered that the stack trace should be that of the original cause.
 * [#78 Trimming error messages](https://github.com/adobe/bridgeService/issues/78). We now trim the error messages.
 * [#80 Removing stack trace for certain errors](https://github.com/adobe/bridgeService/issues/80). We removed the stack trace for errors, where the method or class cannot be found or accessed.
-* We have now introduced a dedicated exception or when a public Method in a Java class with no scope definition. This created linkage errors. 
+* [#83 Adapting log files for production](https://github.com/adobe/bridgeService/issues/83). We now limit the log files so not too much log data is stored. More details to be found in [the Technical Doc](docs/Technical.md).
+* Moved the log level for the loading of the classes to 'trace' instead of 'debug'.
+* We have now introduced a dedicated exception for when a public Method in a Java class with no scope definition. This created linkage errors. 
 
 ## 2.11.14
 * [#61 Allowing Map/JSON return type](https://github.com/adobe/bridgeService/issues/61). Until recently we were not able to correctly accept map and JSON Objects.

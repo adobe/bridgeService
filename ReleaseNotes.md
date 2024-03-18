@@ -1,6 +1,6 @@
 # Bridge Service - RELEASE NOTES
 
-## 2.11.15 - SNAPSHOT
+## 2.11.15
 * [#71 Adding step name when throwing exceptions](https://github.com/adobe/bridgeService/issues/71). When an exception happens, include the step in which it occurred.
 * [#72 Provide the stack trace of the root cause of the errors](https://github.com/adobe/bridgeService/issues/72). With issue #9 we discovered that the stack trace should be that of the original cause.
 * [#78 Trimming error messages](https://github.com/adobe/bridgeService/issues/78). We now trim the error messages.

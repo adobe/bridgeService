@@ -4,11 +4,11 @@ This document deals with the general technical elements of the project.
 ## Error Handling
 We currently manage the following error types.
 
-| Error Code | Exceptions                                                                         | Description                                                |
-|------------|------------------------------------------------------------------------------------|------------------------------------------------------------|
-| 404        | NonExistentJavaObjectException , JsonProcessingException, AmbiguousMethodException | Errors due to client side manipulations, and payloads.     |
-| 408        | IBSTimeOutException                                                                | When the underlying java call takes too long to execute.   |
-| 500        | IBSConfigurationException, IBSRunTimeException, TargetJavaMethodCallException      | Errors happening when calling the underlying Java classes. |
+| Error Code | Exceptions                                                                                                           | Description                                                |
+|------------|----------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------|
+| 404        | NonExistentJavaObjectException , JsonProcessingException, AmbiguousMethodException, JavaObjectInaccessibleException  | Errors due to client side manipulations, and payloads.     |
+| 408        | IBSTimeOutException                                                                                                  | When the underlying java call takes too long to execute.   |
+| 500        | IBSConfigurationException, IBSRunTimeException, TargetJavaMethodCallException                                        | Errors happening when calling the underlying Java classes. |
 
 ## Managing Contexts and Static Variables
 We have three modes of Integrity management :
@@ -34,3 +34,11 @@ This page describes the state of how Calls access static variables. The structur
 2. Calling Java
 3. (optional) Environment Variable Setting
 4. Calling Java
+
+## Log Handling
+The logs are by default deleted after a certain time. In production, we have opted for the following rules:
+* They are stored in the directory 'ibs_output'
+* When the size becomes larger than 50MB, we archive the contents to a zip file
+* The zip files are deleted on a regular basis based on the following rules:
+  * The files exceed 3GB 
+  * The files are more than 10 days old.

@@ -46,10 +46,10 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         // is this class already loaded?
             Class cls = super.findLoadedClass(in_classPath);
         if (cls != null) {
-            log.debug("Class {} has already been loaded.",in_classPath);
+            log.trace("Class {} has already been loaded.",in_classPath);
             return cls;
         } else {
-            log.debug("Class {} has not been loaded. Loading now.", in_classPath);
+            log.trace("Class {} has not been loaded. Loading now.", in_classPath);
         }
 
 
@@ -89,7 +89,7 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      */
     @Override
     public Class loadClass(String in_classFullPath) throws ClassNotFoundException {
-        log.debug("Preparing class {}", in_classFullPath);
+        log.trace("Preparing class {}", in_classFullPath);
 
         if (ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.is("manual", "semi-manual")) {
             if (isClassAmongPackagePaths(in_classFullPath)) {

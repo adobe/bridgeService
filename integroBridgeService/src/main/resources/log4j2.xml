@@ -12,17 +12,36 @@
 <Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
 
     <Appenders>
-        <File name="FILE" fileName="ibs_output/logs/logfile.log">
-            <PatternLayout pattern="%-5p | %d{yyyy-MM-dd HH:mm:ss} | [%t] %C{2} (%F:%L) - %m%n"/>
-        </File>
+        <RollingFile name="RollingFile" fileName="ibs_output/logfile.log"
+                     filePattern="ibs_output/logfile-$${date:yyyy-MM-dd}.log.gz">
+            <PatternLayout>
+                <Pattern>%-5p | %d{yyyy-MM-dd HH:mm:ss} | [%t] %C{2} (%F:%L) - %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="50MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy max="12">
+                <Delete basePath="ibs_output" maxDepth="2">
+                    <IfFileName glob="logfile*.log.gz" >
+                        <IfAny>
+                            <IfAccumulatedFileSize exceeds="3GB" />
+                            <IfLastModified age="P10D" />
+                        </IfAny>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
         <Console name="STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="%-5p | %d{yyyy-MM-dd HH:mm:ss} | [%t] %C{2} (%F:%L) - %m%n"/>
         </Console>
+
     </Appenders>
 
 
   <Loggers>
     <Root level="DEBUG">
+        <AppenderRef ref="RollingFile" level="DEBUG"/>
       <AppenderRef ref="FILE" level="DEBUG"/>
       <AppenderRef ref="STDOUT" level="INFO"/>
       <!--You can set ref="STDOUT" level ="DEBUG" to allow all the logs in the console locally-->

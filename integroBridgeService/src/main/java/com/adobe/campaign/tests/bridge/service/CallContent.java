@@ -11,6 +11,7 @@ package com.adobe.campaign.tests.bridge.service;
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.logging.log4j.LogManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -139,6 +140,7 @@ public class CallContent {
 
         Object lr_object;
         try {
+            LogManager.getLogger().debug("Calling  Class: {} and  Method: {} with {} arguments.", this.getClassName(), this.getMethodName(), this.args.length);
             //Add our package to the classLoader integrity paths
             if (ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.is("semi-manual")) {
 

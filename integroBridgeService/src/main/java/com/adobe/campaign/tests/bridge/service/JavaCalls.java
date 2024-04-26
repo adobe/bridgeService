@@ -100,7 +100,7 @@ public class JavaCalls {
         JavaCallResults lr_returnObject = new JavaCallResults();
 
         for (String lt_key : this.getCallContent().keySet()) {
-            LogManagement.logStep(lt_key);
+            LogManagement.logStep(lt_key+ "(Class: "+this.getCallContent().get(lt_key).getClassName()+ "  Method: "+this.getCallContent().get(lt_key).getMethodName()+"("+this.getCallContent().get(lt_key).getArgs().length+")");
 
             long l_startOfCall = System.currentTimeMillis();
             Object callResult = this.call(lt_key);

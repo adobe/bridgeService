@@ -8,12 +8,16 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 
 import java.util.Optional;
 
 public class LogManagement {
     public static final String STD_CURRENT_STEP = "currentStep";
+    private static final Logger log = LogManager.getLogger();
+
 
     /**
      * Logs the step in the context. it will later be used by the Error Object to generate step info in the error
@@ -32,6 +36,7 @@ public class LogManagement {
      * @param in_step A constant static field
      */
     protected static void logStep(String in_step) {
+        log.info("About to perform step : {}", in_step);
         ThreadContext.put(STD_CURRENT_STEP, in_step);
     }
 

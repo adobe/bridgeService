@@ -127,7 +127,7 @@ Product user version : 7.0
 
 Note: _The 'Product user version' is a value that you set in the environment variables, and is intended for the consumers._
 
-## Testing That all External Dervices can be Accessed
+## Testing That all External Devices can be Accessed
 One of the added values of this service is to create a single point of access for external dependencies. However, this needs to be checked, before using this service. In order to do this you need to the following POST call:
 
 ```

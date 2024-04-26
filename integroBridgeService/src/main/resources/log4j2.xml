@@ -23,10 +23,10 @@
 
             <DefaultRolloverStrategy max="12">
                 <Delete basePath="ibs_output" maxDepth="2">
-                    <IfFileName glob="logfile*.log.gz" >
+                    <IfFileName glob="logfile*.log.gz">
                         <IfAny>
-                            <IfAccumulatedFileSize exceeds="3GB" />
-                            <IfLastModified age="P10D" />
+                            <IfAccumulatedFileSize exceeds="3GB"/>
+                            <IfLastModified age="P10D"/>
                         </IfAny>
                     </IfFileName>
                 </Delete>
@@ -39,12 +39,11 @@
     </Appenders>
 
 
-  <Loggers>
-    <Root level="DEBUG">
-        <AppenderRef ref="RollingFile" level="DEBUG"/>
-      <AppenderRef ref="FILE" level="DEBUG"/>
-      <AppenderRef ref="STDOUT" level="INFO"/>
-      <!--You can set ref="STDOUT" level ="DEBUG" to allow all the logs in the console locally-->
-    </Root>
-  </Loggers>
+    <Loggers>
+        <Root level="DEBUG">
+            <AppenderRef ref="RollingFile" level="DEBUG"/>
+            <AppenderRef ref="STDOUT" level="INFO"/>
+            <!--You can set ref="STDOUT" level ="DEBUG" to allow all the logs in the console locally-->
+        </Root>
+    </Loggers>
 </Configuration>

@@ -1,5 +1,8 @@
 # Bridge Service - RELEASE NOTES
 
+## 2.11.16-SNAPSHOT
+* [#88 Logging action steps](https://github.com/adobe/bridgeService/issues/88). We now log the steps we take during execution for better debugging.
+
 ## 2.11.15
 * [#71 Adding step name when throwing exceptions](https://github.com/adobe/bridgeService/issues/71). When an exception happens, include the step in which it occurred.
 * [#72 Provide the stack trace of the root cause of the errors](https://github.com/adobe/bridgeService/issues/72). With issue #9 we discovered that the stack trace should be that of the original cause.

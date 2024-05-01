@@ -11,15 +11,10 @@ package com.adobe.campaign.tests.bridge.service;
 import com.adobe.campaign.tests.bridge.service.data.MyPropertiesHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
-import com.sun.source.tree.AssertTree;
 import org.hamcrest.Matchers;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -53,7 +48,7 @@ public class TestAssertions {
 
         l_assert.matcher = "equalTo";
         l_assert.actualValue = "A";
-        l_assert.expected = "B";
+        l_assert.expectedValue = "B";
 
         assertThat("We should be false", l_assert.perform(l_myJavaCall.getLocalClassLoader(), new JavaCallResults()), Matchers.equalTo(false));
 
@@ -78,7 +73,7 @@ public class TestAssertions {
         l_assert.type = Assertion.TYPES.RESULT;
         l_assert.matcher = "equalTo";
         l_assert.actualValue = "fetchString";
-        l_assert.expected = "_Success";
+        l_assert.expectedValue = "_Success";
 
         assertThat("We should correctly compare the values", l_assert.perform(l_myJavaCall.getLocalClassLoader(), new JavaCallResults()));
 
@@ -106,7 +101,7 @@ public class TestAssertions {
         l_assert.type = Assertion.TYPES.RESULT;
         l_assert.matcher = "equalTo";
         l_assert.actualValue = "fetchString1";
-        l_assert.expected = "fetchString2";
+        l_assert.expectedValue = "fetchString2";
 
         assertThat("We should correctly compare the values", l_assert.perform(l_myJavaCall.getLocalClassLoader(), new JavaCallResults()));
 
@@ -130,9 +125,9 @@ public class TestAssertions {
 
         Assertion l_assert = new Assertion();
         l_assert.type = Assertion.TYPES.DURATION;
-        l_assert.matcher = "greaterThanOrEqualTo";
         l_assert.actualValue = "spendTime";
-        l_assert.expected = Arrays.asList("100");
+        l_assert.matcher = "greaterThanOrEqualTo";
+        l_assert.expectedValue = 100;
 
         assertThat("We should have a duration greater or Equal to 100ms", l_assert.perform(l_myJavaCall.getLocalClassLoader(), jcr));
 

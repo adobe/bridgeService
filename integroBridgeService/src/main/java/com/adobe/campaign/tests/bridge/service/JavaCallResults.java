@@ -8,11 +8,13 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.service.exceptions.IBSRunTimeException;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JavaCallResults  implements Serializable {
+public class JavaCallResults implements Serializable {
     private static final long serialVersionUID = 2535562419078918507L;
 
     private Map<String, Long> callDurations;
@@ -24,9 +26,12 @@ public class JavaCallResults  implements Serializable {
         setCallDurations(new HashMap<>());
     }
 
-
     public Map<String, Object> getReturnValues() {
         return returnValues;
+    }
+
+    public void setReturnValues(Map<String, Object> returnValues) {
+        this.returnValues = returnValues;
     }
 
     public Map<String, Long> getCallDurations() {
@@ -37,21 +42,35 @@ public class JavaCallResults  implements Serializable {
         this.callDurations = callDurations;
     }
 
-    public void setReturnValues(Map<String, Object> returnValues) {
-        this.returnValues = returnValues;
-    }
-
-
     /**
      * Stored the given result in the return Object
      *
-     * @param in_key     a key to store the result with
-     * @param callResult a result object
+     * @param in_key          a key to store the result with
+     * @param callResult      a result object
      * @param in_callDuration The duration of the call
      */
     public void addResult(String in_key, Object callResult, long in_callDuration) {
         returnValues.put(in_key, callResult);
         callDurations.put(in_key, in_callDuration);
     }
-    
+
+    /**
+     * If the given object is a key, we return the duration stored for that key. Otherwise we return the
+     *
+     * @param in_keyOrValue An object that is either a key or an
+     * @return
+     */
+    public Long expandDurations(Object in_keyOrValue) {
+        if (getCallDurations().containsKey(in_keyOrValue) ) {
+            return callDurations.get(in_keyOrValue);
+        } else  {
+            try {
+                return Long.parseLong(
+                        String.valueOf(in_keyOrValue));
+            } catch (NumberFormatException nfe) {
+                throw new IBSRunTimeException("The given keyOrValue "+in_keyOrValue+" could not be mapped to a duration.");
+            }
+        }
+
+    }
 }

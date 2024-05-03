@@ -8,39 +8,46 @@
 This project allows you to expose your Java project/library as a REST service. It allows you to make calls to Java code from any language or framework you are in.
 
 ## Table of Contents
-- [Release Notes](#release-notes)
-- [Implementing The Bridge Service in Your Project](#implementing-the-bridge-service-in-your-project)
+<!-- TOC -->
+* [BridgeService](#bridgeservice)
+* [PhasedTesting](#phasedtesting)
+  * [Table of Contents](#table-of-contents)
+  * [Release Notes](#release-notes)
+  * [Implementing The Bridge Service in Your Project](#implementing-the-bridge-service-in-your-project)
     * [Adding the Bridge Service to Your Project](#adding-the-bridge-service-to-your-project)
-        - [Installation](#installation)
-        + [Considerations](#considerations)
+        * [Installation](#installation)
+      * [Considerations](#considerations)
     * [Including your project in the BridgeService](#including-your-project-in-the-bridgeservice)
-- [Starting the Bridge Service](#starting-the-bridge-service)
+  * [Starting the Bridge Service](#starting-the-bridge-service)
     * [Running the Bridge Locally](#running-the-bridge-locally)
     * [Running a DEMO](#running-a-demo)
-- [Setting Information About your Environment](#setting-information-about-your-environment)
-- [Testing That all is Working](#testing-that-all-is-working)
-- [Testing That all External Dervices can be Accessed](#testing-that-all-external-dervices-can-be-accessed)
-- [Making a basic Java Call](#making-a-basic-java-call)
-- [Instantiating Objects](#instantiating-objects)
-- [Managing Timeouts](#managing-timeouts)
+  * [Setting Information About your Environment](#setting-information-about-your-environment)
+  * [Testing That all is Working](#testing-that-all-is-working)
+  * [Testing That all External Devices can be Accessed](#testing-that-all-external-devices-can-be-accessed)
+  * [Making a basic Java Call](#making-a-basic-java-call)
+  * [Instantiating Objects](#instantiating-objects)
+  * [Managing Timeouts](#managing-timeouts)
     * [Setting Timeout Globally](#setting-timeout-globally)
     * [Setting a Timeout for the Call Session](#setting-a-timeout-for-the-call-session)
-- [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
+  * [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
     * [Call Chaining and Call Dependencies](#call-chaining-and-call-dependencies)
     * [Call Chaining and Instance Methods](#call-chaining-and-instance-methods)
-- [Creating a Call Context](#creating-a-call-context)
+  * [Creating a Call Context](#creating-a-call-context)
     * [Static Variable Scopes](#static-variable-scopes)
-        + [Session Scopes](#session-scopes)
-        + [Product Scope](#product-scope)
-- [Error Management](#error-management)
-- [Contribution](#contribution)
-- [Known Errors](#known-errors)
+      * [Session Scopes](#session-scopes)
+      * [Product Scope](#product-scope)
+  * [Making Assertions](#making-assertions)
+    * [Duration-based Assertions](#duration-based-assertions)
+  * [Error Management](#error-management)
+  * [Contribution](#contribution)
+  * [Known Errors](#known-errors)
     * [Linked Error](#linked-error)
-- [Known Issues and Limitations](#known-issues-and-limitations)
+  * [Known Issues and Limitations](#known-issues-and-limitations)
     * [Cannot call overloaded methods with the same number of arguments.](#cannot-call-overloaded-methods-with-the-same-number-of-arguments)
     * [Only simple arguments](#only-simple-arguments)
-    * [Complex Non-Serialisable Return Objects](#complex-non-serialisable-return-objects)
+    * [Complex Non-Serializable Return Objects](#complex-non-serializable-return-objects)
     * [Calling Enum Methods](#calling-enum-methods)
+<!-- TOC -->
 
 ## Release Notes
 The release notes can be found [here](ReleaseNotes.md).
@@ -65,7 +72,7 @@ mvn compile exec:java -Dexec.mainClass=MainContainer -Dexec.args="test"
 The following dependency needs to be added to your pom file:
 
 ```
- <dependency>
+<dependency>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
     <version>2.11.15</version>
@@ -138,16 +145,16 @@ The payload needs to have the following format:
 
 ```JSON
 {
-    "<URL ID 1>": "<dns 1>:<Port>",
-    "<URL ID 2>": "<dns 2>:<Port>"
+  "<URL ID 1>": "<dns 1>:<Port>",
+  "<URL ID 2>": "<dns 2>:<Port>"
 }
 ```
 
 The payload returns a JSON with the test results:
 ```JSON
 {
-    "<URL ID 1>": true,
-    "<URL ID 2>": false
+  "<URL ID 1>": true,
+  "<URL ID 2>": false
 }
 ```
 
@@ -159,13 +166,16 @@ The simplest java call is done in the following way:
 
 ```JSON
 {
-    "callContent": {
-        "<ID>": {
-            "class": "<package name>.<class Name>",
-            "method": "<method name>",
-            "args": ["argument1","argument2"]
-        }
+  "callContent": {
+    "<ID>": {
+      "class": "<package name>.<class Name>",
+      "method": "<method name>",
+      "args": [
+        "argument1",
+        "argument2"
+      ]
     }
+  }
 }
 ```
 
@@ -173,25 +183,29 @@ If the IntegroBridgeService can find the method it will execute it. The result i
 
 ```JSON
 {
-    "returnValues": {
-        "<ID>": "<result>"
-    },
-    "callDurations": {
-        "<ID>": "<duration ms>"
-    }
+  "returnValues": {
+    "<ID>": "<result>"
+  },
+  "callDurations": {
+    "<ID>": "<duration ms>"
+  }
 }
 ```
 
 ## Instantiating Objects
 If we do not specify a method, the bridge service assumes that we are instantiating the given class:
+
 ```JSON
 {
-    "callContent": {
-        "<ID>": {
-            "class": "<package name>.<class Name>",
-            "args": ["argument1","argument2"]
-        }
+  "callContent": {
+    "<ID>": {
+      "class": "<package name>.<class Name>",
+      "args": [
+        "argument1",
+        "argument2"
+      ]
     }
+  }
 }
 ```
 
@@ -213,16 +227,16 @@ We can also set the Timeout for a java call transaction. In that case the value 
 In the example below the method `methodWithTimeOut` waits for the provided, in this case 800ms, amount of time. In the example below the test will pass because we wait for 800ms, and the timeout is 1000s.  
 ```JSON
 {
-	"callContent": {
-		"call1": {
-			"class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
-			"method": "methodWithTimeOut",
-			"args": [
-				800
-			]
-		}
-	},
-	"timeout": 1000
+  "callContent": {
+    "call1": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodWithTimeOut",
+      "args": [
+        800
+      ]
+    }
+  },
+  "timeout": 1000
 }
 ```
 
@@ -233,18 +247,24 @@ We can chain a series of java calls in the same payload:
 
 ```JSON
 {
-    "callContent": {
-        "<ID-1>": {
-            "class": "<package name 1>.<class name 1>",
-            "method": "<method name 1>",
-            "args": ["argument1","argument2"]
-        },
-        "<ID-2>": {
-           "class": "<package name 2>.<class name 2>",
-           "method": "<method name 2>",
-           "args": ["argument1","argument2"]
-        }
+  "callContent": {
+    "<ID-1>": {
+      "class": "<package name 1>.<class name 1>",
+      "method": "<method name 1>",
+      "args": [
+        "argument1",
+        "argument2"
+      ]
+    },
+    "<ID-2>": {
+      "class": "<package name 2>.<class name 2>",
+      "method": "<method name 2>",
+      "args": [
+        "argument1",
+        "argument2"
+      ]
     }
+  }
 }
 ```
 
@@ -252,14 +272,14 @@ In the example above the results will be stored in the following way:
 
 ```JSON
 {
-    "returnValues": {
-        "<ID-1>": "<result>",
-        "<ID-2>": "<result>"
-    },
-    "callDurations": {
-        "<ID-1>": "<duration ms>",
-        "<ID-2>": "<duration ms>"
-    }
+  "returnValues": {
+    "<ID-1>": "<result>",
+    "<ID-2>": "<result>"
+  },
+  "callDurations": {
+    "<ID-1>": "<duration ms>",
+    "<ID-2>": "<duration ms>"
+  }
 }
 ```
 
@@ -269,18 +289,24 @@ We now have the possibility of injecting call results from one call to the other
 
 ```JSON
 {
-    "callContent": {
-        "<ID-1>": {
-            "class": "<package name 1>.<class name 1>",
-            "method": "<method name 1>",
-            "args": ["argument1","argument2"]
-        },
-        "<ID-2>": {
-           "class": "<package name 2>.<class name 2>",
-           "method": "<method name 2>",
-           "args": ["<ID-1>","argument2"]
-        }
+  "callContent": {
+    "<ID-1>": {
+      "class": "<package name 1>.<class name 1>",
+      "method": "<method name 1>",
+      "args": [
+        "argument1",
+        "argument2"
+      ]
+    },
+    "<ID-2>": {
+      "class": "<package name 2>.<class name 2>",
+      "method": "<method name 2>",
+      "args": [
+        "<ID-1>",
+        "argument2"
+      ]
     }
+  }
 }
 ```
 
@@ -294,17 +320,22 @@ We now have the possibility of injecting call results from one call to the other
 
 ```JSON
 {
-    "callContent": {
-        "<ID-1>": {
-           "class": "<package name>.<class name>",
-           "args": ["argument1","argument2"]
-        },
-        "<ID-2>": {
-           "class": "<ID-1>",
-           "method": "<method name>",
-           "args": ["argument2"]
-        }
+  "callContent": {
+    "<ID-1>": {
+      "class": "<package name>.<class name>",
+      "args": [
+        "argument1",
+        "argument2"
+      ]
+    },
+    "<ID-2>": {
+      "class": "<ID-1>",
+      "method": "<method name>",
+      "args": [
+        "argument2"
+      ]
     }
+  }
 }
 ```
 
@@ -315,16 +346,19 @@ We sometimes need to set environment variables when making calls. This is usuall
 
 ```JSON
 {
-    "callContent": {
-        "<ID>": {
-            "class": "<package name>.<class Name>",
-            "method": "<method name>",
-            "args": ["argument1","argument2"]
-        }
-    },
-    "environmentVariables": {
-        "<ENVIRONMENT PROPERTY 1>": "<value>"
+  "callContent": {
+    "<ID>": {
+      "class": "<package name>.<class Name>",
+      "method": "<method name>",
+      "args": [
+        "argument1",
+        "argument2"
+      ]
     }
+  },
+  "environmentVariables": {
+    "<ENVIRONMENT PROPERTY 1>": "<value>"
+  }
 }
 ```
 
@@ -349,22 +383,145 @@ Although we do not, yet, provide tools for managing variables that are valid for
 * Managing a properties for in your deployment
 * Injecting Runtime properties at the commandline
 
+## Making Assertions
+As of version 2.11.16, we allow the user to define assertions. An assertion allows users to define acceptance criteria for a call. They can also allow users to delegate the execution to a third party, by defining what an acceptable outcome for a result should be. This has been implemented by embedding [Hamcrest Matchers](https://hamcrest.org/JavaHamcrest/javadoc/2.2/org/hamcrest/Matchers.html) in the bridge service. You can now define a matcher to define rules for the correctness of a call. 
+
+Assertions in IBS will allow you to reference different calls you have previously made in the "callContent" section. Just as in argument epansion, we will fetch the result of the call and use in the assertion.
+
+An assertion, in its most basic form, can be done in the following way:
+
+```JSON
+{
+  "callContent": {
+    "<ID>": {
+      "class": "<package name>.<class Name>",
+      "method": "<method name>",
+      "args": [
+        "argument1",
+        "argument2"
+      ]
+    }
+  },
+  "assertions": {
+    "<Assertion Title>": {
+      "matcher": "<A matcher defined in the org.hamcrest.Matchers class>",
+      "actualValue": "<ID> as referenced in the call value. or a simple value",
+      "expectedValue": "A value or an ID"
+    }
+  }
+}
+```
+
+The assertions will then be present in the return payload:
+
+```JSON
+{
+  "returnValues": {
+    "<ID>": "<result>"
+  },
+  "callDurations": {
+    "<ID>": "<duration ms>"
+  },
+  "assetions": {
+    "<Assertion Title>": "<true or false>"
+  }
+}
+```
+
+example:
+```JSON
+{
+  "callContent": {
+    "fetchString1": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodReturningString"
+    },
+    "fetchString2": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodReturningString"
+    }
+  },
+  "assertions": {
+    "Both values should be the same": {
+      "matcher": "equalTo",
+      "actualValue": "fetchString1",
+      "expectedValue": "fetchString2"
+    }
+  }
+}
+```
+
+By default, assertions in the Bridge Service will look at the resulut of a call, however, you can chose a different behavior or this. Currently, assertions are of two types:
+* Result Based,
+* Duration Based 
+
+### Duration-based Assertions
+As mentioned earlier an assertion can be duration based. In that case, IBS will consider the call duration of a call for the assertion. In order to perform an assertion the payload needs to include the entry `"type": "DURATION"` to the payload:
+```JSON
+{
+  "callContent": {
+    "<ID>": {
+      "class": "<package name>.<class Name>",
+      "method": "<method name>",
+      "args": [
+        "argument1",
+        "argument2"
+      ]
+    }
+  },
+  "assertions": {
+    "<Assertion Title>": {
+      "type": "DURATION",
+      "matcher": "<A matcher defined in the org.hamcrest.Matchers class>",
+      "actualValue": "<ID>",
+      "expectedValue": "Expected duration for ID in milli-seconds"
+    }
+  }
+}
+```
+
+When set, the assertion will use the call duration of the call, and use it in the assertion evaluation.
+
+Example:
+```JSON
+{
+  "callContent": {
+    "spendTime": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodWithTimeOut",
+      "args": [
+        100
+      ]
+    }
+  },
+  "assertions": {
+    "The duration should not be greater than 100": {
+      "type": "DURATION",
+      "matcher": "greaterThanOrEqualTo",
+      "actualValue": "spendTime",
+      "expectedValue": "100"
+    }
+  }
+}
+```
+
+
 ## Error Management
 Currently, whenever there is an error in the underlying java call we will include the orginal error message in the error response. For example, for the call:
 
 ```json
 {
-    "callContent": {
-        "call1": {
-            "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
-            "method": "methodThrowingException",
-            "returnType": "java.lang.String",
-            "args": [
-                3,
-                3
-            ]
-        }
+  "callContent": {
+    "call1": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodThrowingException",
+      "returnType": "java.lang.String",
+      "args": [
+        3,
+        3
+      ]
     }
+  }
 }
 ```
 
@@ -385,9 +542,9 @@ When using the bridge service, we also include additional info:
   "originalMessage": "The message of the originating exception",
   "failureAtStep": "Step name",
   "stackTrace": [
-                "ClassA.methodA",
-                "ClassB.methodB"
-                ]
+    "ClassA.methodA",
+    "ClassB.methodB"
+  ]
 }
 ```
 

@@ -17,6 +17,7 @@ import com.adobe.campaign.tests.bridge.testdata.one.StaticType;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Matchers;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -1367,6 +1368,34 @@ public class TestFetchCalls {
                 Matchers.equalTo(objectValue));
     }
 
+    //Tests for validating that we can correctlly return the duration of a specific execution
+    @Test
+    public void testDurationReplacement() {
+        JavaCallResults jcr = new JavaCallResults();
+        jcr.getCallDurations().put("A", 100l);
+
+        Long result = jcr.expandDurations(100l);
+        assertThat("We should have replaced the value correctly", result, Matchers.equalTo(100l));
+
+        Long result2 = jcr.expandDurations("A");
+        assertThat("We should have replaced the value correctly", result2, Matchers.equalTo(100l));
+
+        Long result3 = jcr.expandDurations(100);
+        assertThat(result3, Matchers.equalTo(100l));
+
+
+    }
+
+    @Test
+    public void testDurationReplacement_negative() {
+        JavaCallResults jcr = new JavaCallResults();
+        jcr.getCallDurations().put("A", 100l);
+
+        Assert.assertThrows(IBSRunTimeException.class, () -> jcr.expandDurations(Boolean.FALSE));
+
+    }
+
+    //Tests for extracting data from an object
     @Test
     public void testExtractable() {
 
@@ -1939,7 +1968,7 @@ public class TestFetchCalls {
 
     @Test
     public void testExtractingJSONLvl_2() {
-        Map mapOfString = SimpleStaticMethods.returnJSONSimple();
+        Map mapOfString = SimpleStaticMethods.methodReturningMap();
 
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
 
@@ -2028,6 +2057,5 @@ public class TestFetchCalls {
 
         }
     }
-
 }
 

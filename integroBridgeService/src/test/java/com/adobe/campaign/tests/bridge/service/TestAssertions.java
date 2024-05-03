@@ -28,7 +28,6 @@ public class TestAssertions {
         MyPropertiesHandler.resetAll();
         ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(EnvironmentVariableHandler.class.getTypeName());
         ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.activate("manual");
-
     }
 
     @Test
@@ -130,6 +129,64 @@ public class TestAssertions {
         l_assert.expectedValue = 100;
 
         assertThat("We should have a duration greater or Equal to 100ms", l_assert.perform(l_myJavaCall.getLocalClassLoader(), jcr));
+
+    }
+
+
+    @Test
+    public void assertionInProductionE2E_calculateDuration() {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodWithTimeOut");
+        l_cc.setArgs(new Object[]{100});
+
+        l_myJavaCall.getCallContent().put("spendTime", l_cc);
+
+        Assertion l_assert = new Assertion();
+        l_assert.type = Assertion.TYPES.DURATION;
+        l_assert.actualValue = "spendTime";
+        l_assert.matcher = "greaterThanOrEqualTo";
+        l_assert.expectedValue = 100;
+        l_myJavaCall.getAssertions().put("The duration should be greater that 100ms", l_assert);
+
+        JavaCallResults jcr = l_myJavaCall.submitCalls();
+
+        assertThat("Checking the duration", jcr.getCallDurations().get("spendTime"), Matchers.greaterThanOrEqualTo(100l));
+        assertThat("We should have a duration greater or Equal to 100ms", jcr.getAssertionResults().containsKey("The duration should be greater that 100ms"));
+    }
+
+
+    @Test
+    public void assertionInProductionE2E_expandAll() {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodReturningString");
+
+        l_myJavaCall.getCallContent().put("fetchString1", l_cc);
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc2.setMethodName("methodReturningString");
+
+        l_myJavaCall.getCallContent().put("fetchString2", l_cc2);
+
+        Assertion l_assert = new Assertion();
+        l_assert.type = Assertion.TYPES.RESULT;
+        l_assert.matcher = "equalTo";
+        l_assert.actualValue = "fetchString1";
+        l_assert.expectedValue = "fetchString2";
+
+        l_myJavaCall.getAssertions().put("Both values should be the same", l_assert);
+
+        JavaCallResults jcr = l_myJavaCall.submitCalls();
+
+        assertThat("Our assertion should be correct", jcr.getAssertionResults().containsKey("Both values should be the same"));
+        assertThat("Our assertion should be correct", jcr.getAssertionResults().get("Both values should be the same"));
+
 
     }
 }

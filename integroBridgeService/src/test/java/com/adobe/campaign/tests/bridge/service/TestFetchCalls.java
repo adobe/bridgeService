@@ -1968,7 +1968,7 @@ public class TestFetchCalls {
 
     @Test
     public void testExtractingJSONLvl_2() {
-        Map mapOfString = SimpleStaticMethods.returnJSONSimple();
+        Map mapOfString = SimpleStaticMethods.methodReturningMap();
 
         Map<String, Object> oneResultMap = (Map<String, Object>) MetaUtils.extractValuesFromMap(mapOfString);
 

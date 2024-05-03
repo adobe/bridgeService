@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 public class JavaCalls {
 
+    private Map<String, Assertion> assertions;
     private Long timeout;
     private Map<String, CallContent> callContent;
     private Properties environmentVariables;
@@ -30,6 +31,7 @@ public class JavaCalls {
 
     public JavaCalls() {
         callContent = new LinkedHashMap<>();
+        assertions = new LinkedHashMap<>();
         environmentVariables = new Properties();
         setLocalClassLoader(new IntegroBridgeClassLoader());
         timeout = Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue());
@@ -110,6 +112,11 @@ public class JavaCalls {
             lr_returnObject.addResult(lt_key, MetaUtils.extractValuesFromObject(callResult), l_endOfCall - l_startOfCall);
         }
 
+        getAssertions().forEach((k,v) -> {
+            LogManagement.logStep("Asserting "+k);
+            lr_returnObject.getAssertionResults().put(k, v.perform(getLocalClassLoader(), lr_returnObject));
+        });
+
         LogManagement.logStep(LogManagement.STD_STEPS.SEND_RESULT);
         return lr_returnObject;
     }
@@ -178,4 +185,11 @@ public class JavaCalls {
         this.timeout = timeout;
     }
 
+    public Map<String, Assertion> getAssertions() {
+        return assertions;
+    }
+
+    public void setAssertions(Map<String, Assertion> assertions) {
+        this.assertions = assertions;
+    }
 }

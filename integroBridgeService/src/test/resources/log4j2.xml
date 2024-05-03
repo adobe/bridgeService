@@ -39,9 +39,9 @@
     </Appenders>
 
     <Loggers>
-        <Root level="DEBUG">
+        <Root level="TRACE">
             <AppenderRef ref="STDOUT" level="TRACE"/>
-            <AppenderRef ref="RollingFile" level="DEBUG"/>
+            <AppenderRef ref="RollingFile" level="TRACE"/>
 
             <!--You can set ref="STDOUT" level ="DEBUG" to allow all the logs in the console locally-->
         </Root>

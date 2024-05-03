@@ -9,6 +9,7 @@
 package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.exceptions.IBSRunTimeException;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -21,9 +22,15 @@ public class JavaCallResults implements Serializable {
 
     private Map<String, Object> returnValues = new HashMap<>();
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private HashMap<String, Boolean> assertionResults;
+
+
     JavaCallResults() {
         setReturnValues(new HashMap<>());
         setCallDurations(new HashMap<>());
+        setAssertionResults(new HashMap<>());
+
     }
 
     public Map<String, Object> getReturnValues() {
@@ -72,5 +79,13 @@ public class JavaCallResults implements Serializable {
             }
         }
 
+    }
+
+    public HashMap<String, Boolean> getAssertionResults() {
+        return assertionResults;
+    }
+
+    public void setAssertionResults(HashMap<String, Boolean> assertionResults) {
+        this.assertionResults = assertionResults;
     }
 }

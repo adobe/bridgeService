@@ -113,7 +113,7 @@ public class TimeOutTesting {
         Long l_sleepDuration = Long.parseLong(ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.fetchValue());
 
         JavaCalls jc = new JavaCalls();
-        jc.setTimeout(399l);
+        jc.setTimeout(299l);
         CallContent cc1 = new CallContent();
         cc1.setClassName(SimpleStaticMethods.class.getTypeName());
         cc1.setMethodName("methodWithTimeOut");

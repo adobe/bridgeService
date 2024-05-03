@@ -96,6 +96,7 @@ public class E2ETests {
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
                 Matchers.equalTo(SimpleStaticMethods.SUCCESS_VAL));
+
     }
 
     @Test(groups = "E2E")
@@ -659,7 +660,7 @@ public class E2ETests {
                 .body("originalException", Matchers.equalTo("java.lang.IllegalArgumentException"))
                 .body("originalMessage", Matchers.equalTo("Will always throw this"))
                 .body("stackTrace[0]", Matchers.equalTo(
-                        "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowsException(SimpleStaticMethods.java:65)"));
+                        "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowsException(SimpleStaticMethods.java:55)"));
 
     }
 
@@ -728,6 +729,37 @@ public class E2ETests {
                 Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE));
         assertThat("We should be able to get the body", l_call2Result[0].get("failureAtStep"),
                 Matchers.equalTo("step2"));
+    }
+
+    @Test(groups = "E2E")
+    public void testAssertionsHelloWorldCall() {
+
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodReturningString");
+
+        l_myJavaCall.getCallContent().put("fetchString1", l_cc);
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc2.setMethodName("methodReturningString");
+
+        l_myJavaCall.getCallContent().put("fetchString2", l_cc2);
+
+        Assertion l_assert = new Assertion();
+        l_assert.type = Assertion.TYPES.RESULT;
+        l_assert.matcher = "equalTo";
+        l_assert.actualValue = "fetchString1";
+        l_assert.expectedValue = "fetchString2";
+
+        l_myJavaCall.getAssertions().put("Both values should be the same", l_assert);
+
+        given().body(l_myJavaCall).post(EndPointURL + "call").then().assertThat()
+                .body("assertionResults", Matchers.hasKey("Both values should be the same"))
+                .body("assertionResults.'Both values should be the same'", Matchers.equalTo(true));
+
     }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)

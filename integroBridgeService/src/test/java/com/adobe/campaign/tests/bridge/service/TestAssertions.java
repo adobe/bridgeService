@@ -43,15 +43,15 @@ public class TestAssertions {
         l_myJavaCall.getCallContent().put("fetchString", l_cc);
 
         Assertion l_assert = new Assertion();
-        assertThat("By default the type should be RESULT", l_assert.type, Matchers.equalTo(Assertion.TYPES.RESULT));
+        assertThat("By default the type should be RESULT", l_assert.getType(), Matchers.equalTo(Assertion.TYPES.RESULT));
 
-        l_assert.matcher = "equalTo";
-        l_assert.actualValue = "A";
-        l_assert.expectedValue = "B";
+        l_assert.setMatcher("equalTo");
+        l_assert.setActualValue("A");
+        l_assert.setExpectedValue("B");
 
         assertThat("We should be false", l_assert.perform(l_myJavaCall.getLocalClassLoader(), new JavaCallResults()), Matchers.equalTo(false));
 
-        l_assert.actualValue="B";
+        l_assert.setActualValue("B");
 
         assertThat("We should now be true", l_assert.perform(l_myJavaCall.getLocalClassLoader(), new JavaCallResults()));
     }
@@ -69,10 +69,10 @@ public class TestAssertions {
         l_myJavaCall.submitCalls();
 
         Assertion l_assert = new Assertion();
-        l_assert.type = Assertion.TYPES.RESULT;
-        l_assert.matcher = "equalTo";
-        l_assert.actualValue = "fetchString";
-        l_assert.expectedValue = "_Success";
+        l_assert.setType(Assertion.TYPES.RESULT);
+        l_assert.setMatcher("equalTo");
+        l_assert.setActualValue("fetchString");
+        l_assert.setExpectedValue("_Success");
 
         assertThat("We should correctly compare the values", l_assert.perform(l_myJavaCall.getLocalClassLoader(), new JavaCallResults()));
 
@@ -97,10 +97,10 @@ public class TestAssertions {
         l_myJavaCall.submitCalls();
 
         Assertion l_assert = new Assertion();
-        l_assert.type = Assertion.TYPES.RESULT;
-        l_assert.matcher = "equalTo";
-        l_assert.actualValue = "fetchString1";
-        l_assert.expectedValue = "fetchString2";
+        l_assert.setType(Assertion.TYPES.RESULT);
+        l_assert.setMatcher("equalTo");
+        l_assert.setActualValue("fetchString1");
+        l_assert.setExpectedValue("fetchString2");
 
         assertThat("We should correctly compare the values", l_assert.perform(l_myJavaCall.getLocalClassLoader(), new JavaCallResults()));
 
@@ -123,10 +123,10 @@ public class TestAssertions {
         assertThat("Checking the duration", jcr.getCallDurations().get("spendTime"), Matchers.greaterThanOrEqualTo(100l));
 
         Assertion l_assert = new Assertion();
-        l_assert.type = Assertion.TYPES.DURATION;
-        l_assert.actualValue = "spendTime";
-        l_assert.matcher = "greaterThanOrEqualTo";
-        l_assert.expectedValue = 100;
+        l_assert.setType(Assertion.TYPES.DURATION);
+        l_assert.setActualValue("spendTime");
+        l_assert.setMatcher("greaterThanOrEqualTo");
+        l_assert.setExpectedValue(100);
 
         assertThat("We should have a duration greater or Equal to 100ms", l_assert.perform(l_myJavaCall.getLocalClassLoader(), jcr));
 
@@ -145,10 +145,10 @@ public class TestAssertions {
         l_myJavaCall.getCallContent().put("spendTime", l_cc);
 
         Assertion l_assert = new Assertion();
-        l_assert.type = Assertion.TYPES.DURATION;
-        l_assert.actualValue = "spendTime";
-        l_assert.matcher = "greaterThanOrEqualTo";
-        l_assert.expectedValue = 100;
+        l_assert.setType(Assertion.TYPES.DURATION);
+        l_assert.setActualValue("spendTime");
+        l_assert.setMatcher("greaterThanOrEqualTo");
+        l_assert.setExpectedValue(100);
         l_myJavaCall.getAssertions().put("The duration should be greater that 100ms", l_assert);
 
         JavaCallResults jcr = l_myJavaCall.submitCalls();
@@ -175,10 +175,10 @@ public class TestAssertions {
         l_myJavaCall.getCallContent().put("fetchString2", l_cc2);
 
         Assertion l_assert = new Assertion();
-        l_assert.type = Assertion.TYPES.RESULT;
-        l_assert.matcher = "equalTo";
-        l_assert.actualValue = "fetchString1";
-        l_assert.expectedValue = "fetchString2";
+        l_assert.setType(Assertion.TYPES.RESULT);
+        l_assert.setMatcher("equalTo");
+        l_assert.setActualValue("fetchString1");
+        l_assert.setExpectedValue("fetchString2");
 
         l_myJavaCall.getAssertions().put("Both values should be the same", l_assert);
 

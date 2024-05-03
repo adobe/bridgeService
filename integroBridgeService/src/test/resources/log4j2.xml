@@ -40,7 +40,7 @@
 
     <Loggers>
         <Root level="TRACE">
-            <AppenderRef ref="STDOUT" level="TRACE"/>
+            <AppenderRef ref="STDOUT" level="DEBUG"/>
             <AppenderRef ref="RollingFile" level="TRACE"/>
 
             <!--You can set ref="STDOUT" level ="DEBUG" to allow all the logs in the console locally-->

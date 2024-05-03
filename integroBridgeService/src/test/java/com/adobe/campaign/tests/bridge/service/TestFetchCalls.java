@@ -1368,7 +1368,7 @@ public class TestFetchCalls {
                 Matchers.equalTo(objectValue));
     }
 
-
+    //Tests for validating that we can correctlly return the duration of a specific execution
     @Test
     public void testDurationReplacement() {
         JavaCallResults jcr = new JavaCallResults();
@@ -1395,7 +1395,7 @@ public class TestFetchCalls {
 
     }
 
-
+    //Tests for extracting data from an object
     @Test
     public void testExtractable() {
 
@@ -2057,12 +2057,5 @@ public class TestFetchCalls {
 
         }
     }
-
-
-    @Test
-    public void testJavaCallFetchResults() {
-
-    }
-
 }
 

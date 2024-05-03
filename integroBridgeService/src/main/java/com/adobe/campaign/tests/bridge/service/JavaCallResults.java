@@ -30,7 +30,6 @@ public class JavaCallResults implements Serializable {
         setReturnValues(new HashMap<>());
         setCallDurations(new HashMap<>());
         setAssertionResults(new HashMap<>());
-
     }
 
     public Map<String, Object> getReturnValues() {

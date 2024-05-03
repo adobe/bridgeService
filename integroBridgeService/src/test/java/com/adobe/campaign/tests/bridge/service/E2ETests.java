@@ -749,10 +749,10 @@ public class E2ETests {
         l_myJavaCall.getCallContent().put("fetchString2", l_cc2);
 
         Assertion l_assert = new Assertion();
-        l_assert.type = Assertion.TYPES.RESULT;
-        l_assert.matcher = "equalTo";
-        l_assert.actualValue = "fetchString1";
-        l_assert.expectedValue = "fetchString2";
+        l_assert.setType(Assertion.TYPES.RESULT);
+        l_assert.setMatcher("equalTo");
+        l_assert.setActualValue("fetchString1");
+        l_assert.setExpectedValue("fetchString2");
 
         l_myJavaCall.getAssertions().put("Both values should be the same", l_assert);
 

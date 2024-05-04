@@ -79,7 +79,7 @@ public class IntegroAPI {
         post("/call", (req, res) -> {
             JavaCalls fetchedFromJSON = BridgeServiceFactory.createJavaCalls(req.body());
 
-            fetchedFromJSON.addSecrets(req.headers().stream().collect(Collectors.toMap(k -> k, k -> req.headers(k))));
+            fetchedFromJSON.addHeaders(req.headers().stream().collect(Collectors.toMap(k -> k, k -> req.headers(k))));
 
             return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls());
         });

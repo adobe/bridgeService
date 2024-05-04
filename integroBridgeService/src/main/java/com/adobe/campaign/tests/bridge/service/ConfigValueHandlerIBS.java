@@ -56,7 +56,7 @@ public enum ConfigValueHandlerIBS {
         }
     },
     TEMP_INTERNAL_ERROR_MODE("TMP.INTERNAL.ERROR.MODE", "off", false, "This is a temporary variable for testing purposes only."),
-    SECRETS_FILTER_PREFIX("IBS.HEADERS.FILTER.PREFIX","", false, "When set we only include headers with a name starting with this value.");
+    HEADERS_FILTER_PREFIX("IBS.HEADERS.FILTER.PREFIX","", false, "When set we only include headers with a name starting with this value.");
 
 
     public final String systemName;

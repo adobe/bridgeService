@@ -201,20 +201,22 @@ public class JavaCalls {
     }
 
     /**
-     * Adds headers to the results cache of the ClassLoader
+     * Adds headers to the results cache of the ClassLoader. We throw an exception o the header corresponds to a
+     * callContent
      *
      * @param in_mapOHeaders A map containing header values coming from the request
      */
-    public void addSecrets(Map<String, String> in_mapOHeaders) {
+    public void addHeaders(Map<String, String> in_mapOHeaders) {
         in_mapOHeaders.keySet().stream()
-                .filter(i -> i.startsWith(ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue())).forEach(fk -> {
+                .filter(i -> i.startsWith(ConfigValueHandlerIBS.HEADERS_FILTER_PREFIX.fetchValue())).forEach(fk -> {
                     this.getLocalClassLoader().getCallResultCache().put(fk, in_mapOHeaders.get(fk));
-                    this.getLocalClassLoader().getSecretsSet().add(fk);
+                    this.getLocalClassLoader().getHeaderSet().add(fk);
                 });
 
-        this.getLocalClassLoader().getSecretsSet().stream().filter(s -> this.getCallContent().keySet().contains(s))
+        //Check for duplicates between headers and call contents
+        this.getLocalClassLoader().getHeaderSet().stream().filter(s -> this.getCallContent().keySet().contains(s))
                 .anyMatch(t -> {
-                    throw new IBSPayloadException("There is a duplicate key between the Secrets and the CallContents");
+                    throw new IBSPayloadException("The key "+t+" is a duplicate between the Headers and the CallContents");
                 });
     }
 }

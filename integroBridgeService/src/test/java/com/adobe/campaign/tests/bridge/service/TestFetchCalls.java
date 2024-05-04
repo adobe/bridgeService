@@ -2066,11 +2066,11 @@ public class TestFetchCalls {
         assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getCallResultCache(),
                 Matchers.anEmptyMap());
 
-        l_myJavaCalls.addSecrets(l_headerMap);
+        l_myJavaCalls.addHeaders(l_headerMap);
         assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getCallResultCache().size(),
                 Matchers.equalTo(2));
 
-        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getSecretsSet().size(),
+        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getHeaderSet().size(),
                 Matchers.equalTo(2));
 
 
@@ -2078,16 +2078,16 @@ public class TestFetchCalls {
 
     @Test
     public void testUsingHeaders_filterWhichHeadersToInclude() {
-        ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.activate("ibs-header-");
+        ConfigValueHandlerIBS.HEADERS_FILTER_PREFIX.activate("ibs-header-");
         Map<String, String> l_secretsMap = Map.of("key1", "value1", "ibs-header-key2", "value2");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
-        l_myJavaCalls.addSecrets(l_secretsMap);
+        l_myJavaCalls.addHeaders(l_secretsMap);
         assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getCallResultCache().size(),
                 Matchers.equalTo(1));
 
-        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getSecretsSet().size(),
+        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getHeaderSet().size(),
                 Matchers.equalTo(1));
     }
 
@@ -2102,7 +2102,7 @@ public class TestFetchCalls {
 
         l_myJavaCalls.getCallContent().put("ibs-header-key2", l_cc);
 
-        Assert.assertThrows(IBSPayloadException.class, () -> l_myJavaCalls.addSecrets(l_secretsMap));
+        Assert.assertThrows(IBSPayloadException.class, () -> l_myJavaCalls.addHeaders(l_secretsMap));
 
     }
 }

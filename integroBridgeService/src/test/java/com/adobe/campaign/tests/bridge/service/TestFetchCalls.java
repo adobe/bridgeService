@@ -2058,7 +2058,7 @@ public class TestFetchCalls {
 
     //Managing headers
     @Test
-    public void testUsingHeaders() {
+    public void testUsingHeadersAsVariables() {
         Map<String, String> l_headerMap = Map.of("key1", "value1", "key2", "value2");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -2077,7 +2077,7 @@ public class TestFetchCalls {
     }
 
     @Test
-    public void testUsingHeaders_filter() {
+    public void testUsingHeaders_filterWhichHeadersToInclude() {
         ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.activate("ibs-header-");
         Map<String, String> l_secretsMap = Map.of("key1", "value1", "ibs-header-key2", "value2");
 
@@ -2089,6 +2089,21 @@ public class TestFetchCalls {
 
         assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getSecretsSet().size(),
                 Matchers.equalTo(1));
+    }
+
+    @Test
+    public void testUsingHeaders_negative() {
+        Map<String, String> l_secretsMap = Map.of("key1", "value1", "ibs-header-key2", "value2");
+
+        JavaCalls l_myJavaCalls = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodReturningString");
+
+        l_myJavaCalls.getCallContent().put("ibs-header-key2", l_cc);
+
+        Assert.assertThrows(IBSPayloadException.class, () -> l_myJavaCalls.addSecrets(l_secretsMap));
+
     }
 }
 

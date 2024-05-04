@@ -26,6 +26,7 @@ public class IntegroAPI {
     public static final String ERROR_CONTENT_TYPE = "application/problem+json";
     public static final String SYSTEM_UP_MESSAGE = "All systems up";
     public static final String ERROR_IBS_INTERNAL = "Internal IBS error. Please file a bug report with the project and provide this JSON in the report.";
+    public static final String ERROR_PAYLOAD_INCONSISTENCY = "We detected stored header ames that match a callContent.";
     protected static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
     protected static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
     protected static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
@@ -91,6 +92,14 @@ public class IntegroAPI {
             res.type(ERROR_CONTENT_TYPE);
             res.body(BridgeServiceFactory.createExceptionPayLoad(
                     new ErrorObject(e, ERROR_JSON_TRANSFORMATION, statusCode)));
+        });
+
+        exception(IBSPayloadException.class, (e, req, res) -> {
+            int statusCode = 404;
+            res.status(statusCode);
+            res.type(ERROR_CONTENT_TYPE);
+            res.body(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_PAYLOAD_INCONSISTENCY, statusCode)));
         });
 
         exception(AmbiguousMethodException.class, (e, req, res) -> {

@@ -779,6 +779,23 @@ public class E2ETests {
 
     }
 
+    @Test(description = "Issue #78 accepting header secrets - where the header has the same name as a call content", groups = "E2E")
+    public void testFetchHeaders_negative() {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodAcceptingStringArgument");
+        l_cc.setArgs(new Object[] { "IBS_HEADER_1" });
+
+        l_myJavaCall.getCallContent().put("IBS_HEADER_1", l_cc);
+
+        given().body(l_myJavaCall).header("IBS_HEADER_1","REAL").post(EndPointURL + "call").then().statusCode(404)
+                .assertThat()
+                .body("title", Matchers.equalTo(IntegroAPI.ERROR_PAYLOAD_INCONSISTENCY));
+
+    }
+
 
 
     @AfterGroups(groups = "E2E", alwaysRun = true)

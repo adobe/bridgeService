@@ -206,9 +206,15 @@ public class JavaCalls {
      * @param in_mapOHeaders A map containing header values coming from the request
      */
     public void addSecrets(Map<String, String> in_mapOHeaders) {
-        in_mapOHeaders.keySet().stream().filter(i -> i.startsWith(ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue())).forEach(fk -> {
-            this.getLocalClassLoader().getCallResultCache().put(fk, in_mapOHeaders.get(fk));
-            this.getLocalClassLoader().getSecretsSet().add(fk);
-        });
+        in_mapOHeaders.keySet().stream()
+                .filter(i -> i.startsWith(ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue())).forEach(fk -> {
+                    this.getLocalClassLoader().getCallResultCache().put(fk, in_mapOHeaders.get(fk));
+                    this.getLocalClassLoader().getSecretsSet().add(fk);
+                });
+
+        this.getLocalClassLoader().getSecretsSet().stream().filter(s -> this.getCallContent().keySet().contains(s))
+                .anyMatch(t -> {
+                    throw new IBSPayloadException("There is a duplicate key between the Secrets and the CallContents");
+                });
     }
 }

@@ -2170,7 +2170,7 @@ public class TestFetchCalls {
                 () -> BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, l_myJavaCalls.fetchSecrets()));
 
         //Deactivate the Config Handler
-        ConfigValueHandlerIBS.HEADERS_BLOCK_OUTPUT.activate("false");
+        ConfigValueHandlerIBS.SECRETS_BLOCK_OUTPUT.activate("false");
 
         assertThat("We should successfully fetch the result string",
                 BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, l_myJavaCalls.fetchSecrets())

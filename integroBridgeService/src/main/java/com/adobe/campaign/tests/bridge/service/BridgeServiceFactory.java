@@ -12,7 +12,6 @@ import com.adobe.campaign.tests.bridge.service.exceptions.IBSPayloadException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,8 +41,8 @@ public class BridgeServiceFactory {
 
         ObjectMapper mapper = new ObjectMapper();
         String lr_resultPayload = mapper.writeValueAsString(in_callResults);
-        if (ConfigValueHandlerIBS.HEADERS_BLOCK_OUTPUT.is("true") && in_secretValues.stream().anyMatch(h -> lr_resultPayload.contains(h))) {
-            throw new IBSPayloadException("Your return payload contains secrets. You may consider reevaluating the headers you send. If they are not a secret, they can be put directly in the payload. Otherwise you can simply disable the "+ConfigValueHandlerIBS.HEADERS_BLOCK_OUTPUT.systemName+" option.");
+        if (ConfigValueHandlerIBS.SECRETS_BLOCK_OUTPUT.is("true") && in_secretValues.stream().anyMatch(h -> lr_resultPayload.contains(h))) {
+            throw new IBSPayloadException("Your return payload contains secrets. You may consider reevaluating the headers you send. If they are not a secret, they can be put directly in the payload. Otherwise you can simply disable the "+ConfigValueHandlerIBS.SECRETS_BLOCK_OUTPUT.systemName+" option.");
         }
         return lr_resultPayload;
     }

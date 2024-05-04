@@ -765,7 +765,7 @@ public class E2ETests {
 
     @Test(description = "Issue #78 accepting header secrets", groups = "E2E")
     public void testFetchHeaders() {
-        ConfigValueHandlerIBS.HEADERS_BLOCK_OUTPUT.activate("false");
+        ConfigValueHandlerIBS.SECRETS_BLOCK_OUTPUT.activate("false");
         JavaCalls l_myJavaCall = new JavaCalls();
 
         CallContent l_cc = new CallContent();

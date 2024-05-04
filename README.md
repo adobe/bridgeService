@@ -388,12 +388,18 @@ As of version 2.11.16, we can now use header variables in the payload. This feat
 * Avoiding the passing o secrets directly in the JSON payload.
 * Allowing for users to re-use the same JSON payload for different values.
 
-All you need to do is to reference your header name in the `args` section.
+All you need to do is to reference your header name in the `args` section. 
 
-### Avoiding XSS
-With the introduction of secrets we now, by default, block calls that are including the secret in the out-going payload.
+### Secrets
+Secrets allow you to have an extra level of security. This will mean that we will not allow you to print the secret in the output. 
 
-This can be deactivated by setting run-time variable `IBS.HEADERS.BLOCK.OUTPUT` to false. 
+A secret sent to the IBS will have to be prefixed with `ibs-secret-`. This can be overridden by setting the run-time variable `IBS.SECRETS.FILTER.PREFIX`. 
+
+Sometimes you may want to debug the system. In these cases you can deactivate the output check by setting run-time variable `IBS.SECRETS.BLOCK.OUTPUT` to false. However, this should only be temporary, and in production it is best to keep this control.
+
+### Steamlining Headers
+By default, IBS stores all the headers when you send a call. You have the possibility to filter the headers you want to use by setting the run-time variable `IBS.HEADERS.FILTER.PREFIX`.
+
 
 ## Making Assertions
 As of version 2.11.16, we allow the user to define assertions. An assertion allows users to define acceptance criteria for a call. They can also allow users to delegate the execution to a third party, by defining what an acceptable outcome for a result should be. This has been implemented by embedding [Hamcrest Matchers](https://hamcrest.org/JavaHamcrest/javadoc/2.2/org/hamcrest/Matchers.html) in the bridge service. You can now define a matcher to define rules for the correctness of a call. 

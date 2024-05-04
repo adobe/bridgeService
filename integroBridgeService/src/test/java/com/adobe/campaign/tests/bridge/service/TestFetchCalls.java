@@ -1168,7 +1168,8 @@ public class TestFetchCalls {
 
         JavaCallResults returnedValue = fetchedFromJSON.submitCalls();
 
-        System.out.println(BridgeServiceFactory.transformJavaCallResultsToJSON(returnedValue,fetchedFromJSON.fetchHeaderVaues()));
+        System.out.println(
+                BridgeServiceFactory.transformJavaCallResultsToJSON(returnedValue, fetchedFromJSON.fetchSecrets()));
 
         assertThat("We should get a good answer back from the call",
                 returnedValue.getReturnValues().get("call1").toString(),
@@ -1472,7 +1473,7 @@ public class TestFetchCalls {
         JavaCallResults jcr = new JavaCallResults();
         jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(x));
 
-        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr,new HashSet<>());
+        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, new HashSet<>());
 
         System.out.println(value);
 
@@ -2059,7 +2060,8 @@ public class TestFetchCalls {
     //Managing headers
     @Test
     public void testUsingHeadersAsVariables() {
-        Map<String, String> l_headerMap = Map.of("key1", "value1", "key2", "value2");
+        Map<String, String> l_headerMap = Map.of("key1", "value1",
+                ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.defaultValue + "key2", "value2");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
@@ -2072,33 +2074,41 @@ public class TestFetchCalls {
                 Matchers.equalTo(2));
 
         assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getHeaderSet().size(),
-                Matchers.equalTo(2));
+                Matchers.equalTo(1));
 
-        assertThat("We should not have any call results yet", l_myJavaCalls.fetchHeaderVaues(),
-                Matchers.containsInAnyOrder("value2", "value1"));
+        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getSecretSet().size(),
+                Matchers.equalTo(1));
+
+        assertThat("We should not have any call results yet", l_myJavaCalls.fetchSecrets(),
+                Matchers.containsInAnyOrder("value2"));
     }
 
     @Test
     public void testUsingHeaders_filterWhichHeadersToInclude() {
         ConfigValueHandlerIBS.HEADERS_FILTER_PREFIX.activate("ibs-header-");
-        Map<String, String> l_secretsMap = Map.of("key1", "value1", "ibs-header-key2", "value2");
+        ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.activate("ibs-sec-");
+        Map<String, String> l_headersMap = Map.of("ibs-sec-key1", "value1", "ibs-header-key2", "value2", "key3",
+                "value3");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
 
-        l_myJavaCalls.addHeaders(l_secretsMap);
+        l_myJavaCalls.addHeaders(l_headersMap);
         assertThat("We should not have any call results yet",
                 l_myJavaCalls.getLocalClassLoader().getCallResultCache().size(),
-                Matchers.equalTo(1));
+                Matchers.equalTo(2));
 
         assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getHeaderSet().size(),
                 Matchers.equalTo(1));
 
-        assertThat("We should not have any call results yet", l_myJavaCalls.fetchHeaderVaues(),
-                Matchers.containsInAnyOrder("value2"));
+        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getSecretSet().size(),
+                Matchers.equalTo(1));
+
+        assertThat("We should not have any call results yet", l_myJavaCalls.fetchSecrets(),
+                Matchers.containsInAnyOrder("value1"));
     }
 
     @Test
-    public void testUsingHeaders_negative() {
+    public void testUsingHeaders_negativeHeader() {
         Map<String, String> l_secretsMap = Map.of("key1", "value1", "ibs-header-key2", "value2");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
@@ -2112,10 +2122,32 @@ public class TestFetchCalls {
     }
 
     @Test
+    public void testUsingHeaders_negativeSecret() {
+        Map<String, String> l_secretsMap = Map.of("key1", "value1", "ibs-secret-key2", "value2");
+
+        JavaCalls l_myJavaCalls = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodReturningString");
+
+        l_myJavaCalls.getCallContent().put("ibs-secret-key2", l_cc);
+
+        boolean exceptionCheck = false;
+        try {
+            l_myJavaCalls.addHeaders(l_secretsMap);
+        } catch (Exception e) {
+            assertThat("The correct exception should have been thrown", e, Matchers.instanceOf(IBSPayloadException.class));
+            assertThat("The correct exception message should have been thrown", e.getMessage(), Matchers.startsWith("We found a secret key"));
+            exceptionCheck=true;
+        }
+        assertThat("We should have gone through the exception", exceptionCheck);
+    }
+
+    @Test
     public void testUsingHeaders_negativePassingSecrets()
             throws JsonProcessingException {
 
-        Map<String, String> l_secretsMap = Map.of("key1", "value1", "ibs-header-key2", "value2");
+        Map<String, String> l_secretsMap = Map.of("key1", "value1", "ibs-secret-key2", "value2");
 
         JavaCalls l_myJavaCalls = new JavaCalls();
         CallContent l_cc = new CallContent();
@@ -2135,13 +2167,13 @@ public class TestFetchCalls {
         jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(messages));
 
         Assert.assertThrows(IBSPayloadException.class,
-                () -> BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, l_myJavaCalls.fetchHeaderVaues()));
+                () -> BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, l_myJavaCalls.fetchSecrets()));
 
         //Deactivate the Config Handler
         ConfigValueHandlerIBS.HEADERS_BLOCK_OUTPUT.activate("false");
 
         assertThat("We should successfully fetch the result string",
-                BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, l_myJavaCalls.fetchHeaderVaues())
+                BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, l_myJavaCalls.fetchSecrets())
                         .contains("value2"));
 
     }

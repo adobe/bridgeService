@@ -208,24 +208,40 @@ public class JavaCalls {
      */
     public void addHeaders(Map<String, String> in_mapOHeaders) {
         in_mapOHeaders.keySet().stream()
-                .filter(i -> i.startsWith(ConfigValueHandlerIBS.HEADERS_FILTER_PREFIX.fetchValue())).forEach(fk -> {
+                .filter(i -> (i.startsWith(ConfigValueHandlerIBS.HEADERS_FILTER_PREFIX.fetchValue()) && !i.startsWith(
+                        ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue()))).forEach(fk -> {
                     this.getLocalClassLoader().getCallResultCache().put(fk, in_mapOHeaders.get(fk));
                     this.getLocalClassLoader().getHeaderSet().add(fk);
                 });
 
+        in_mapOHeaders.keySet().stream()
+                .filter(i -> i.startsWith(ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue())).forEach(fk -> {
+                    this.getLocalClassLoader().getCallResultCache().put(fk, in_mapOHeaders.get(fk));
+                    this.getLocalClassLoader().getSecretSet().add(fk);
+                });
+
         //Check for duplicates between headers and call contents
-        if (this.getLocalClassLoader().getHeaderSet().stream().anyMatch(s -> this.getCallContent().keySet().contains(s))) {
+        if (this.getLocalClassLoader().getHeaderSet().stream()
+                .anyMatch(s -> this.getCallContent().keySet().contains(s))) {
             throw new IBSPayloadException("We found a header key that is also found among the callContent names");
+        }
+
+        //Check for duplicates between headers and call contents
+        if (this.getLocalClassLoader().getSecretSet().stream()
+                .anyMatch(s -> this.getCallContent().keySet().contains(s))) {
+            throw new IBSPayloadException("We found a secret key that is also found among the callContent names");
         }
 
     }
 
     /**
-     * Returns a set of headers that are stored during the call
-     * @return a set of stored header values
+     * Returns a set of secrets that are stored during the call
+     *
+     * @return a set of stored secret values
      */
-    public Set<String> fetchHeaderVaues() {
-        return this.getLocalClassLoader().getHeaderSet().stream().map(k -> (String) getLocalClassLoader().getCallResultCache().get(k)).collect(
-                Collectors.toSet());
+    public Set<String> fetchSecrets() {
+        return this.getLocalClassLoader().getSecretSet().stream()
+                .map(k -> (String) getLocalClassLoader().getCallResultCache().get(k)).collect(
+                        Collectors.toSet());
     }
 }

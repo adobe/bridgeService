@@ -2,6 +2,7 @@
 
 ## 2.11.16-SNAPSHOT
 * New Feature : [#3 Include an Assertion Feature](https://github.com/adobe/bridgeService/issues/3). We have now included the possibility for users to define assertions. This allows you to clarify accepted results for the call you make with the IBS.
+* New Feature : [#79 Allow or passing secrets in headers](https://github.com/adobe/bridgeService/issues/79). You can now pass variables and secrets as headers. 
 * [#88 Logging action steps](https://github.com/adobe/bridgeService/issues/88). We now log the steps we take during execution for better debugging.
 
 ## 2.11.15

@@ -59,6 +59,8 @@ public enum ConfigValueHandlerIBS {
             "This is a temporary variable for testing purposes only."),
     HEADERS_FILTER_PREFIX("IBS.HEADERS.FILTER.PREFIX", "", false,
             "When set we only include headers with a name starting with this value."),
+    SECRETS_FILTER_PREFIX("IBS.SECRETS.FILTER.PREFIX", "ibs-secret-", false,
+            "Headers with this prefix will be considered as secrets."),
     HEADERS_BLOCK_OUTPUT("IBS.HEADERS.BLOCK.OUTPUT", "true", false,
             "When set to true, we forbid the system from returning the value in the return payload. This is to avoid XSS attacks.");
 

@@ -81,7 +81,7 @@ public class IntegroAPI {
 
             fetchedFromJSON.addHeaders(req.headers().stream().collect(Collectors.toMap(k -> k, req::headers)));
 
-            return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls(), fetchedFromJSON.fetchHeaderVaues());
+            return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls(), fetchedFromJSON.fetchSecrets());
         });
 
         after((req, res) -> res.type("application/json"));

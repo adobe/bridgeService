@@ -799,7 +799,7 @@ public class E2ETests {
 
     @Test(description = "Issue #78 accepting header secrets - where the header has the same name as a call content", groups = "E2E")
     public void testFetchHeaders_negativeXsideScripting() {
-        ConfigValueHandlerIBS.HEADERS_FILTER_PREFIX.activate("ibs-header-");
+        ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.activate("ibs-header-");
 
         JavaCalls l_myJavaCall = new JavaCalls();
 

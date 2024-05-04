@@ -13,10 +13,13 @@ import com.adobe.campaign.tests.bridge.service.utils.ServiceTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import spark.Request;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
@@ -76,6 +79,8 @@ public class IntegroAPI {
 
         post("/call", (req, res) -> {
             JavaCalls fetchedFromJSON = BridgeServiceFactory.createJavaCalls(req.body());
+
+            fetchedFromJSON.addHeaders(req.headers().stream().collect(Collectors.toMap(k -> k, k -> req.headers(k))));
 
             return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls());
         });

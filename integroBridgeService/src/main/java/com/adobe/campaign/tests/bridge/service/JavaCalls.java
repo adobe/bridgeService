@@ -192,4 +192,12 @@ public class JavaCalls {
     public void setAssertions(Map<String, Assertion> assertions) {
         this.assertions = assertions;
     }
+
+    /**
+     * Adds headers to the results cache of the ClassLoader
+     * @param in_mapOHeaders A map containing header values coming from the request
+     */
+    public void addHeaders(Map<String, String> in_mapOHeaders) {
+        in_mapOHeaders.forEach((k,v) -> this.getLocalClassLoader().getCallResultCache().put(k,v));
+    }
 }

@@ -17,7 +17,6 @@ import com.adobe.campaign.tests.bridge.testdata.one.StaticType;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Matchers;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -1383,7 +1382,6 @@ public class TestFetchCalls {
         Long result3 = jcr.expandDurations(100);
         assertThat(result3, Matchers.equalTo(100l));
 
-
     }
 
     @Test
@@ -2056,6 +2054,21 @@ public class TestFetchCalls {
                     Matchers.equalTo(LogManagement.STD_STEPS.ENVVARS.value));
 
         }
+    }
+
+    //Managing headers
+    @Test
+    public void testUsingHeaders() {
+        Map<String, String> l_headerMap = Map.of("key1", "value1", "key2", "value2");
+
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getCallResultCache(),
+                Matchers.anEmptyMap());
+
+        l_myJavaCalls.addHeaders(l_headerMap);
+        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getCallResultCache().size(),
+                Matchers.equalTo(2));
     }
 }
 

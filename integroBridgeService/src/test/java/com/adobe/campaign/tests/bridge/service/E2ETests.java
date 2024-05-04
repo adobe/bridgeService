@@ -762,8 +762,26 @@ public class E2ETests {
 
     }
 
+
+    @Test(description = "Issue #78 accepting header secrets", groups = "E2E")
+    public void testFetchHeaders() {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodAcceptingStringArgument");
+        l_cc.setArgs(new Object[] { "IBS_HEADER_1" });
+
+        l_myJavaCall.getCallContent().put("fetchString", l_cc);
+
+        given().body(l_myJavaCall).header("IBS_HEADER_1","REAL").post(EndPointURL + "call").then().assertThat()
+                .body("returnValues.fetchString", Matchers.equalTo("REAL_Success"));
+
+    }
+
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {
+
         ConfigValueHandlerIBS.resetAllValues();
         Spark.stop();
         serverSocket1.close();

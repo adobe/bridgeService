@@ -55,7 +55,8 @@ public class LogManagement {
         SEND_RESULT("Returning result"),
         NOT_IN_A_STEP("Not in a Step"),
         ANALYZING_PAYLOAD("Analyzing Payload"),
-        GENERATING_RESPONSE("Generating Response");
+        GENERATING_RESPONSE("Generating Response"),
+        STORE_HEADERS("Storing Headers");
 
         final String value;
 

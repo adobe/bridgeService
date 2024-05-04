@@ -207,6 +207,7 @@ public class JavaCalls {
      * @param in_mapOHeaders A map containing header values coming from the request
      */
     public void addHeaders(Map<String, String> in_mapOHeaders) {
+        LogManagement.logStep(LogManagement.STD_STEPS.STORE_HEADERS);
         in_mapOHeaders.keySet().stream()
                 .filter(i -> (i.startsWith(ConfigValueHandlerIBS.HEADERS_FILTER_PREFIX.fetchValue()) && !i.startsWith(
                         ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue()))).forEach(fk -> {

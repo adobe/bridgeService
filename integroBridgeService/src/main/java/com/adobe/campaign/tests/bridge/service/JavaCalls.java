@@ -214,9 +214,18 @@ public class JavaCalls {
                 });
 
         //Check for duplicates between headers and call contents
-        this.getLocalClassLoader().getHeaderSet().stream().filter(s -> this.getCallContent().keySet().contains(s))
-                .anyMatch(t -> {
-                    throw new IBSPayloadException("The key "+t+" is a duplicate between the Headers and the CallContents");
-                });
+        if (this.getLocalClassLoader().getHeaderSet().stream().anyMatch(s -> this.getCallContent().keySet().contains(s))) {
+            throw new IBSPayloadException("We found a header key that is also found among the callContent names");
+        }
+
+    }
+
+    /**
+     * Returns a set of headers that are stored during the call
+     * @return a set of stored header values
+     */
+    public Set<String> fetchHeaderVaues() {
+        return this.getLocalClassLoader().getHeaderSet().stream().map(k -> (String) getLocalClassLoader().getCallResultCache().get(k)).collect(
+                Collectors.toSet());
     }
 }

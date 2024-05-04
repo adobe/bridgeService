@@ -46,18 +46,21 @@ public enum ConfigValueHandlerIBS {
             "IBS.CLASSLOADER.INTEGRITY.MODE","semi-manual", false,
             "This value defined the injection mode of packages and classes. We have three modes: automatic, manual, semi-automatic"),*/
     INTEGRITY_PACKAGE_INJECTION_MODE(
-            "IBS.CLASSLOADER.INTEGRITY.MODE","semi-manual", false,
-                    "This value defined the injection mode of packages and classes. We have three modes: automatic, manual, semi-automatic") {
+            "IBS.CLASSLOADER.INTEGRITY.MODE", "semi-manual", false,
+            "This value defined the injection mode of packages and classes. We have three modes: automatic, manual, semi-automatic") {
         public void activate(String in_value) {
             //Use default if value is not in range
-            if (Arrays.asList("manual","semi-manual").contains(in_value.toLowerCase())) {
+            if (Arrays.asList("manual", "semi-manual").contains(in_value.toLowerCase())) {
                 System.setProperty(this.systemName, in_value);
             }
         }
     },
-    TEMP_INTERNAL_ERROR_MODE("TMP.INTERNAL.ERROR.MODE", "off", false, "This is a temporary variable for testing purposes only."),
-    HEADERS_FILTER_PREFIX("IBS.HEADERS.FILTER.PREFIX","", false, "When set we only include headers with a name starting with this value.");
-
+    TEMP_INTERNAL_ERROR_MODE("TMP.INTERNAL.ERROR.MODE", "off", false,
+            "This is a temporary variable for testing purposes only."),
+    HEADERS_FILTER_PREFIX("IBS.HEADERS.FILTER.PREFIX", "", false,
+            "When set we only include headers with a name starting with this value."),
+    HEADERS_BLOCK_OUTPUT("IBS.HEADERS.BLOCK.OUTPUT", "true", false,
+            "When set to true, we forbid the system from returning the value in the return payload. This is to avoid XSS attacks.");
 
     public final String systemName;
     public final String defaultValue;

@@ -8,10 +8,13 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.service.exceptions.IBSPayloadException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class BridgeServiceFactory {
     /**
@@ -28,14 +31,20 @@ public class BridgeServiceFactory {
     /**
      * Transforms the results of the JavaCall to a JSON
      * @param in_callResults A JavaCallResults object to be transformed
+     * @param in_headerValues A set of secrets that need to be check for the output
      * @return The JSON representation of the Call result
      * @throws JsonProcessingException when failing to parse the JavaCallResults object
      */
-    public static String transformJavaCallResultsToJSON(JavaCallResults in_callResults) throws JsonProcessingException {
+    public static String transformJavaCallResultsToJSON(JavaCallResults in_callResults, Set<String> in_headerValues)
+            throws JsonProcessingException {
         LogManagement.logStep(LogManagement.STD_STEPS.GENERATING_RESPONSE);
 
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(in_callResults);
+        String lr_resultPayload = mapper.writeValueAsString(in_callResults);
+        if (ConfigValueHandlerIBS.HEADERS_BLOCK_OUTPUT.is("true") && in_headerValues.stream().anyMatch(h -> lr_resultPayload.contains(h))) {
+            throw new IBSPayloadException("Your return payload contains secrets. You may consider reevaluating the headers you send. If they are not a secret, they can be put directly in the payload. Otherwise you can simply disable the "+ConfigValueHandlerIBS.HEADERS_BLOCK_OUTPUT.systemName+" option.");
+        }
+        return lr_resultPayload;
     }
 
     /**
@@ -77,6 +86,7 @@ public class BridgeServiceFactory {
         return mapper.writeValueAsString(in_testPayLoad);
     }
 
+
     /**
      * Extracted the information related to the exceptions caused by the application
      * @param in_errorObject The code of the exception
@@ -104,4 +114,5 @@ public class BridgeServiceFactory {
             return "Problem creating error payload. Original error is " + in_errorObject.getTitle();
         }
     }
+
 }

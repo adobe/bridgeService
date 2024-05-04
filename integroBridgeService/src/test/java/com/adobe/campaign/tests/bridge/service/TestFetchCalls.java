@@ -2066,9 +2066,29 @@ public class TestFetchCalls {
         assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getCallResultCache(),
                 Matchers.anEmptyMap());
 
-        l_myJavaCalls.addHeaders(l_headerMap);
+        l_myJavaCalls.addSecrets(l_headerMap);
         assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getCallResultCache().size(),
                 Matchers.equalTo(2));
+
+        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getSecretsSet().size(),
+                Matchers.equalTo(2));
+
+
+    }
+
+    @Test
+    public void testUsingHeaders_filter() {
+        ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.activate("ibs-header-");
+        Map<String, String> l_secretsMap = Map.of("key1", "value1", "ibs-header-key2", "value2");
+
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        l_myJavaCalls.addSecrets(l_secretsMap);
+        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getCallResultCache().size(),
+                Matchers.equalTo(1));
+
+        assertThat("We should not have any call results yet", l_myJavaCalls.getLocalClassLoader().getSecretsSet().size(),
+                Matchers.equalTo(1));
     }
 }
 

@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
@@ -25,6 +26,7 @@ public class IntegroAPI {
     public static final String ERROR_CONTENT_TYPE = "application/problem+json";
     public static final String SYSTEM_UP_MESSAGE = "All systems up";
     public static final String ERROR_IBS_INTERNAL = "Internal IBS error. Please file a bug report with the project and provide this JSON in the report.";
+    public static final String ERROR_PAYLOAD_INCONSISTENCY = "We detected an inconsistency in your payload.";
     protected static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
     protected static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
     protected static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
@@ -77,7 +79,9 @@ public class IntegroAPI {
         post("/call", (req, res) -> {
             JavaCalls fetchedFromJSON = BridgeServiceFactory.createJavaCalls(req.body());
 
-            return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls());
+            fetchedFromJSON.addHeaders(req.headers().stream().collect(Collectors.toMap(k -> k, req::headers)));
+
+            return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls(), fetchedFromJSON.fetchSecrets());
         });
 
         after((req, res) -> res.type("application/json"));
@@ -88,6 +92,14 @@ public class IntegroAPI {
             res.type(ERROR_CONTENT_TYPE);
             res.body(BridgeServiceFactory.createExceptionPayLoad(
                     new ErrorObject(e, ERROR_JSON_TRANSFORMATION, statusCode)));
+        });
+
+        exception(IBSPayloadException.class, (e, req, res) -> {
+            int statusCode = 404;
+            res.status(statusCode);
+            res.type(ERROR_CONTENT_TYPE);
+            res.body(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_PAYLOAD_INCONSISTENCY, statusCode)));
         });
 
         exception(AmbiguousMethodException.class, (e, req, res) -> {

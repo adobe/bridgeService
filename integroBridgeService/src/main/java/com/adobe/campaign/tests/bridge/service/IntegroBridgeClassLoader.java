@@ -18,6 +18,8 @@ import java.util.*;
 
 public class IntegroBridgeClassLoader extends ClassLoader {
     private static final Logger log = LogManager.getLogger();
+    private Set<String> secretSet;
+    private Set<String> headerSet;
     private Map<String, Object> callResultCache;
 
     private Set<String> packagePaths;
@@ -31,6 +33,8 @@ public class IntegroBridgeClassLoader extends ClassLoader {
         super(IntegroBridgeClassLoader.class.getClassLoader());
         setPackagePaths(ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.fetchValue());
         this.setCallResultCache(new HashMap<>());
+        this.setHeaderSet(new HashSet<>());
+        this.setSecretSet(new HashSet<>());
     }
 
     /**
@@ -168,5 +172,21 @@ public class IntegroBridgeClassLoader extends ClassLoader {
      */
     public boolean isClassLoaded(String typeName) {
         return !(findLoadedClass(typeName)==null);
+    }
+
+    public Set<String> getHeaderSet() {
+        return headerSet;
+    }
+
+    public void setHeaderSet(Set<String> headerSet) {
+        this.headerSet = headerSet;
+    }
+
+    public Set<String> getSecretSet() {
+        return secretSet;
+    }
+
+    public void setSecretSet(Set<String> secretSet) {
+        this.secretSet = secretSet;
     }
 }

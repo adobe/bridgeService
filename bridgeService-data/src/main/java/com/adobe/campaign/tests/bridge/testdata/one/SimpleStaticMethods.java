@@ -51,6 +51,13 @@ public class SimpleStaticMethods {
         return in_stringArgument1 + "+" + in_stringArgument2 + SUCCESS_VAL;
     }
 
+    public static int methodAcceptingListArguments(List<String> in_ListArgument) {
+        return in_ListArgument.size();
+    }
+
+    public static int methodAcceptingArrayArguments(String[] in_arrayArgument) {
+        return in_arrayArgument.length;
+    }
     public static String methodThrowsException() {
         throw new IllegalArgumentException("Will always throw this");
     }

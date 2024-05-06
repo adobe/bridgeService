@@ -28,6 +28,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -2175,6 +2176,66 @@ public class TestFetchCalls {
         assertThat("We should successfully fetch the result string",
                 BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, l_myJavaCalls.fetchSecrets())
                         .contains("value2"));
+    }
+
+    //#111 Var args and list -array interoperability
+    @Test
+    public void testInListToArrayTransformation() throws NoSuchMethodException, ClassNotFoundException {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodAcceptingArrayArguments");
+        var stringList = Arrays.asList("value1", "value2");
+        //var stringList = new String[]{"value1", "value2"};
+        l_cc.setArgs(new Object[]{ stringList });
+        l_myJavaCall.getCallContent().put("call1", l_cc);
+
+        Method[] mandms =  SimpleStaticMethods.class.getMethods();
+        Method l_myMethod = SimpleStaticMethods.class.getDeclaredMethod(l_cc.getMethodName(), String[].class);
+        System.out.println(l_myMethod.getParameterTypes()[0]);
+        assertThat("The first parameter is an array",l_myMethod.getParameterTypes()[0].isArray());
+        assertThat("The first parameter is an array",l_myMethod.getParameterTypes()[0], Matchers.equalTo(String[].class));
+
+        System.out.println(l_myMethod.getParameterTypes()[0].getComponentType().getTypeName());
+
+        assertThat("We should now have an array of array", l_cc.getArgs()[0], Matchers.instanceOf(List.class));
+        System.out.println("arg "+l_cc.getArgs()[0].getClass());
+
+        Object[] newArgs = l_cc.castArgs(l_cc.getArgs(), l_myMethod);
+        assertThat(newArgs, Matchers.notNullValue());
+        assertThat("We should now have an array", newArgs[0].getClass().isArray());
+        assertThat("We should now have an array of Strings", newArgs[0].getClass().getComponentType(), Matchers.equalTo(String.class));
+
+
+        System.out.println(l_myMethod.getParameterTypes()[0].getComponentType().getTypeName());
+
+        assertThat("We should now have an array of array", newArgs[0].getClass().isArray());
+        System.out.println("newArgs "+newArgs[0].getClass().getComponentType().getTypeName());
+
+        Method l_myMethod2 = SimpleStaticMethods.class.getDeclaredMethod("methodAcceptingListArguments", List.class);
+        assertThat("The first parameter is an array",l_myMethod2.getParameterTypes()[0], Matchers.equalTo(List.class));
+
+
+        assertThat("We should get the correct return value", l_myJavaCall.call("call1"), Matchers.equalTo(2));
+
+    }
+
+
+    @Test
+    public void testMetaIsListToArray() throws NoSuchMethodException {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodAcceptingArrayArguments");
+        var stringList = Arrays.asList("value1", "value2");
+        l_cc.setArgs(new Object[]{ stringList });
+        l_myJavaCall.getCallContent().put("call1", l_cc);
+
+        Method l_myMethod = SimpleStaticMethods.class.getDeclaredMethod(l_cc.getMethodName(), String[].class);
+        //assertThat("We should correctly detect a target of array and a ");
+
 
     }
 }

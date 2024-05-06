@@ -13,9 +13,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.logging.log4j.LogManager;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -164,12 +166,13 @@ public class CallContent {
                 Method l_method = fetchMethod(ourClass);
 
                 Object ourInstance = (l_instanceObject == null) ? ourClass.getDeclaredConstructor().newInstance() : l_instanceObject;
-                lr_object = l_method.invoke(ourInstance, expandArgs(iClassLoader));
+                lr_object = l_method.invoke(ourInstance, castArgs(expandArgs(iClassLoader), l_method));
+                //lr_object = l_method.invoke(ourInstance, expandArgs(iClassLoader));
             }
 
         } catch (IllegalArgumentException e) {
             throw new NonExistentJavaObjectException(
-                    "The given method " + this.getFullName() + " could not accept the given arguments..");
+                    "The given method " + this.getFullName() + " could not accept the given arguments.");
 
         } catch (IllegalAccessException e) {
             throw new JavaObjectInaccessibleException("We do not have the right to execute the given class. Original message : "+e.getMessage(), e);
@@ -255,5 +258,30 @@ public class CallContent {
         result = 31 * result + (getReturnType() != null ? getReturnType().hashCode() : 0);
         result = 31 * result + Arrays.hashCode(getArgs());
         return result;
+    }
+
+    /**
+     * This method transforms the arguments, when necessary to the target objects
+     * @param in_objects
+     * @param in_method
+     * @return
+     */
+     Object[] castArgs(Object[] in_objects, Method in_method) {
+        List<Object> ltr_objects =  new ArrayList<>();
+        for (int i=0; i < in_objects.length; i++) {
+            Class lt_type = in_method.getParameterTypes()[i];
+            if (lt_type.isArray() && in_objects[i] instanceof List) {
+                Class<?> lt_targetClass = lt_type.getComponentType();
+                Object lt_targetObject = Array.newInstance(lt_targetClass, ((List)in_objects[0]).size());
+                for (int i2=0; i2 < ((List)in_objects[0]).size(); i2++) {
+                    Array.set(lt_targetObject, i2, ((List<?>) in_objects[i]).get(i2));
+                }
+                ltr_objects.add(lt_targetObject);
+            } else {
+                ltr_objects.add(in_objects[i]);
+            }
+        }
+
+        return ltr_objects.toArray();
     }
 }

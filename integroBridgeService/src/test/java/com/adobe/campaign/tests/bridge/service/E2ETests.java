@@ -660,7 +660,7 @@ public class E2ETests {
                 .body("originalException", Matchers.equalTo("java.lang.IllegalArgumentException"))
                 .body("originalMessage", Matchers.equalTo("Will always throw this"))
                 .body("stackTrace[0]", Matchers.equalTo(
-                        "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowsException(SimpleStaticMethods.java:55)"));
+                        "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowsException(SimpleStaticMethods.java:62)"));
 
     }
 
@@ -762,7 +762,6 @@ public class E2ETests {
 
     }
 
-
     @Test(description = "Issue #78 accepting header secrets", groups = "E2E")
     public void testFetchHeaders() {
         ConfigValueHandlerIBS.SECRETS_BLOCK_OUTPUT.activate("false");
@@ -775,7 +774,7 @@ public class E2ETests {
 
         l_myJavaCall.getCallContent().put("fetchString", l_cc);
 
-        given().body(l_myJavaCall).header("IBS_HEADER_1","REAL").post(EndPointURL + "call").then().assertThat()
+        given().body(l_myJavaCall).header("IBS_HEADER_1", "REAL").post(EndPointURL + "call").then().assertThat()
                 .body("returnValues.fetchString", Matchers.equalTo("REAL_Success"));
 
     }
@@ -791,7 +790,7 @@ public class E2ETests {
 
         l_myJavaCall.getCallContent().put("IBS_HEADER_1", l_cc);
 
-        given().body(l_myJavaCall).header("IBS_HEADER_1","REAL").post(EndPointURL + "call").then().statusCode(404)
+        given().body(l_myJavaCall).header("IBS_HEADER_1", "REAL").post(EndPointURL + "call").then().statusCode(404)
                 .assertThat()
                 .body("title", Matchers.equalTo(IntegroAPI.ERROR_PAYLOAD_INCONSISTENCY));
 
@@ -810,13 +809,46 @@ public class E2ETests {
 
         l_myJavaCall.getCallContent().put("fetchString", l_cc);
 
-        given().body(l_myJavaCall).header("ibs-header-1","REAL").post(EndPointURL + "call").then().statusCode(404)
+        given().body(l_myJavaCall).header("ibs-header-1", "REAL").post(EndPointURL + "call").then().statusCode(404)
                 .assertThat()
                 .body("title", Matchers.equalTo(IntegroAPI.ERROR_PAYLOAD_INCONSISTENCY));
+    }
+
+    @Test(groups = "E2E")
+    public void callAssertionOneOf_varArgs() {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        Assertion l_assert = new Assertion();
+        l_assert.setType(Assertion.TYPES.RESULT);
+        l_assert.setMatcher("oneOf");
+        l_assert.setActualValue("A");
+        l_assert.setExpectedValue(new String[]{"A","B"});
+
+        l_myJavaCall.getAssertions().put("Both values should be the same", l_assert);
+
+        given().body(l_myJavaCall).post(EndPointURL + "call").then().assertThat().statusCode(200)
+                .body("assertionResults", Matchers.hasKey("Both values should be the same"))
+                .body("assertionResults.'Both values should be the same'", Matchers.equalTo(true));
 
     }
 
+    @Test(groups = "E2E")
+    public void callMethodWithArray() {
+        JavaCalls l_myJavaCall = new JavaCalls();
 
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodAcceptingArrayArguments");
+        l_cc.setArgs(new Object[] { new String[] { "value1", "value2" } });
+
+        l_myJavaCall.getCallContent().put("fetchArraySize", l_cc);
+
+        given().body(l_myJavaCall).post(EndPointURL + "call").then()
+                .statusCode(200)
+                .assertThat()
+                .body("returnValues.fetchArraySize", Matchers.equalTo(2));
+
+    }
 
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {

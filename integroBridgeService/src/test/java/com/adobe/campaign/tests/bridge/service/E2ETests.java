@@ -821,15 +821,14 @@ public class E2ETests {
         Assertion l_assert = new Assertion();
         l_assert.setType(Assertion.TYPES.RESULT);
         l_assert.setMatcher("oneOf");
-        l_assert.setActualValue("A");
-        l_assert.setExpectedValue(new String[]{"A","B"});
+        l_assert.setActualValue(2);
+        l_assert.setExpectedValue(new int[]{3,5,2});
 
         l_myJavaCall.getAssertions().put("Both values should be the same", l_assert);
 
         given().body(l_myJavaCall).post(EndPointURL + "call").then().assertThat().statusCode(200)
                 .body("assertionResults", Matchers.hasKey("Both values should be the same"))
                 .body("assertionResults.'Both values should be the same'", Matchers.equalTo(true));
-
     }
 
     @Test(groups = "E2E")

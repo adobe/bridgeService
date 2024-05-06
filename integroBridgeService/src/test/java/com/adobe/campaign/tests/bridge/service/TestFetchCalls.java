@@ -2187,11 +2187,9 @@ public class TestFetchCalls {
         l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
         l_cc.setMethodName("methodAcceptingArrayArguments");
         var stringList = Arrays.asList("value1", "value2");
-        //var stringList = new String[]{"value1", "value2"};
         l_cc.setArgs(new Object[]{ stringList });
         l_myJavaCall.getCallContent().put("call1", l_cc);
 
-        Method[] mandms =  SimpleStaticMethods.class.getMethods();
         Method l_myMethod = SimpleStaticMethods.class.getDeclaredMethod(l_cc.getMethodName(), String[].class);
         System.out.println(l_myMethod.getParameterTypes()[0]);
         assertThat("The first parameter is an array",l_myMethod.getParameterTypes()[0].isArray());
@@ -2207,18 +2205,7 @@ public class TestFetchCalls {
         assertThat("We should now have an array", newArgs[0].getClass().isArray());
         assertThat("We should now have an array of Strings", newArgs[0].getClass().getComponentType(), Matchers.equalTo(String.class));
 
-
-        System.out.println(l_myMethod.getParameterTypes()[0].getComponentType().getTypeName());
-
-        assertThat("We should now have an array of array", newArgs[0].getClass().isArray());
-        System.out.println("newArgs "+newArgs[0].getClass().getComponentType().getTypeName());
-
-        Method l_myMethod2 = SimpleStaticMethods.class.getDeclaredMethod("methodAcceptingListArguments", List.class);
-        assertThat("The first parameter is an array",l_myMethod2.getParameterTypes()[0], Matchers.equalTo(List.class));
-
-
         assertThat("We should get the correct return value", l_myJavaCall.call("call1"), Matchers.equalTo(2));
-
     }
 
 

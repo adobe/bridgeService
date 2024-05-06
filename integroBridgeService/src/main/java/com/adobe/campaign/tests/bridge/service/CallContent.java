@@ -167,7 +167,6 @@ public class CallContent {
 
                 Object ourInstance = (l_instanceObject == null) ? ourClass.getDeclaredConstructor().newInstance() : l_instanceObject;
                 lr_object = l_method.invoke(ourInstance, castArgs(expandArgs(iClassLoader), l_method));
-                //lr_object = l_method.invoke(ourInstance, expandArgs(iClassLoader));
             }
 
         } catch (IllegalArgumentException e) {

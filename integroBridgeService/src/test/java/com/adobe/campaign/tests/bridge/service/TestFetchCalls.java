@@ -2208,7 +2208,6 @@ public class TestFetchCalls {
         assertThat("We should get the correct return value", l_myJavaCall.call("call1"), Matchers.equalTo(2));
     }
 
-
     @Test
     public void testMetaIsListToArray() throws NoSuchMethodException {
         JavaCalls l_myJavaCall = new JavaCalls();
@@ -2216,14 +2215,10 @@ public class TestFetchCalls {
         CallContent l_cc = new CallContent();
         l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
         l_cc.setMethodName("methodAcceptingArrayArguments");
-        var stringList = Arrays.asList("value1", "value2");
-        l_cc.setArgs(new Object[]{ stringList });
+        l_cc.setArgs(new Object[]{ new String[]{"value1", "value2"} });
         l_myJavaCall.getCallContent().put("call1", l_cc);
 
-        Method l_myMethod = SimpleStaticMethods.class.getDeclaredMethod(l_cc.getMethodName(), String[].class);
-        //assertThat("We should correctly detect a target of array and a ");
-
-
+        assertThat("We should get the correct return value", l_myJavaCall.call("call1"), Matchers.equalTo(2));
     }
 }
 

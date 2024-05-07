@@ -548,7 +548,7 @@ public class E2ETests {
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(500).
                 body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_CONFIG))
                 .body("code", Matchers.equalTo(500))
-                .body("detail", Matchers.startsWith("Linkage Error detected."))
+                .body("detail", Matchers.startsWith("Linkage Error detected"))
                 .body("bridgeServiceException", Matchers.equalTo(IBSConfigurationException.class.getTypeName()))
                 .body("originalException", Matchers.equalTo(LinkageError.class.getTypeName()))
                 .body("originalMessage", Matchers.startsWith("loader constraint violation:"));

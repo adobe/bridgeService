@@ -193,11 +193,9 @@ public class CallContent {
                     "Could not find the method " + this.getFullName() + ".");
         } catch (LinkageError e) {
             throw new ClassLoaderConflictException(
-                    "Linkage Error detected. This can be corrected by either setting the config value "
-                            + ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.systemName
-                            + " to 'automatic', or by enriching the "
+                    "Linkage Error detected for class "+this.getClassName()+". This can be corrected by enriching the "
                             + ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.systemName
-                            + " property with the given path.", e);
+                            + " property with the given package.", e);
         }
 
         return lr_object;

@@ -10,10 +10,7 @@ package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.service.data.MyPropertiesHandler;
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
-import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
-import com.adobe.campaign.tests.bridge.testdata.one.Instantiable;
-import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
-import com.adobe.campaign.tests.bridge.testdata.one.StaticType;
+import com.adobe.campaign.tests.bridge.testdata.one.*;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +30,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -208,7 +206,7 @@ public class TestFetchCalls {
         l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
         l_cc.setMethodName("methodReturningString");
 
-        l_cc.setArgs(new Object[] { MimeMessageFactory.getMessage("ab") });
+        l_cc.setArgs(new Object[] { MimeMessageMethods.createMessage("ab") });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
         Assert.assertThrows(NonExistentJavaObjectException.class, () -> l_cc.call(iClassLoader));
@@ -222,7 +220,7 @@ public class TestFetchCalls {
         l_cc.setClassName("non.existant.class.NoWhereToBeFound");
         l_cc.setMethodName("getRandomString");
 
-        l_cc.setArgs(new Object[] { MimeMessageFactory.getMessage("ab") });
+        l_cc.setArgs(new Object[] { MimeMessageMethods.createMessage("ab") });
 
         IntegroBridgeClassLoader iClassLoader = new IntegroBridgeClassLoader();
 
@@ -407,7 +405,7 @@ public class TestFetchCalls {
     public void testDeserializer()
             throws MessagingException {
         String l_suffix = "one";
-        Message l_message = MimeMessageFactory.getMessage(l_suffix);
+        Message l_message = MimeMessageMethods.createMessage(l_suffix);
 
         // ObjectMapper mapper = new ObjectMapper();
         // mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
@@ -436,7 +434,7 @@ public class TestFetchCalls {
     public void testDeserializer_collection()
             throws MessagingException {
         String l_suffix = "two";
-        List<Message> l_messages = Collections.singletonList(MimeMessageFactory.getMessage(l_suffix));
+        List<Message> l_messages = Collections.singletonList(MimeMessageMethods.createMessage(l_suffix));
 
         List l_resultList = (List) MetaUtils.extractValuesFromList(l_messages);
 
@@ -1465,8 +1463,8 @@ public class TestFetchCalls {
     @Test
     public void prepareExtractMimeMessage()
             throws MessagingException, JsonProcessingException {
-        Message m1 = MimeMessageFactory.getMessage("five");
-        Message m2 = MimeMessageFactory.getMessage("six");
+        Message m1 = MimeMessageMethods.createMessage("five");
+        Message m2 = MimeMessageMethods.createMessage("six");
         List<Message> messages = Arrays.asList(m1, m2);
         Object x = messages;
 
@@ -2219,6 +2217,64 @@ public class TestFetchCalls {
         l_myJavaCall.getCallContent().put("call1", l_cc);
 
         assertThat("We should get the correct return value", l_myJavaCall.call("call1"), Matchers.equalTo(2));
+    }
+
+
+    @Test
+    public void chainingComplexCalls() {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.one.MimeMessageMethods");
+        l_cc1.setMethodName("fetchMessages");
+        l_cc1.setArgs(new Object[]{"complexCalls", 4});
+
+        l_myJavaCall.getCallContent().put("fetchMessages", l_cc1);
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("com.adobe.campaign.tests.bridge.testdata.one.MimeMessageMethods");
+        l_cc2.setMethodName("fetchMessageSubjects");
+        l_cc2.setArgs(new Object[]{"fetchMessages"});
+
+        l_myJavaCall.getCallContent().put("fetchSubjects", l_cc2);
+
+        JavaCallResults jcr = l_myJavaCall.submitCalls();
+
+        assertThat("we should have our results", jcr.getReturnValues().keySet(), Matchers.containsInAnyOrder("fetchMessages", "fetchSubjects"));
+        assertThat("we should have our results", jcr.getReturnValues().get("fetchSubjects"), Matchers.instanceOf(List.class));
+
+        List<String> fetchSubjects = (List<String>) jcr.getReturnValues().get("fetchSubjects");
+        assertThat("we should have our results",
+                fetchSubjects, Matchers.hasItem("a subject by me complexCallsArray_3"));
+    }
+
+    @Test
+    public void chainingComplexCallsArray() {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName("com.adobe.campaign.tests.bridge.testdata.one.MimeMessageMethods");
+        l_cc1.setMethodName("fetchMessagesArray");
+        l_cc1.setArgs(new Object[]{"complexCallsArray", 4});
+
+        l_myJavaCall.getCallContent().put("fetchMessages", l_cc1);
+
+        CallContent l_cc2 = new CallContent();
+        l_cc2.setClassName("com.adobe.campaign.tests.bridge.testdata.one.MimeMessageMethods");
+        l_cc2.setMethodName("fetchMessageArraySubjects");
+        l_cc2.setArgs(new Object[]{"fetchMessages"});
+
+        l_myJavaCall.getCallContent().put("fetchSubjects", l_cc2);
+
+        JavaCallResults jcr = l_myJavaCall.submitCalls();
+
+        assertThat("we should have succeeded", jcr.getReturnValues().keySet(), Matchers.containsInAnyOrder("fetchMessages", "fetchSubjects"));
+        assertThat("we should have a liste returned", jcr.getReturnValues().get("fetchSubjects"), Matchers.instanceOf(List.class));
+
+        List<String> fetchSubjects = (List<String>) jcr.getReturnValues().get("fetchSubjects");
+        assertThat("we should have our results",
+                fetchSubjects, Matchers.hasItem("a subject by me complexCallsArray_3"));
+
     }
 }
 

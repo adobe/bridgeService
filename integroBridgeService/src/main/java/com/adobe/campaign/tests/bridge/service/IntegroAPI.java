@@ -16,12 +16,14 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 
 import javax.servlet.MultipartConfigElement;
+import javax.servlet.http.Part;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,6 +36,8 @@ public class IntegroAPI {
     public static final String SYSTEM_UP_MESSAGE = "All systems up";
     public static final String ERROR_IBS_INTERNAL = "Internal IBS error. Please file a bug report with the project and provide this JSON in the report.";
     public static final String ERROR_PAYLOAD_INCONSISTENCY = "We detected an inconsistency in your payload.";
+    public static final String UPLOADED_FILE_REF = "uploaded_file";
+    public static final String JAVA_CALL_REF = "call_part";
     protected static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
     protected static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
     protected static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
@@ -87,35 +91,24 @@ public class IntegroAPI {
         //staticFiles.externalLocation("upload");
 
         post("/call", (req, res) -> {
-            /*
-            JavaCalls fetchedFromJSON = BridgeServiceFactory.createJavaCalls(req.body());
 
-            fetchedFromJSON.addHeaders(req.headers().stream().collect(Collectors.toMap(k -> k, req::headers)));
-
-            return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls(),
-                    fetchedFromJSON.fetchSecrets());
-        });
-
-        post("/callwithfile", (req, res) -> {
-
-             */
-
+            Map<String, Path> fileRefs = new HashMap<>();
             boolean isMultiPart = false;
-            Path tempFile = null;
 
             //Extract multipart information
             if (req.contentType() != null && req.contentType().toLowerCase().startsWith("multipart/form-data")) {
                 req.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("./temp"));
                 isMultiPart = true;
-
                 //Extract file information
-                if (req.raw().getParts().stream().anyMatch(p -> p.getName().equals("uploaded_file"))) {
-                    tempFile = Files.createTempFile(uploadDir.toPath(), "", "");
+                Collection<Part> x = req.raw().getParts();
+                for (Part p : req.raw().getParts().stream().filter(p -> p.getSubmittedFileName() != null).collect(
+                        Collectors.toList())) {
 
-                    ThreadContext.put("UPLOADED_FILE", tempFile.getFileName().toString());
+                    Path tempFile = Files.createTempFile(uploadDir.toPath(), "", "");
+                    ThreadContext.put(p.getName(), tempFile.getFileName().toString());
+                    fileRefs.put(p.getName(), tempFile);
 
-                    try (InputStream is = req.raw().getPart("uploaded_file").getInputStream()) {
-
+                    try (InputStream is = p.getInputStream()) {
                         // https://github.com/tipsy/spark-file-upload/blob/master/src/main/java/UploadExample.java
                         Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);
                     }
@@ -123,13 +116,13 @@ public class IntegroAPI {
             }
 
             JavaCalls fetchedFromJSON = BridgeServiceFactory.createJavaCalls(
-                    isMultiPart ? new String(req.raw().getPart("call_part").getInputStream().readAllBytes(),
+                    isMultiPart ? new String(req.raw().getPart(JAVA_CALL_REF).getInputStream().readAllBytes(),
                             StandardCharsets.UTF_8) : req.body());
 
-            //Store ile in context
-            if (tempFile != null) {
-                fetchedFromJSON.getLocalClassLoader().getCallResultCache().put("uploaded_file", tempFile.toFile());
-            }
+            //Store file in context
+            fileRefs.forEach((k, v) ->
+                    fetchedFromJSON.getLocalClassLoader().getCallResultCache()
+                            .put(k, v.toFile()));
 
             fetchedFromJSON.addHeaders(req.headers().stream().collect(Collectors.toMap(k -> k, req::headers)));
 
@@ -176,7 +169,8 @@ public class IntegroAPI {
             int statusCode = 500;
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_RUNTIME, statusCode)));
+            res.body(
+                    BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_RUNTIME, statusCode)));
         });
 
         exception(TargetJavaMethodCallException.class, (e, req, res) -> {
@@ -216,12 +210,13 @@ public class IntegroAPI {
             int statusCode = 500;
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_INTERNAL, statusCode)));
+            res.body(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_IBS_INTERNAL, statusCode)));
         });
 
         afterAfter((req, res) -> {
             if (ThreadContext.containsKey("UPLOADED_FILE")) {
-                log.debug("Cleaning up file {}.",ThreadContext.get("UPLOADED_FILE"));
+                log.debug("Cleaning up file {}.", ThreadContext.get("UPLOADED_FILE"));
                 (new File(uploadDir.getName(), ThreadContext.get("UPLOADED_FILE"))).delete();
             }
         });

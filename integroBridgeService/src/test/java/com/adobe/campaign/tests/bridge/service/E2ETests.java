@@ -13,6 +13,7 @@ import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import org.hamcrest.Matchers;
 import org.testng.annotations.AfterGroups;
@@ -23,6 +24,7 @@ import spark.Spark;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -865,11 +867,11 @@ public class E2ETests {
         CallContent myContent = new CallContent();
         myContent.setClassName(SimpleStaticMethods.class.getTypeName());
         myContent.setMethodName("methodAcceptingFile");
-        myContent.setArgs(new Object[]{"uploaded_file"});
+        myContent.setArgs(new Object[]{IntegroAPI.UPLOADED_FILE_REF});
         l_call.getCallContent().put("call1PL", myContent);
 
-        given().multiPart("call_part", l_call, "application/json").
-                multiPart("uploaded_file", l_myFile, "text/html").
+        given().multiPart(IntegroAPI.JAVA_CALL_REF, l_call, "application/json").
+                multiPart( IntegroAPI.UPLOADED_FILE_REF, l_myFile, "text/html").
                 post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
                         Matchers.equalTo(fileContent));
 
@@ -885,6 +887,29 @@ public class E2ETests {
                 Matchers.equalTo(SimpleStaticMethods.SUCCESS_VAL));
 
     }
+
+    @Test(groups = "E2E")
+    public void testCallWithFileUpload_XML() throws IOException {
+
+        File l_myFile = new File("src/test/resources/uploadFiles/surfaRosa.xml");
+
+        String fileContent = Files.readString(l_myFile.toPath(), StandardCharsets.UTF_8);
+
+        assertThat("The file should exist", l_myFile.exists());
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName(SimpleStaticMethods.class.getTypeName());
+        myContent.setMethodName("methodAcceptingFile");
+        myContent.setArgs(new Object[] { "myFile" });
+        l_call.getCallContent().put("call1PL", myContent);
+
+        given().multiPart(IntegroAPI.JAVA_CALL_REF, l_call, "application/json").
+                multiPart("myFile", l_myFile, "application/xml").
+                post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
+                        Matchers.equalTo(fileContent));
+    }
+
 
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {

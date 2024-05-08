@@ -28,6 +28,7 @@ import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -47,6 +48,9 @@ public class E2ETests {
         Spark.awaitInitialization();
 
         serverSocket1 = new ServerSocket(port1);
+
+        File uploadDir = new File("upload");
+        Arrays.stream(uploadDir.listFiles()).forEach(File::delete);
     }
 
     @BeforeMethod
@@ -908,6 +912,11 @@ public class E2ETests {
                 multiPart("myFile", l_myFile, "application/xml").
                 post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
                         Matchers.equalTo(fileContent));
+
+        File uploadDir = new File("upload");
+        Arrays.stream(uploadDir.list()).forEach(System.out::println);
+        assertThat("The directory should be empty", uploadDir.list().length, Matchers.equalTo(0));
+        //staticFiles.externalLocation("upload");
     }
 
 

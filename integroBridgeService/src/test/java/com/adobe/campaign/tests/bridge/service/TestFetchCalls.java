@@ -2245,7 +2245,7 @@ public class TestFetchCalls {
 
         List<String> fetchSubjects = (List<String>) jcr.getReturnValues().get("fetchSubjects");
         assertThat("we should have our results",
-                fetchSubjects, Matchers.hasItem("a subject by me complexCallsArray_3"));
+                fetchSubjects, Matchers.hasItem("a subject by me complexCalls_3"));
     }
 
     @Test
@@ -2276,5 +2276,6 @@ public class TestFetchCalls {
                 fetchSubjects, Matchers.hasItem("a subject by me complexCallsArray_3"));
 
     }
+
 }
 

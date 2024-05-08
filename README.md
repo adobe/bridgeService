@@ -1,7 +1,5 @@
 # BridgeService
 
-# PhasedTesting
-
 [![unit-tests](https://github.com/adobe/bridgeService/actions/workflows/onPushSimpleTest.yml/badge.svg)](https://github.com/adobe/bridgeService/actions/workflows/onPushSimpleTest.yml)
 [![codecov](https://codecov.io/gh/adobe/bridgeService/branch/main/graph/badge.svg?token=GSi0gUlqq5)](https://codecov.io/gh/adobe/bridgeService)
 [![javadoc](https://javadoc.io/badge2/com.adobe.campaign.tests.bridge.service/integroBridgeService/javadoc.svg)](https://javadoc.io/doc/com.adobe.campaign.tests.bridge.service/integroBridgeService)
@@ -599,7 +597,7 @@ behavior or this. Currently, assertions are of two types:
 * Result Based,
 * Duration Based
 
-### Duration-based Assertions
+### Duration-Based Assertions
 
 As mentioned earlier an assertion can be duration based. In that case, IBS will consider the call duration of a call for
 the assertion. In order to perform an assertion the payload needs to include the entry `"type": "DURATION"` to the

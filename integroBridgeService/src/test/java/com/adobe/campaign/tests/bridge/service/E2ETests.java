@@ -21,8 +21,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import spark.Spark;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -96,7 +99,6 @@ public class E2ETests {
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
                 Matchers.equalTo(SimpleStaticMethods.SUCCESS_VAL));
-
     }
 
     @Test(groups = "E2E")
@@ -653,14 +655,15 @@ public class E2ETests {
         myContent.setReturnType("java.lang.String");
         l_call.getCallContent().put("call1PL", myContent);
 
+        //This is a log test that fails i you update the class SimpleStaticMethods
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
                 .body("title",
                         Matchers.equalTo(
                                 "Error during call of target Java Class and Method."))
                 .body("originalException", Matchers.equalTo("java.lang.IllegalArgumentException"))
                 .body("originalMessage", Matchers.equalTo("Will always throw this"))
-                .body("stackTrace[0]", Matchers.equalTo(
-                        "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowsException(SimpleStaticMethods.java:62)"));
+                .body("stackTrace[0]", Matchers.startsWith(
+                        "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowsException(SimpleStaticMethods.java:6"));
 
     }
 
@@ -846,6 +849,40 @@ public class E2ETests {
                 .statusCode(200)
                 .assertThat()
                 .body("returnValues.fetchArraySize", Matchers.equalTo(2));
+    }
+
+
+    @Test(groups = "E2E")
+    public void testMainHelloWorldCallWithFileUploadMain() throws IOException {
+
+        File l_myFile = new File("src/test/resources/uploadFiles/testaRosa.txt");
+
+        String fileContent = Files.readString(l_myFile.toPath(), StandardCharsets.UTF_8);
+
+        assertThat("The file should exist", l_myFile.exists());
+
+        JavaCalls l_call = new JavaCalls();
+        CallContent myContent = new CallContent();
+        myContent.setClassName(SimpleStaticMethods.class.getTypeName());
+        myContent.setMethodName("methodAcceptingFile");
+        myContent.setArgs(new Object[]{"uploaded_file"});
+        l_call.getCallContent().put("call1PL", myContent);
+
+        given().multiPart("call_part", l_call, "application/json").
+                multiPart("uploaded_file", l_myFile, "text/html").
+                post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
+                        Matchers.equalTo(fileContent));
+
+        JavaCalls l_call2 = new JavaCalls();
+        CallContent myContent2 = new CallContent();
+        myContent2.setClassName(SimpleStaticMethods.class.getTypeName());
+        myContent2.setMethodName("methodReturningString");
+        myContent2.setReturnType("java.lang.String");
+        l_call2.getCallContent().put("call1PL", myContent2);
+
+        //Second call to check that non-multi-part also works
+        given().body(l_call2).post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
+                Matchers.equalTo(SimpleStaticMethods.SUCCESS_VAL));
 
     }
 

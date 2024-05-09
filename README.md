@@ -614,9 +614,7 @@ curl --request POST \
 ```
 
 In the call above we pass `MyValue` with the key `ibs-header-var1` as a header. Our payload will fetch the value in
-the `args`section.
-
-The call will return :
+the `args`section. The call will return :
 
 ```JSON
 {

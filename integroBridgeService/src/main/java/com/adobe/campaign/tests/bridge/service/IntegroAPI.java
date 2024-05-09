@@ -48,6 +48,7 @@ public class IntegroAPI {
     protected static final String ERROR_JAVA_OBJECT_NOT_ACCESSIBLE = "The java object you want to call is inaccessible. This is very possibly a scope problem.";
     private static final Logger log = LogManager.getLogger();
     public static final String ERROR_BAD_MULTI_PART_REQUEST = "When sending a multi-part request, you need to at least have a payload for the callContent.";
+    public static final String STD_UPLOAD_DIR = "upload";
 
     public static void startServices(int port) {
 
@@ -88,12 +89,12 @@ public class IntegroAPI {
             return BridgeServiceFactory.transformServiceAccessResult(
                     l_serviceAccess.checkAccessibilityOfExternalResources());
         });
-        File uploadDir = new File("upload");
+
+        File uploadDir = new File(STD_UPLOAD_DIR);
         uploadDir.mkdir(); // create the upload directory if it doesn't exist
         //staticFiles.externalLocation("upload");
 
         post("/call", (req, res) -> {
-
 
             boolean isMultiPart = false;
             JavaCalls fetchedFromJSON;

@@ -595,23 +595,22 @@ All you need to do is to reference your header name in the `args` section.
 
 Example:
 
-```
-POST /api/call HTTP/1.1
-ibs-header-var1: MyValue
-```
-
-```JSON
-{
-  "callContent": {
-    "fetchString1": {
-      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
-      "method": "methodAcceptingStringArgument",
-      "args": [
-        "ibs-header-var1"
-      ]
-    }
-  }
-}
+```shell
+curl --request POST \
+  --url http://localhost:8080/call \
+  --header 'Content-Type: application/json' \
+  --header 'ibs-header-var1: MyValue' \
+  --data '{
+	"callContent": {
+		"fetchHeader": {
+			"class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+			"method": "methodAcceptingStringArgument",
+			"args": [
+				"ibs-header-var1"
+			]
+		}
+	}
+}'
 ```
 
 In the call above we pass `MyValue` with the key `ibs-header-var1` as a header. Our payload will fetch the value in
@@ -630,8 +629,35 @@ The call will return :
 }
 ```
 
-As mentioned earlier, if `MyValue` were to be passed as a secret (with a prefix `ibs-secret-`), we would be getting an
+### Secrets
+
+Secrets allow you to have an extra level of security. This will mean that we will not allow you to print the secret in
+the output.
+
+A secret sent to the IBS will have to be prefixed with `ibs-secret-`. This can be overridden by setting the run-time
+variable `IBS.SECRETS.FILTER.PREFIX`.
+
+In the example earlier, if `MyValue` were to be passed as a secret (with a prefix `ibs-secret-`), we would be getting an
 exception:
+
+```shell
+curl --request POST \
+  --url http://localhost:8080/call \
+  --header 'Content-Type: application/json' \
+  --header 'ibs-header-var1: MyValue' \
+  --data '{
+	"callContent": {
+		"fetchHeader": {
+			"class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+			"method": "methodAcceptingStringArgument",
+			"args": [
+				"ibs-secret-var1"
+			]
+		}
+	}
+}'
+```
+Below is the exception we will get: 
 
 ```JSON
 {
@@ -641,14 +667,6 @@ exception:
   "bridgeServiceException": "com.adobe.campaign.tests.bridge.service.exceptions.IBSPayloadException"
 }
 ```
-
-### Secrets
-
-Secrets allow you to have an extra level of security. This will mean that we will not allow you to print the secret in
-the output.
-
-A secret sent to the IBS will have to be prefixed with `ibs-secret-`. This can be overridden by setting the run-time
-variable `IBS.SECRETS.FILTER.PREFIX`.
 
 Sometimes you may want to debug the system. In these cases you can deactivate the output check by setting run-time
 variable `IBS.SECRETS.BLOCK.OUTPUT` to false. However, this should only be temporary, and in production it is best to

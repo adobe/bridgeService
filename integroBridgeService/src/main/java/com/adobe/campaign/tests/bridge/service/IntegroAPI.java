@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,7 @@ public class IntegroAPI {
     protected static final String ERROR_AMBIGUOUS_METHOD = "No unique method could be identified that matches your request.";
     protected static final String ERROR_JAVA_OBJECT_NOT_ACCESSIBLE = "The java object you want to call is inaccessible. This is very possibly a scope problem.";
     private static final Logger log = LogManager.getLogger();
+    public static final String ERROR_BAD_MULTI_PART_REQUEST = "When sending a multi-part request, you need to at least have a payload for the callContent.";
 
     public static void startServices(int port) {
 
@@ -92,12 +94,14 @@ public class IntegroAPI {
 
         post("/call", (req, res) -> {
 
-            Map<String, Path> fileRefs = new HashMap<>();
+
             boolean isMultiPart = false;
+            JavaCalls fetchedFromJSON;
 
             //Extract multipart information
             if (req.contentType() != null && req.contentType().toLowerCase().startsWith("multipart/form-data")) {
                 req.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("./temp"));
+                Map<String, Path> fileRefs = new HashMap<>();
                 isMultiPart = true;
                 //Extract file information
                 for (Part p : req.raw().getParts().stream().filter(p -> p.getSubmittedFileName() != null)
@@ -115,14 +119,25 @@ public class IntegroAPI {
 
                 ThreadContext.put(UPLOADED_FILE_REF, String.join(",",
                         fileRefs.values().stream().map(p -> p.getFileName().toString()).collect(Collectors.toList())));
+
+                List<Part> l_parts = req.raw().getParts().stream().filter(t -> t.getSubmittedFileName() == null)
+                        .collect(Collectors.toList());
+
+                if (l_parts.size() != 1) {
+                    throw new IBSPayloadException(
+                            ERROR_BAD_MULTI_PART_REQUEST);
+                }
+
+                fetchedFromJSON = BridgeServiceFactory.createJavaCalls(
+                        new String(l_parts.get(0).getInputStream().readAllBytes(), StandardCharsets.UTF_8));
+
+                //Store file in context
+                fileRefs.forEach((k, v) -> fetchedFromJSON.getLocalClassLoader().getCallResultCache().put(k, v.toFile()));
+
+            } else {
+                fetchedFromJSON = BridgeServiceFactory.createJavaCalls(req.body());
             }
 
-            JavaCalls fetchedFromJSON = BridgeServiceFactory.createJavaCalls(
-                    isMultiPart ? new String(req.raw().getPart(JAVA_CALL_REF).getInputStream().readAllBytes(),
-                            StandardCharsets.UTF_8) : req.body());
-
-            //Store file in context
-            fileRefs.forEach((k, v) -> fetchedFromJSON.getLocalClassLoader().getCallResultCache().put(k, v.toFile()));
 
             fetchedFromJSON.addHeaders(req.headers().stream().collect(Collectors.toMap(k -> k, req::headers)));
 

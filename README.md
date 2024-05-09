@@ -11,8 +11,6 @@ from any language or framework you are in.
 ## Table of Contents
 
 <!-- TOC -->
-* [BridgeService](#bridgeservice)
-* [PhasedTesting](#phasedtesting)
   * [Table of Contents](#table-of-contents)
   * [Release Notes](#release-notes)
   * [Implementing The Bridge Service in Your Project](#implementing-the-bridge-service-in-your-project)
@@ -26,14 +24,20 @@ from any language or framework you are in.
   * [Setting Information About your Environment](#setting-information-about-your-environment)
   * [Testing That all is Working](#testing-that-all-is-working)
   * [Testing That all External Devices can be Accessed](#testing-that-all-external-devices-can-be-accessed)
-  * [Making a basic Java Call](#making-a-basic-java-call)
-  * [Instantiating Objects](#instantiating-objects)
+  * [Making Java Calls](#making-java-calls)
+    * [A basic Java Call](#a-basic-java-call)
+    * [Instantiating Objects](#instantiating-objects)
+    * [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
+    * [Call Chaining and Call Dependencies](#call-chaining-and-call-dependencies)
+      * [Call Chaining and Instance Methods](#call-chaining-and-instance-methods)
+    * [Argument Types](#argument-types)
+      * [Simple Java Objects](#simple-java-objects)
+      * [Lists and Arrays](#lists-and-arrays)
+      * [Complex Types](#complex-types)
+      * [Files](#files)
   * [Managing Timeouts](#managing-timeouts)
     * [Setting Timeout Globally](#setting-timeout-globally)
     * [Setting a Timeout for the Call Session](#setting-a-timeout-for-the-call-session)
-  * [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
-    * [Call Chaining and Call Dependencies](#call-chaining-and-call-dependencies)
-    * [Call Chaining and Instance Methods](#call-chaining-and-instance-methods)
   * [Creating a Call Context](#creating-a-call-context)
     * [Static Variable Scopes](#static-variable-scopes)
       * [Session Scopes](#session-scopes)
@@ -42,7 +46,7 @@ from any language or framework you are in.
     * [Secrets](#secrets)
     * [Steamlining Headers](#steamlining-headers)
   * [Making Assertions](#making-assertions)
-    * [Duration-based Assertions](#duration-based-assertions)
+    * [Duration-Based Assertions](#duration-based-assertions)
   * [Error Management](#error-management)
   * [Contribution](#contribution)
   * [Known Errors](#known-errors)
@@ -190,6 +194,7 @@ The payload returns a JSON with the test results:
 In the example above "<URL ID 2>" is marked as false because it can not be accessed from the BridgeService.
 
 ## Making Java Calls
+
 ### A basic Java Call
 
 The simplest java call is done in the following way:
@@ -220,6 +225,36 @@ a 'returnValues' object.
   },
   "callDurations": {
     "<ID>": "<duration ms>"
+  }
+}
+```
+
+Here is an example for the POST call `http://localhost:8080/call` and the payload:
+
+```JSON
+{
+  "callContent": {
+    "fetchString1": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodAcceptingStringArgument",
+      "args": [
+        "REAL"
+      ]
+    }
+  }
+}
+```
+
+`SimpleStaticMethods.methodAcceptingStringArgument` accepts a string argument and concatenates the given argument
+with `_SUCCESS`. The call will return the following result:
+
+```JSON
+{
+  "callDurations": {
+    "fetchString1": 7
+  },
+  "returnValues": {
+    "fetchString1": "REAL_Success"
   }
 }
 ```
@@ -319,6 +354,49 @@ In the example above "ID-2" will use the return value of the call "ID-1" as ts f
 **NOTE** : When passing a call result as an argument, it needs to be a String. In many languages such as JavaScript, the
 JSON keys need not be a string, however, for this to work you need to pass the ID as a string.
 
+Here is an example of for a call chaining:
+
+```JSON
+{
+  "callContent": {
+    "fetchStringsList": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodReturningList",
+      "args": []
+    },
+    "fetchSubjects": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodAcceptingListArguments",
+      "args": [
+        "fetchStringsList"
+      ]
+    }
+  }
+}
+```
+
+`methodReturningList` returns a list of Strings. `methodAcceptingListArguments` accepts a list and returns its size. As
+you can see we have passed the identity of the first call, `fetchStringsList` to the second one `fetchSubjects`. Here
+is the return payload:
+
+```JSON
+{
+  "callDurations": {
+    "fetchStringsList": 5,
+    "fetchSubjects": 1
+  },
+  "returnValues": {
+    "fetchStringsList": [
+      "NA1",
+      "NA2",
+      "NA3",
+      "NA4"
+    ],
+    "fetchSubjects": 4
+  }
+}
+```
+
 #### Call Chaining and Instance Methods
 
 We now have the possibility of injecting call results from one call to the other. In the example below we instantiate an
@@ -349,19 +427,66 @@ the `instance` value for the following call.
 In the example above "ID-2" will use call the instance method of the object created in call "ID-1".
 
 ### Argument Types
+
 Since we are using JSON to pass values to the method, we need to cover how different types are passed.
 
 #### Simple Java Objects
+
 The internal Java objects such as int, String and boolean can be passed with no problems
 
 #### Lists and Arrays
-List and Arrays can be passed as JSONArrays. IBS will transform them to the target argument when needed (_Available since 2.116_).  
+
+List and Arrays can be passed as JSONArrays. IBS will transform them to the target argument when needed (_Available
+since 2.116_).
 
 #### Complex Types
-Some methods require complex Objects as arguments. In this case you need to have a constructor/factory call in one call, and pass they key as an argument. 
+
+Some methods require complex Objects as arguments. In this case you need to have a constructor/factory call in one call,
+and pass they key as an argument.
 
 #### Files
-As of version 2.11.16 we have the possibility to pass a file to the bridgeService. When doing so, you need to send your request as a multi-part request. As in most multi-part requests, you need to give each uploaded file a key value. In that case the file is referenced with that key value.
+
+As of version 2.11.16 we have the possibility to pass a file to the bridgeService. When doing so, you need to send your
+request as a multi-part request. As in most multi-part requests, you need to give each uploaded file a key value. In
+that case the file is referenced with that key value.
+
+Below is an example using curl (_executed from the project root_). We are uploading the file `integroBridgeService/src/test/resources/uploadFiles/testaRosa.txt` with the id `uploaded_file`, like in call chaining we have passed this id to the method call `fileReader`, whose job is to return the file contents.
+
+```shell
+curl --request POST \
+  --url http://localhost:8080/call \
+  --header 'Content-Type: multipart/form-data' \
+  --form 'jsonbody={
+        "assertions": {},
+        "timeout": 10000,
+        "callContent": {
+                "fileReader": {
+                        "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+                        "method": "methodAcceptingFile",
+                        "args": [
+                                "uploaded_file"
+                        ]
+
+                }
+        },
+        "environmentVariables": {}
+}' \
+  --form uploaded_file=@integroBridgeService/src/test/resources/uploadFiles/testaRosa.txt
+
+```
+
+The result is then:
+
+```JSON
+{
+  "callDurations": {
+    "call1PL": 7
+  },
+  "returnValues": {
+    "fileReader": "Hello World"
+  }
+}
+```
 
 ## Managing Timeouts
 
@@ -470,29 +595,26 @@ All you need to do is to reference your header name in the `args` section.
 
 Example:
 
-```
-POST /api/call HTTP/1.1
-ibs-header-var1: MyValue
-```
-
-```JSON
-{
-  "callContent": {
-    "fetchString1": {
-      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
-      "method": "methodAcceptingStringArgument",
-      "args": [
-        "ibs-header-var1"
-      ]
-    }
-  }
-}
+```shell
+curl --request POST \
+  --url http://localhost:8080/call \
+  --header 'Content-Type: application/json' \
+  --header 'ibs-header-var1: MyValue' \
+  --data '{
+	"callContent": {
+		"fetchHeader": {
+			"class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+			"method": "methodAcceptingStringArgument",
+			"args": [
+				"ibs-header-var1"
+			]
+		}
+	}
+}'
 ```
 
 In the call above we pass `MyValue` with the key `ibs-header-var1` as a header. Our payload will fetch the value in
-the `args`section.
-
-The call will return :
+the `args`section. The call will return :
 
 ```JSON
 {
@@ -505,7 +627,36 @@ The call will return :
 }
 ```
 
-As mentioned earlier, if `MyValue` were to be passed as a secret (with a prefix `ibs-secret-`), we would be getting an exception:
+### Secrets
+
+Secrets allow you to have an extra level of security. This will mean that we will not allow you to print the secret in
+the output.
+
+A secret sent to the IBS will have to be prefixed with `ibs-secret-`. This can be overridden by setting the run-time
+variable `IBS.SECRETS.FILTER.PREFIX`.
+
+In the example earlier, if `MyValue` were to be passed as a secret (with a prefix `ibs-secret-`), we would be getting an
+exception:
+
+```shell
+curl --request POST \
+  --url http://localhost:8080/call \
+  --header 'Content-Type: application/json' \
+  --header 'ibs-header-var1: MyValue' \
+  --data '{
+	"callContent": {
+		"fetchHeader": {
+			"class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+			"method": "methodAcceptingStringArgument",
+			"args": [
+				"ibs-secret-var1"
+			]
+		}
+	}
+}'
+```
+Below is the exception we will get: 
+
 ```JSON
 {
   "title": "We detected an inconsistency in your payload.",
@@ -514,14 +665,6 @@ As mentioned earlier, if `MyValue` were to be passed as a secret (with a prefix 
   "bridgeServiceException": "com.adobe.campaign.tests.bridge.service.exceptions.IBSPayloadException"
 }
 ```
-
-### Secrets
-
-Secrets allow you to have an extra level of security. This will mean that we will not allow you to print the secret in
-the output.
-
-A secret sent to the IBS will have to be prefixed with `ibs-secret-`. This can be overridden by setting the run-time
-variable `IBS.SECRETS.FILTER.PREFIX`.
 
 Sometimes you may want to debug the system. In these cases you can deactivate the output check by setting run-time
 variable `IBS.SECRETS.BLOCK.OUTPUT` to false. However, this should only be temporary, and in production it is best to

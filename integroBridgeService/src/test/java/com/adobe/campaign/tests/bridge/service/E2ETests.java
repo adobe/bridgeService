@@ -910,7 +910,7 @@ public class E2ETests {
                 post(EndPointURL + "call").then().assertThat().body("returnValues.call1PL",
                         Matchers.equalTo(fileContent));
 
-        File uploadDir = new File("upload");
+        File uploadDir = new File(IntegroAPI.STD_UPLOAD_DIR);
         Arrays.stream(uploadDir.list()).forEach(System.out::println);
         assertThat("The directory should be empty", uploadDir.list().length, Matchers.equalTo(0));
     }

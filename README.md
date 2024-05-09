@@ -361,10 +361,7 @@ List and Arrays can be passed as JSONArrays. IBS will transform them to the targ
 Some methods require complex Objects as arguments. In this case you need to have a constructor/factory call in one call, and pass they key as an argument. 
 
 #### Files
-As of version 2.11.16 we have the possibility to pass a file to the bridgeService. 
-
-
-
+As of version 2.11.16 we have the possibility to pass a file to the bridgeService. When doing so, you need to send your request as a multi-part request. As in most multi-part requests, you need to give each uploaded file a key value. In that case the file is referenced with that key value.
 
 ## Managing Timeouts
 

@@ -1,7 +1,5 @@
 # BridgeService
 
-# PhasedTesting
-
 [![unit-tests](https://github.com/adobe/bridgeService/actions/workflows/onPushSimpleTest.yml/badge.svg)](https://github.com/adobe/bridgeService/actions/workflows/onPushSimpleTest.yml)
 [![codecov](https://codecov.io/gh/adobe/bridgeService/branch/main/graph/badge.svg?token=GSi0gUlqq5)](https://codecov.io/gh/adobe/bridgeService)
 [![javadoc](https://javadoc.io/badge2/com.adobe.campaign.tests.bridge.service/integroBridgeService/javadoc.svg)](https://javadoc.io/doc/com.adobe.campaign.tests.bridge.service/integroBridgeService)
@@ -191,7 +189,8 @@ The payload returns a JSON with the test results:
 
 In the example above "<URL ID 2>" is marked as false because it can not be accessed from the BridgeService.
 
-## Making a basic Java Call
+## Making Java Calls
+### A basic Java Call
 
 The simplest java call is done in the following way:
 ```/call```
@@ -225,7 +224,7 @@ a 'returnValues' object.
 }
 ```
 
-## Instantiating Objects
+### Instantiating Objects
 
 If we do not specify a method, the bridge service assumes that we are instantiating the given class:
 
@@ -246,47 +245,7 @@ If we do not specify a method, the bridge service assumes that we are instantiat
 **Note :** You can also set the method name to the class name, but it may be easier to simply skip setting a method name
 in this case.
 
-## Managing Timeouts
-
-As of version 2.11.6 we now introduce the notion of timeouts. This means that after a declared time a call will be
-interrupted. Setting this value can be done at two levels:
-
-* The deployment level
-* The Call session
-
-**Note :** If set to 0, there is no timeout.
-
-### Setting Timeout Globally
-
-You can set a default value when starting the service. This is done by setting the environment
-variable `IBS.TIMEOUT.DEFAULT`. If not set, the default value is 10000ms.
-
-### Setting a Timeout for the Call Session
-
-We can also set the Timeout for a java call transaction. In that case the value you pass overrides the global value, but
-only for you session. If the `timeout` is not test in the payload at the next call, the global value will be used.
-
-In the example below the method `methodWithTimeOut` waits for the provided, in this case 800ms, amount of time. In the
-example below the test will pass because we wait for 800ms, and the timeout is 1000s.
-
-```JSON
-{
-  "callContent": {
-    "call1": {
-      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
-      "method": "methodWithTimeOut",
-      "args": [
-        800
-      ]
-    }
-  },
-  "timeout": 1000
-}
-```
-
-If the payload above would have a timeout below 800ms, the call will fail.
-
-## Call Chaining a basic Java Call
+### Call Chaining a basic Java Call
 
 We can chain a series of java calls in the same payload:
 
@@ -360,7 +319,7 @@ In the example above "ID-2" will use the return value of the call "ID-1" as ts f
 **NOTE** : When passing a call result as an argument, it needs to be a String. In many languages such as JavaScript, the
 JSON keys need not be a string, however, for this to work you need to pass the ID as a string.
 
-### Call Chaining and Instance Methods
+#### Call Chaining and Instance Methods
 
 We now have the possibility of injecting call results from one call to the other. In the example below we instantiate an
 object, and in the following call we call a method of that object. This is done by passing the ID of the first call as
@@ -388,6 +347,61 @@ the `instance` value for the following call.
 ```
 
 In the example above "ID-2" will use call the instance method of the object created in call "ID-1".
+
+### Argument Types
+Since we are using JSON to pass values to the method, we need to cover how different types are passed.
+
+#### Simple Java Objects
+The internal Java objects such as int, String and boolean can be passed with no problems
+
+#### Lists and Arrays
+List and Arrays can be passed as JSONArrays. IBS will transform them to the target argument when needed (_Available since 2.116_).  
+
+#### Complex Types
+Some methods require complex Objects as arguments. In this case you need to have a constructor/factory call in one call, and pass they key as an argument. 
+
+#### Files
+As of version 2.11.16 we have the possibility to pass a file to the bridgeService. When doing so, you need to send your request as a multi-part request. As in most multi-part requests, you need to give each uploaded file a key value. In that case the file is referenced with that key value.
+
+## Managing Timeouts
+
+As of version 2.11.6 we now introduce the notion of timeouts. This means that after a declared time a call will be
+interrupted. Setting this value can be done at two levels:
+
+* The deployment level
+* The Call session
+
+**Note :** If set to 0, there is no timeout.
+
+### Setting Timeout Globally
+
+You can set a default value when starting the service. This is done by setting the environment
+variable `IBS.TIMEOUT.DEFAULT`. If not set, the default value is 10000ms.
+
+### Setting a Timeout for the Call Session
+
+We can also set the Timeout for a java call transaction. In that case the value you pass overrides the global value, but
+only for you session. If the `timeout` is not test in the payload at the next call, the global value will be used.
+
+In the example below the method `methodWithTimeOut` waits for the provided, in this case 800ms, amount of time. In the
+example below the test will pass because we wait for 800ms, and the timeout is 1000s.
+
+```JSON
+{
+  "callContent": {
+    "call1": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodWithTimeOut",
+      "args": [
+        800
+      ]
+    }
+  },
+  "timeout": 1000
+}
+```
+
+If the payload above would have a timeout below 800ms, the call will fail.
 
 ## Creating a Call Context
 
@@ -599,7 +613,7 @@ behavior or this. Currently, assertions are of two types:
 * Result Based,
 * Duration Based
 
-### Duration-based Assertions
+### Duration-Based Assertions
 
 As mentioned earlier an assertion can be duration based. In that case, IBS will consider the call duration of a call for
 the assertion. In order to perform an assertion the payload needs to include the entry `"type": "DURATION"` to the

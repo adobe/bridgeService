@@ -18,7 +18,6 @@ public class LogManagement {
     public static final String STD_CURRENT_STEP = "currentStep";
     private static final Logger log = LogManager.getLogger();
 
-
     /**
      * Logs the step in the context. it will later be used by the Error Object to generate step info in the error
      * reponse. This is for standard steps.
@@ -56,7 +55,8 @@ public class LogManagement {
         NOT_IN_A_STEP("Not in a Step"),
         ANALYZING_PAYLOAD("Analyzing Payload"),
         GENERATING_RESPONSE("Generating Response"),
-        STORE_HEADERS("Storing Headers");
+        STORE_HEADERS("Storing Headers"),
+        CLEANUP("Cleaning up temporary files");
 
         final String value;
 

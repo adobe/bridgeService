@@ -13,9 +13,19 @@ import com.adobe.campaign.tests.bridge.service.utils.ServiceTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.http.Part;
 import java.io.File;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -27,14 +37,17 @@ public class IntegroAPI {
     public static final String SYSTEM_UP_MESSAGE = "All systems up";
     public static final String ERROR_IBS_INTERNAL = "Internal IBS error. Please file a bug report with the project and provide this JSON in the report.";
     public static final String ERROR_PAYLOAD_INCONSISTENCY = "We detected an inconsistency in your payload.";
+    public static final String UPLOADED_FILE_REF = "uploaded_file";
+    public static final String JAVA_CALL_REF = "call_part";
     protected static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
     protected static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
     protected static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
     protected static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
     protected static final String ERROR_IBS_RUNTIME = "Problems with payload.";
     protected static final String ERROR_AMBIGUOUS_METHOD = "No unique method could be identified that matches your request.";
-    private static final Logger log = LogManager.getLogger();
     protected static final String ERROR_JAVA_OBJECT_NOT_ACCESSIBLE = "The java object you want to call is inaccessible. This is very possibly a scope problem.";
+    private static final Logger log = LogManager.getLogger();
+    public static final String ERROR_BAD_MULTI_PART_REQUEST = "When sending a multi-part request, you need to at least have a payload for the callContent.";
 
     public static void startServices(int port) {
 
@@ -75,16 +88,66 @@ public class IntegroAPI {
             return BridgeServiceFactory.transformServiceAccessResult(
                     l_serviceAccess.checkAccessibilityOfExternalResources());
         });
+        File uploadDir = new File("upload");
+        uploadDir.mkdir(); // create the upload directory if it doesn't exist
+        //staticFiles.externalLocation("upload");
 
         post("/call", (req, res) -> {
-            JavaCalls fetchedFromJSON = BridgeServiceFactory.createJavaCalls(req.body());
+
+
+            boolean isMultiPart = false;
+            JavaCalls fetchedFromJSON;
+
+            //Extract multipart information
+            if (req.contentType() != null && req.contentType().toLowerCase().startsWith("multipart/form-data")) {
+                req.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("./temp"));
+                Map<String, Path> fileRefs = new HashMap<>();
+                isMultiPart = true;
+                //Extract file information
+                for (Part p : req.raw().getParts().stream().filter(p -> p.getSubmittedFileName() != null)
+                        .collect(Collectors.toList())) {
+
+                    Path tempFile = Files.createTempFile(uploadDir.toPath(), "", "");
+                    ThreadContext.put(p.getName(), tempFile.getFileName().toString());
+                    fileRefs.put(p.getName(), tempFile);
+
+                    try (InputStream is = p.getInputStream()) {
+                        // https://github.com/tipsy/spark-file-upload/blob/master/src/main/java/UploadExample.java
+                        Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
+
+                ThreadContext.put(UPLOADED_FILE_REF, String.join(",",
+                        fileRefs.values().stream().map(p -> p.getFileName().toString()).collect(Collectors.toList())));
+
+                List<Part> l_parts = req.raw().getParts().stream().filter(t -> t.getSubmittedFileName() == null)
+                        .collect(Collectors.toList());
+
+                if (l_parts.size() != 1) {
+                    throw new IBSPayloadException(
+                            ERROR_BAD_MULTI_PART_REQUEST);
+                }
+
+                fetchedFromJSON = BridgeServiceFactory.createJavaCalls(
+                        new String(l_parts.get(0).getInputStream().readAllBytes(), StandardCharsets.UTF_8));
+
+                //Store file in context
+                fileRefs.forEach((k, v) -> fetchedFromJSON.getLocalClassLoader().getCallResultCache().put(k, v.toFile()));
+
+            } else {
+                fetchedFromJSON = BridgeServiceFactory.createJavaCalls(req.body());
+            }
+
 
             fetchedFromJSON.addHeaders(req.headers().stream().collect(Collectors.toMap(k -> k, req::headers)));
 
-            return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls(), fetchedFromJSON.fetchSecrets());
+            return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls(),
+                    fetchedFromJSON.fetchSecrets());
         });
 
-        after((req, res) -> res.type("application/json"));
+        after((req, res) -> {
+            res.type("application/json");
+        });
 
         exception(JsonProcessingException.class, (e, req, res) -> {
             int statusCode = 404;
@@ -107,7 +170,7 @@ public class IntegroAPI {
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
             res.body(BridgeServiceFactory.createExceptionPayLoad(
-                    new ErrorObject(e, ERROR_AMBIGUOUS_METHOD, statusCode,false)));
+                    new ErrorObject(e, ERROR_AMBIGUOUS_METHOD, statusCode, false)));
         });
 
         exception(IBSConfigurationException.class, (e, req, res) -> {
@@ -152,7 +215,8 @@ public class IntegroAPI {
             int statusCode = 408;
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_CALL_TIMEOUT, statusCode, false)));
+            res.body(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_CALL_TIMEOUT, statusCode, false)));
         });
 
         //Internal exception
@@ -161,6 +225,15 @@ public class IntegroAPI {
             res.status(statusCode);
             res.type(ERROR_CONTENT_TYPE);
             res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_INTERNAL, statusCode)));
+        });
+
+        afterAfter((req, res) -> {
+            if (ThreadContext.containsKey(UPLOADED_FILE_REF)) {
+                Arrays.stream(ThreadContext.get(UPLOADED_FILE_REF).split(",")).forEach(f -> {
+                    log.debug("Cleaning up file {}. succeeded {}.", f, (new File(uploadDir.getName(), f)).delete());
+                });
+
+            }
         });
     }
 

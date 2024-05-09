@@ -8,6 +8,11 @@
  */
 package com.adobe.campaign.tests.bridge.testdata.one;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -114,5 +119,9 @@ public class SimpleStaticMethods {
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException("Got that one", e);
         }
+    }
+
+    public static String methodAcceptingFile(File fileObject) throws IOException {
+        return Files.readString(fileObject.toPath(), StandardCharsets.UTF_8);
     }
 }

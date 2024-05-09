@@ -103,6 +103,7 @@
                             <header>${license.dir}/LicenseHeader</header>
                             <excludes>
                                 <exclude>**/*.md</exclude>
+                                <exclude>**/*.txt</exclude>
                                 <exclude>**/*.properties</exclude>
                                 <exclude>LICENSE_DATA/**</exclude>
                                 <exclude>ibs_output/**</exclude>

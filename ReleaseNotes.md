@@ -3,8 +3,10 @@
 ## 2.11.16-SNAPSHOT
 * **New Feature** [#3 Include an Assertion Feature](https://github.com/adobe/bridgeService/issues/3). We have now included the possibility for users to define assertions. This allows you to clarify accepted results for the call you make with the IBS.
 * **New Feature** [#79 Allow or passing secrets in headers](https://github.com/adobe/bridgeService/issues/79). You can now pass variables and secrets as headers.
+* **New Feature** [#110 Allow for Fileuploading and Multi-part requests](https://github.com/adobe/bridgeService/issues/100). We can now upload a file and reference it in the request.
 * [#111 Allowing the passing of array and vararg arguments](https://github.com/adobe/bridgeService/issues/111). Previously we were unable to execute methods accepting Arrays and varargs. This has now been corrected.
 * [#88 Logging action steps](https://github.com/adobe/bridgeService/issues/88). We now log the steps we take during execution for better debugging.
+* [#48 Logging action steps](https://github.com/adobe/bridgeService/issues/48). We now log the current class and method being executed.
 
 ## 2.11.15
 * [#71 Adding step name when throwing exceptions](https://github.com/adobe/bridgeService/issues/71). When an exception happens, include the step in which it occurred.

@@ -5,13 +5,14 @@
 [![javadoc](https://javadoc.io/badge2/com.adobe.campaign.tests.bridge.service/integroBridgeService/javadoc.svg)](https://javadoc.io/doc/com.adobe.campaign.tests.bridge.service/integroBridgeService)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=adobe_bridgeService&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=adobe_bridgeService)
 
-This project allows you to expose your Java project/library as a REST service. It allows you to make calls to Java code
+The BridgeService allows you to expose your Java project/library as a REST service. It allows you to make calls to Java code
 from any language or framework you are in.
 
 ## Table of Contents
 
 <!-- TOC -->
-  * [Table of Contents](#table-of-contents)
+  * [Background](#background)
+    * [Demo Project](#demo-project)
   * [Release Notes](#release-notes)
   * [Implementing The Bridge Service in Your Project](#implementing-the-bridge-service-in-your-project)
     * [Adding the Bridge Service to Your Project](#adding-the-bridge-service-to-your-project)
@@ -57,6 +58,12 @@ from any language or framework you are in.
     * [Complex Non-Serializable Return Objects](#complex-non-serializable-return-objects)
     * [Calling Enum Methods](#calling-enum-methods)
 <!-- TOC -->
+
+## Background
+We originally created this project to address the need for Cypress tests to reuse code created for the back-end tests. We had a lot of product knowledge and tooling stored in the back-end tests, that rewriting them in node would not have been practical. Today the project is up and running and is used regularly in our test projects. 
+
+### Demo Project
+We have created a demo project that shpws how the bridge service can be implemented. It is available under [Test As A Product Demo](https://github.com/adobe/test-as-a-product-demo).
 
 ## Release Notes
 

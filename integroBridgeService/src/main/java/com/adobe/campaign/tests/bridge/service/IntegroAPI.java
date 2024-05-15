@@ -76,6 +76,8 @@ public class IntegroAPI {
             status.put("deploymentMode", ConfigValueHandlerIBS.DEPLOYMENT_MODEL.fetchValue());
             status.put("bridgeServiceVersion", ConfigValueHandlerIBS.PRODUCT_VERSION.fetchValue());
 
+            res.header("Z","F");
+
             if (ConfigValueHandlerIBS.PRODUCT_USER_VERSION.isSet()) {
                 status.put("hostVersion", ConfigValueHandlerIBS.PRODUCT_USER_VERSION.fetchValue());
             }
@@ -88,6 +90,18 @@ public class IntegroAPI {
 
             return BridgeServiceFactory.transformServiceAccessResult(
                     l_serviceAccess.checkAccessibilityOfExternalResources());
+        });
+
+        get("/test1", (request, response) -> {
+            response.redirect("/test2");
+            response.header("A","B");
+            return "";
+        });
+
+        get("/test2", (req, res) -> {
+            res.type("application/json");
+            res.header("A","C");
+            return "plop";
         });
 
         File uploadDir = new File(STD_UPLOAD_DIR);

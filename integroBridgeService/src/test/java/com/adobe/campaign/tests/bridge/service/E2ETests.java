@@ -74,6 +74,24 @@ public class E2ETests {
     }
 
     @Test(groups = "E2E")
+    public void testRedirect() {
+
+        given().when().get(EndPointURL + "test1").then().assertThat()
+                .body(Matchers.equalTo("plop"))
+                .header("A","C");
+
+    }
+
+    @Test(groups = "E2E")
+    public void testRedirect_negative() {
+
+        given().when().get(EndPointURL + "test1").then().assertThat()
+                .body(Matchers.equalTo("plop"))
+                .header("A","B");
+
+    }
+
+    @Test(groups = "E2E")
     public void testWorkingWithNoProductVersion() {
         String bridgeServiceVersion = "101";
         ConfigValueHandlerIBS.PRODUCT_VERSION.activate(bridgeServiceVersion);

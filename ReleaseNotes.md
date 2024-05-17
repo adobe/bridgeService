@@ -1,6 +1,6 @@
 # Bridge Service - RELEASE NOTES
 
-## 2.11.16-SNAPSHOT
+## 2.11.16
 * **New Feature** [#3 Include an Assertion Feature](https://github.com/adobe/bridgeService/issues/3). We have now included the possibility for users to define assertions. This allows you to clarify accepted results for the call you make with the IBS.
 * **New Feature** [#79 Allow or passing secrets in headers](https://github.com/adobe/bridgeService/issues/79). You can now pass variables and secrets as headers.
 * **New Feature** [#110 Allow for Fileuploading and Multi-part requests](https://github.com/adobe/bridgeService/issues/100). We can now upload a file and reference it in the request.

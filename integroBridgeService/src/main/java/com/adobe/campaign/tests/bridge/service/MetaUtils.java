@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,8 +40,7 @@ public class MetaUtils {
         }
 
         //Transform first character to lower
-        return Character.toLowerCase(l_step1Transformation.charAt(0)) + l_step1Transformation.substring(
-                RECURSION_DEPTH_LIMIT);
+        return Character.toLowerCase(l_step1Transformation.charAt(0)) + l_step1Transformation.substring(1);
     }
 
     /**
@@ -83,6 +83,7 @@ public class MetaUtils {
                 .startsWith("has"));
         tests.add(isExtractable(in_method.getReturnType()));
         tests.add(in_method.getParameterCount() == 0);
+        tests.add(Modifier.isPublic(in_method.getDeclaringClass().getModifiers()));
 
         return tests.stream().noneMatch(r -> r.equals(Boolean.FALSE));
     }
@@ -108,7 +109,7 @@ public class MetaUtils {
      */
     public static Object extractValuesFromObject(Object in_object, int recursionLevel) {
         if (recursionLevel > RECURSION_DEPTH_LIMIT) {
-            return "Non-Serializeable Object of type" + in_object.getClass().getName();
+            return "... of type " + in_object.getClass().getName();
         }
         Map<String, Object> lr_value = new HashMap<>();
         if (in_object == null) {
@@ -124,7 +125,6 @@ public class MetaUtils {
         for (Method lt_m : Arrays.stream(in_object.getClass().getMethods()).filter(MetaUtils::isExtractable).collect(
                 Collectors.toSet())) {
 
-            //  if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && isExtractable(lt_m.getReturnType())) {
             if (lt_m.getParameterCount() == 0 && isExtractable(lt_m.getReturnType())) {
 
                 try {
@@ -138,7 +138,7 @@ public class MetaUtils {
                         log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue);
                     }
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e);
+                    log.debug("Failed to execute {}.{}", lt_m.getDeclaringClass(), lt_m.getName());
                 }
 
             }

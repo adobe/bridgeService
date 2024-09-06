@@ -8,12 +8,18 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.testdata.nested.NestedExampleA_Level1;
+import com.adobe.campaign.tests.bridge.testdata.nested.NestedExampleA_Level2;
+import com.adobe.campaign.tests.bridge.testdata.nested.NestedExampleA_Level3;
+import com.adobe.campaign.tests.bridge.testdata.nested.NestedExampleA_Level4;
+import com.adobe.campaign.tests.bridge.testdata.one.ClassWithMethodThrowingException;
 import com.adobe.campaign.tests.bridge.testdata.one.MimeMessageMethods;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.hamcrest.Matchers;
-import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.activation.DataHandler;
@@ -31,13 +37,21 @@ import java.util.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class MetaUtilsTests {
+    @BeforeMethod
+    @AfterClass
+    public void setUp() {
+        ConfigValueHandlerIBS.resetAllValues();
+    }
+
     //Tests for extracting data from an object
     @Test
-    public void testExtractable() {
+    public void testExtractable() throws MessagingException, NoSuchMethodException {
 
         Class<?> l_myClass = MimeMessage.class;
 
-        assertThat("MimeMessage is not serializable", Message.class instanceof Serializable);
+        assertThat("MimeMessage is serializable", Message.class instanceof Serializable);
+        assertThat("MimeMessage is serializable", MimeMessage.class instanceof Serializable);
+
 
         assertThat("MimeMessage is not serializable", !MetaUtils.isExtractable(l_myClass));
 
@@ -49,9 +63,16 @@ public class MetaUtilsTests {
 
         assertThat("int is extractable", MetaUtils.isExtractable(l_int));
 
-        Class<?> l_list = List.class;
+        Class<?> l_list = ArrayList.class;
 
         assertThat("list is extractable", MetaUtils.isExtractable(l_list));
+
+        MimeMessage l_message = MimeMessageMethods.createMessage("one");
+        Object l_failingClass = l_message.getAllHeaders();
+
+        Method l_failingMethod = l_failingClass.getClass().getMethod("hasMoreElements", null);
+        assertThat("This method is not extractable", !MetaUtils.isExtractable(l_failingMethod));
+
     }
 
     @Test
@@ -68,8 +89,10 @@ public class MetaUtilsTests {
 
         assertThat("isEmpty is extractable", MetaUtils.isExtractable(l_simpleIs));
 
-        Method l_hashSet = MimeMessage.class.getDeclaredMethod("getSize");
-        assertThat("HashCode is NOT extractable", MetaUtils.isExtractable(l_hashSet));
+        Method l_getSize = MimeMessage.class.getDeclaredMethod("getSize");
+        assertThat("HashCode is NOT extractable", MetaUtils.isExtractable(l_getSize));
+
+
 
     }
 
@@ -96,6 +119,8 @@ public class MetaUtilsTests {
 
         Method l_hashSet = MimeMessage.class.getDeclaredMethod("getSize");
         assertThat("HashCode is NOT extractable", MetaUtils.isExtractable(l_hashSet));
+
+
     }
 
     @Test
@@ -283,8 +308,6 @@ public class MetaUtilsTests {
         jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(x));
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, new HashSet<>());
-
-        System.out.println(value);
     }
 
     @Test
@@ -299,8 +322,6 @@ public class MetaUtilsTests {
         jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(x));
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, new HashSet<>());
-
-        System.out.println(value);
     }
 
     @Test
@@ -316,8 +337,6 @@ public class MetaUtilsTests {
         jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(x));
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, new HashSet<>());
-
-        System.out.println(value);
     }
 
     @Test
@@ -334,8 +353,6 @@ public class MetaUtilsTests {
 
         String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, new HashSet<>());
 
-        System.out.println(value);
-
     }
 
     @Test
@@ -351,7 +368,6 @@ public class MetaUtilsTests {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, true);
 
-        System.out.println(MetaUtils.isExtractable(l_content.getClass()));
         Map<String, Object> value = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
 
         for (Map.Entry<String, Object> lt_entry : value.entrySet()) {
@@ -359,7 +375,6 @@ public class MetaUtilsTests {
         }
 
         String lr_resultPayload = mapper.writeValueAsString(mapper.writeValueAsString(value));
-        System.out.println(lr_resultPayload);
 
     }
 
@@ -387,20 +402,12 @@ public class MetaUtilsTests {
         String l_suffix = "one";
         Message l_message = MimeMessageMethods.createMessage(l_suffix);
 
-        // ObjectMapper mapper = new ObjectMapper();
-        // mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        //  System.out.println(mapper.writeValueAsString(l_message));
-
-        //List<Message> = ArrayList
         assertThat("This class should not be serializable", !(l_message instanceof Serializable));
 
         Map<String, Object> l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
 
-        //assertThat("dddd", l_result instanceof Serializable);
-
         assertThat(l_result.keySet(),
-                Matchers.containsInAnyOrder("contentType", "size", "content", "subject", "lineCount", "messageNumber",
-                        "hashCode", "isExpunged"));
+                Matchers.containsInAnyOrder("isExpunged","hashCode","contentType", "size", "content", "subject", "lineCount", "messageNumber"));
 
         assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
         assertThat(l_result.get("size"), Matchers.equalTo(-1));
@@ -459,6 +466,14 @@ public class MetaUtilsTests {
     }
 
     @Test
+    public void testDeserializingClassWithMethodThrowingException_negative() {
+        ClassWithMethodThrowingException cwe = new ClassWithMethodThrowingException();
+        Map<String, Object>  l_result = (Map) MetaUtils.extractValuesFromObject(cwe);
+        assertThat(l_result.keySet(), Matchers.containsInAnyOrder("second","hashCode"));
+        assertThat(l_result.get("second"), Matchers.equalTo("secondValue"));
+    }
+
+    @Test
     public void testDeserializerNull() {
         String l_returnObject = null;
 
@@ -470,5 +485,50 @@ public class MetaUtilsTests {
 
         assertThat(((Map) extractedReturnObject).size(), Matchers.equalTo(0));
     }
+
+    @Test
+    public void testNestedControl() throws JsonProcessingException, NoSuchMethodException {
+        NestedExampleA_Level1 l_nested = new NestedExampleA_Level1();
+        l_nested.setLevel1Field1("test");
+        NestedExampleA_Level2 l_nested2 = new NestedExampleA_Level2();
+        l_nested2.setLevel2Field1("test2");
+        l_nested.setLevel2(l_nested2);
+
+        Method l_method = NestedExampleA_Level1.class.getDeclaredMethod("getLevel2");
+        assertThat("getLevel2 should be extractable", MetaUtils.isExtractable(l_method));
+        Object l_result = MetaUtils.extractValuesFromObject(l_nested);
+
+        //Add level 2
+        NestedExampleA_Level3 l_nested3 = new NestedExampleA_Level3();
+        l_nested3.setLevel3Field1("test3");
+        l_nested2.setLevel3(l_nested3);
+
+        Object l_result2 = MetaUtils.extractValuesFromObject(l_nested);
+
+        //Add level 3
+        NestedExampleA_Level4 l_nested4 = new NestedExampleA_Level4();
+        l_nested4.setLevel4Field1("test4");
+        l_nested3.setLevel4(l_nested4);
+
+        JavaCallResults jcr = new JavaCallResults();
+        jcr.getReturnValues().put("value", l_result);
+
+        Object l_result3 = MetaUtils.extractValuesFromObject(l_nested);
+        jcr.getReturnValues().put("value", l_result3);
+        String result = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, new HashSet<>());
+
+        assertThat("We should see the effects of nesting", ((Map)((Map) l_result3).get("level2")).get("level3"), Matchers.equalTo("... of type "+NestedExampleA_Level3.class.getName()));
+    }
+
+    @Test
+    public void testingIsBasic() {
+
+        assertThat("String is basic", MetaUtils.isBasicReturnType(String.class));
+        assertThat("String is basic", MetaUtils.isBasicReturnType(Object.class));
+        assertThat("String is basic", MetaUtils.isBasicReturnType(int.class));
+        assertThat("String is basic", MetaUtils.isBasicReturnType(float.class));
+        assertThat("String is basic", !MetaUtils.isBasicReturnType(MimeMessage.class));
+    }
+
 
 }

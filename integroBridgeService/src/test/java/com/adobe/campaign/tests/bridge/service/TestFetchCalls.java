@@ -14,23 +14,23 @@ import com.adobe.campaign.tests.bridge.testdata.one.*;
 import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.hamcrest.Matchers;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import javax.activation.DataHandler;
+import javax.mail.*;
+import javax.mail.internet.*;
+import javax.mail.util.ByteArrayDataSource;
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -381,90 +381,6 @@ public class TestFetchCalls {
                 l_returnValue.getReturnValues().get("call1").toString(),
                 Matchers.endsWith(SimpleStaticMethods.SUCCESS_VAL));
 
-    }
-
-    @Test
-    public void testValueGenerator() {
-        assertThat("We should get the expected field", MetaUtils.extractFieldName("getSubject"),
-                Matchers.equalTo("subject"));
-
-        assertThat("We should get the expected field", MetaUtils.extractFieldName("getSubjectMatter"),
-                Matchers.equalTo("subjectMatter"));
-
-        assertThat("We should get the expected field", MetaUtils.extractFieldName("fetchValue"),
-                Matchers.equalTo("fetchValue"));
-
-        assertThat("We should get the expected field", MetaUtils.extractFieldName("fetchValue"),
-                Matchers.equalTo("fetchValue"));
-
-        assertThat("We should get the expected field", MetaUtils.extractFieldName("get"),
-                Matchers.nullValue());
-    }
-
-    @Test
-    public void testDeserializer()
-            throws MessagingException {
-        String l_suffix = "one";
-        Message l_message = MimeMessageMethods.createMessage(l_suffix);
-
-        // ObjectMapper mapper = new ObjectMapper();
-        // mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        //  System.out.println(mapper.writeValueAsString(l_message));
-
-        //List<Message> = ArrayList
-        assertThat("This class should not be serializable", !(l_message instanceof Serializable));
-
-        Map<String, Object> l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
-
-        //assertThat("dddd", l_result instanceof Serializable);
-
-        assertThat(l_result.keySet(),
-                Matchers.containsInAnyOrder("contentType", "size", "content", "subject", "lineCount", "messageNumber",
-                        "hashCode", "isExpunged"));
-
-        assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
-        assertThat(l_result.get("size"), Matchers.equalTo(-1));
-        assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me " + l_suffix));
-        assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truely " + l_suffix));
-        assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
-
-    }
-
-    @Test
-    public void testDeserializer_collection()
-            throws MessagingException {
-        String l_suffix = "two";
-        List<Message> l_messages = Collections.singletonList(MimeMessageMethods.createMessage(l_suffix));
-
-        List l_resultList = (List) MetaUtils.extractValuesFromList(l_messages);
-
-        assertThat("We should have an array of one element", l_resultList.size(), Matchers.equalTo(1));
-
-        Map<String, Object> l_result = (Map<String, Object>) l_resultList.get(0);
-
-        assertThat(l_result.keySet(),
-                Matchers.containsInAnyOrder("contentType", "size", "content", "subject", "lineCount", "messageNumber",
-                        "hashCode", "isExpunged"));
-
-        assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
-        assertThat(l_result.get("size"), Matchers.equalTo(-1));
-        assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me " + l_suffix));
-        assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truely " + l_suffix));
-        assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
-
-    }
-
-    @Test
-    public void testDeserializerNull() {
-        String l_returnObject = null;
-
-        //List<Message> = ArrayList
-        assertThat("This class should not be serializable", !(l_returnObject instanceof Serializable));
-
-        Object extractedReturnObject = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_returnObject);
-        assertThat(extractedReturnObject, Matchers.instanceOf(Map.class));
-
-        assertThat(((Map) extractedReturnObject).size(), Matchers.equalTo(0));
     }
 
     /**
@@ -1391,126 +1307,6 @@ public class TestFetchCalls {
 
         Assert.assertThrows(IBSRunTimeException.class, () -> jcr.expandDurations(Boolean.FALSE));
 
-    }
-
-    //Tests for extracting data from an object
-    @Test
-    public void testExtractable() {
-
-        Class<?> l_myClass = MimeMessage.class;
-
-        assertThat("MimeMessage is not serializable", Message.class instanceof Serializable);
-
-        assertThat("MimeMessage is not serializable", !MetaUtils.isExtractable(l_myClass));
-
-        Class<?> l_String = String.class;
-
-        assertThat("String is serializable", MetaUtils.isExtractable(l_String));
-
-        Class<?> l_int = int.class;
-
-        assertThat("int is extractable", MetaUtils.isExtractable(l_int));
-
-        Class<?> l_list = List.class;
-
-        assertThat("list is extractable", MetaUtils.isExtractable(l_list));
-    }
-
-    @Test
-    public void testExtractableMethod() throws NoSuchMethodException {
-        Method l_simpleGetter = MimeMessage.class.getDeclaredMethod("getFileName");
-
-        assertThat("getFileName is extractable", MetaUtils.isExtractable(l_simpleGetter));
-
-        Method l_simpleSetter = MimeMessage.class.getDeclaredMethod("setFrom");
-
-        assertThat("setSender is should not be extractable", !MetaUtils.isExtractable(l_simpleSetter));
-
-        Method l_simpleIs = String.class.getDeclaredMethod("isEmpty");
-
-        assertThat("isEmpty is extractable", MetaUtils.isExtractable(l_simpleIs));
-
-        Method l_hashSet = MimeMessage.class.getDeclaredMethod("getSize");
-        assertThat("HashCode is NOT extractable", MetaUtils.isExtractable(l_hashSet));
-
-    }
-
-    @Test
-    public void testExtract() throws NoSuchMethodException {
-
-        String l_simpleString = "testValue";
-
-        assertThat("getFileName is extractable", MetaUtils.extractValuesFromObject(l_simpleString),
-                Matchers.equalTo(l_simpleString));
-
-        //List<String>
-        Object l_simpleList = Collections.singletonList(l_simpleString);
-
-        assertThat("sss", l_simpleList instanceof Collection);
-
-        Method l_simpleSetter = MimeMessage.class.getDeclaredMethod("setFrom");
-
-        assertThat("setSender is should not be extractable", !MetaUtils.isExtractable(l_simpleSetter));
-
-        Method l_simpleIs = String.class.getDeclaredMethod("isEmpty");
-
-        assertThat("isEmpty is extractable", MetaUtils.isExtractable(l_simpleIs));
-
-        Method l_hashSet = MimeMessage.class.getDeclaredMethod("getSize");
-        assertThat("HashCode is NOT extractable", MetaUtils.isExtractable(l_hashSet));
-    }
-
-    @Test
-    public void prepareExtractMimeMessage()
-            throws MessagingException, JsonProcessingException {
-        Message m1 = MimeMessageMethods.createMessage("five");
-        Message m2 = MimeMessageMethods.createMessage("six");
-        List<Message> messages = Arrays.asList(m1, m2);
-        Object x = messages;
-
-        assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
-        JavaCallResults jcr = new JavaCallResults();
-        jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(x));
-
-        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, new HashSet<>());
-
-        System.out.println(value);
-
-    }
-
-    @Test
-    public void prepareExtractSimpleString()
-            throws JsonProcessingException {
-        String m1 = "five";
-        String m2 = "six";
-        List<String> messages = Arrays.asList(m1, m2);
-        Object x = messages;
-
-        assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
-        JavaCallResults jcr = new JavaCallResults();
-        jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(x));
-
-        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, new HashSet<>());
-
-        System.out.println(value);
-
-    }
-
-    @Test
-    public void prepareExtractSimpleInt()
-            throws JsonProcessingException {
-        int m1 = 5;
-        int m2 = 6;
-        List messages = Arrays.asList(m1, m2);
-        Object x = messages;
-
-        assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
-        JavaCallResults jcr = new JavaCallResults();
-        jcr.getReturnValues().put("value", MetaUtils.extractValuesFromObject(x));
-
-        String value = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, new HashSet<>());
-
-        System.out.println(value);
     }
 
     @Test

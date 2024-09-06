@@ -578,6 +578,23 @@ public class E2ETests {
                         "class com.adobe.campaign.tests.bridge.service.CallContent cannot access a member of class"));
     }
 
+
+    @Test(groups = "E2E")
+    public void test_issue159_callToAlternativeMultipartMimeMessage() {
+        JavaCalls jc = new JavaCalls();
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.MimeMessageMethods");
+        l_cc.setMethodName("createMultiPartAlternativeMessage");
+        l_cc.setArgs(new Object[] { "fromEtoE" });
+        jc.getCallContent().put("one", l_cc);
+
+        var response = given().body(jc).post(EndPointURL + "call");
+        System.out.println(response.thenReturn().getBody().asPrettyString());
+        response.then().assertThat().statusCode(200);
+
+    }
+
+
     @Test(groups = "E2E", enabled = false)
     public void testIntegroIssue() {
         ConfigValueHandlerIBS.DEFAULT_CALL_TIMEOUT.activate("0");

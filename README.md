@@ -917,6 +917,8 @@ of that method as an argument for the following java call.
 In many cases the object a method returns is not serializable. If that is the case we mine the object, and extract all
 simple values from the object.
 
+The mining or "scraping" is done by calling all the visible getters of the object. This can be nested, with a limit of three levels. You can modify this by setting the environment variable `IBS.DESERIALIZATION.DEPTH.LIMIT`.
+
 ### Calling Enum Methods
 
 We are currently unable to call enums with the Bridge Service.

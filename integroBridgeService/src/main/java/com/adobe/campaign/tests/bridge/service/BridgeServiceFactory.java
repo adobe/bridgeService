@@ -11,6 +11,7 @@ package com.adobe.campaign.tests.bridge.service;
 import com.adobe.campaign.tests.bridge.service.exceptions.IBSPayloadException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +41,8 @@ public class BridgeServiceFactory {
         LogManagement.logStep(LogManagement.STD_STEPS.GENERATING_RESPONSE);
 
         ObjectMapper mapper = new ObjectMapper();
+        //Activate when we have No serializer found for class errors
+        //mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         String lr_resultPayload = mapper.writeValueAsString(in_callResults);
         if (ConfigValueHandlerIBS.SECRETS_BLOCK_OUTPUT.is("true") && in_secretValues.stream().anyMatch(h -> lr_resultPayload.contains(h))) {
             throw new IBSPayloadException("Your return payload contains secrets. You may consider re-evaluating the headers you send. If they are not a secret, they can be put directly in the payload. Otherwise you can simply disable the "+ConfigValueHandlerIBS.SECRETS_BLOCK_OUTPUT.systemName+" option.");

@@ -1,4 +1,9 @@
 # Bridge Service - RELEASE NOTES
+## 2.11.17
+* [#159 Errors when deserializing Milti-Part Mime Object](https://github.com/adobe/bridgeService/issues/159): We have included a couple of resilience features to better handle the deserialization of complex Objects. This includes:
+  * Nested scraping. We allow a nested scraping of objects.
+  * Ignoring calls that throw errors. We now log the error and continue with the next call.
+  * Ignoring methods returning objects that we do not have the rights to execute/access.  
 
 ## 2.11.16
 * **New Feature** [#3 Include an Assertion Feature](https://github.com/adobe/bridgeService/issues/3). We have now included the possibility for users to define assertions. This allows you to clarify accepted results for the call you make with the IBS.

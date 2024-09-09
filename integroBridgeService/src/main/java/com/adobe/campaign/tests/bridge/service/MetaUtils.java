@@ -15,15 +15,20 @@ import org.apache.logging.log4j.Logger;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class MetaUtils {
+    public static final List<Class<?>> ManagedClasses = Arrays.asList(String.class, int.class, long.class,
+            boolean.class, Integer.class, Long.class, Boolean.class, Object.class);
+    public static final int RECURSION_DEPTH_LIMIT = Integer.parseInt(
+            ConfigValueHandlerIBS.DESERIALIZATION_DEPTH_LIMIT.fetchValue());
     private static final Logger log = LogManager.getLogger();
-    public static final List<Class<?>> ManagedClasses = Arrays.asList(String.class, int.class, long.class, boolean.class,Integer.class, Long.class, Boolean.class, Object.class);
 
     /**
      * Extracts a possible field name given a method name
+     *
      * @param in_methodName The name of the method we want to extract
      * @return A possible field name
      */
@@ -41,28 +46,33 @@ public class MetaUtils {
 
     /**
      * Used for deserializing Collections of unserializable objects.
-      * @param in_object A collection of complex objects
+     *
+     * @param in_object A collection of complex objects
      * @return A List of serialized Objects
      */
     public static List extractValuesFromList(Collection in_object) {
-        return (List<Map<String, Object>>) in_object.stream().map(MetaUtils::extractValuesFromObject).collect(Collectors.toList());
+        return (List<Map<String, Object>>) in_object.stream().map(MetaUtils::extractValuesFromObject)
+                .collect(Collectors.toList());
     }
 
     public static boolean isExtractable(Class in_class) {
-        return ManagedClasses.contains(in_class) || in_class.isPrimitive() || Collection.class.isAssignableFrom(in_class) ;
+        return ManagedClasses.contains(in_class) || in_class.isPrimitive() || Collection.class.isAssignableFrom(
+                in_class);
     }
 
     /**
      * Objects of these types should be returned as is
+     *
      * @param in_class a Class object
      * @return true if the class needs not be managed
      */
     public static boolean isBasicReturnType(Class in_class) {
-        return ManagedClasses.contains(in_class) || in_class.isPrimitive() ;
+        return ManagedClasses.contains(in_class) || in_class.isPrimitive();
     }
 
     /**
      * Lets us know if we can extract this method
+     *
      * @param in_method a method object
      * @return true if this method can be invoked in the case of extracting results
      */
@@ -70,16 +80,40 @@ public class MetaUtils {
         List<Boolean> tests = new ArrayList<>();
 
         tests.add(in_method.getReturnType() instanceof Serializable);
-        tests.add(in_method.getName().startsWith("get") || in_method.getName().startsWith("is")|| in_method.getName().startsWith("has"));
+        tests.add(in_method.getName().startsWith("get") || in_method.getName().startsWith("is") || in_method.getName()
+                .startsWith("has"));
         tests.add(isExtractable(in_method.getReturnType()));
-        tests.add(in_method.getParameterCount()==0);
+        tests.add(in_method.getParameterCount() == 0);
+        tests.add(Modifier.isPublic(in_method.getDeclaringClass().getModifiers()));
 
         return tests.stream().noneMatch(r -> r.equals(Boolean.FALSE));
     }
 
+    /**
+     * Used for deserializing of unserializeable Objects. This method will extract all the values from the object that
+     * it can. It will follow a preset depth which is by default 1.
+     *
+     * @param in_object A complex object
+     * @return A Map of serialized Objects
+     */
     public static Object extractValuesFromObject(Object in_object) {
+        return extractValuesFromObject(in_object, 0);
+    }
+
+    /**
+     * Used for deserializing of unserializeable Objects. This method will extract all the values from the object that
+     * it can. It will follow a preset depth which is by default 1.
+     *
+     * @param in_object      A complex object
+     * @param recursionLevel The depth of the recursion
+     * @return A Map of serialized Objects
+     */
+    public static Object extractValuesFromObject(Object in_object, int recursionLevel) {
+        if (recursionLevel > RECURSION_DEPTH_LIMIT) {
+            return "... of type " + in_object.getClass().getName();
+        }
         Map<String, Object> lr_value = new HashMap<>();
-        if (in_object==null) {
+        if (in_object == null) {
             return lr_value;
         } else if (isBasicReturnType(in_object.getClass())) {
             return in_object;
@@ -92,21 +126,21 @@ public class MetaUtils {
         for (Method lt_m : Arrays.stream(in_object.getClass().getMethods()).filter(MetaUtils::isExtractable).collect(
                 Collectors.toSet())) {
 
-              //  if (lt_m.getParameterCount()==0 && lt_m.canAccess(in_object) && isExtractable(lt_m.getReturnType())) {
-            if (lt_m.getParameterCount()==0 && isExtractable(lt_m.getReturnType())) {
+            if (lt_m.getParameterCount() == 0 && isExtractable(lt_m.getReturnType())) {
 
-                    try {
-                        Object lt_returnValue = lt_m.invoke(in_object);
+                try {
+                    Object lt_returnValue = lt_m.invoke(in_object);
 
-                        //TODO Add option with null values (extract null)
-                        if (lt_returnValue != null) {
-                            lr_value.put(Optional.ofNullable(extractFieldName(lt_m.getName())).orElse("this"),lt_returnValue);
-                            log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue);
-                        }
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        throw new RuntimeException(e);
+                    //TODO Add option with null values (extract null)
+                    if (lt_returnValue != null) {
+                        lr_value.put(Optional.ofNullable(extractFieldName(lt_m.getName())).orElse("this"),
+                                (lt_returnValue instanceof Serializable) ? lt_returnValue : extractValuesFromObject(
+                                        lt_returnValue, recursionLevel + 1));
+                        log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue);
                     }
-
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    log.debug("Failed to execute {}.{}", lt_m.getDeclaringClass(), lt_m.getName());
+                }
 
             }
 
@@ -116,12 +150,13 @@ public class MetaUtils {
 
     /**
      * Used for deserializing Maps of unserializable objects.
+     *
      * @param in_object A collection of complex objects
      * @return A Map of serialized Objects
      */
     public static Map extractValuesFromMap(Map in_object) {
         Map<Object, Object> lr_returnObject = new HashMap<>();
-        in_object.forEach((k,v) -> lr_returnObject.put(k, extractValuesFromObject(v)));
+        in_object.forEach((k, v) -> lr_returnObject.put(k, extractValuesFromObject(v)));
 
         //Just for testing internal issues
         if (ConfigValueHandlerIBS.TEMP_INTERNAL_ERROR_MODE.fetchValue().equals("active")) {

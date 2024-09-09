@@ -62,7 +62,9 @@ public enum ConfigValueHandlerIBS {
     SECRETS_FILTER_PREFIX("IBS.SECRETS.FILTER.PREFIX", "ibs-secret-", false,
             "Headers with this prefix will be considered as secrets."),
     SECRETS_BLOCK_OUTPUT("IBS.SECRETS.BLOCK.OUTPUT", "true", false,
-            "When set to true, we forbid the system from returning the value in the return payload. This is to avoid XSS attacks. This should ONLY be true when you want to debug.");
+            "When set to true, we forbid the system from returning the value in the return payload. This is to avoid XSS attacks. This should ONLY be true when you want to debug."),
+    DESERIALIZATION_DEPTH_LIMIT("IBS.DESERIALIZATION.DEPTH.LIMIT", "1", false,
+            "This value sets the maximum depth of the deserialization.");
 
     public final String systemName;
     public final String defaultValue;

@@ -22,8 +22,9 @@ import java.util.stream.Collectors;
 public class MetaUtils {
     public static final List<Class<?>> ManagedClasses = Arrays.asList(String.class, int.class, long.class,
             boolean.class, Integer.class, Long.class, Boolean.class, Object.class);
+    public static final int RECURSION_DEPTH_LIMIT = Integer.parseInt(
+            ConfigValueHandlerIBS.DESERIALIZATION_DEPTH_LIMIT.fetchValue());
     private static final Logger log = LogManager.getLogger();
-    public static final int RECURSION_DEPTH_LIMIT = 1;
 
     /**
      * Extracts a possible field name given a method name
@@ -103,7 +104,7 @@ public class MetaUtils {
      * Used for deserializing of unserializeable Objects. This method will extract all the values from the object that
      * it can. It will follow a preset depth which is by default 1.
      *
-     * @param in_object A complex object
+     * @param in_object      A complex object
      * @param recursionLevel The depth of the recursion
      * @return A Map of serialized Objects
      */
@@ -134,7 +135,7 @@ public class MetaUtils {
                     if (lt_returnValue != null) {
                         lr_value.put(Optional.ofNullable(extractFieldName(lt_m.getName())).orElse("this"),
                                 (lt_returnValue instanceof Serializable) ? lt_returnValue : extractValuesFromObject(
-                                        lt_returnValue, recursionLevel+1));
+                                        lt_returnValue, recursionLevel + 1));
                         log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue);
                     }
                 } catch (IllegalAccessException | InvocationTargetException e) {

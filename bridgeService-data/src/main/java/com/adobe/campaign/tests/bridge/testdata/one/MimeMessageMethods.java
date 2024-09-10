@@ -26,7 +26,7 @@ public class MimeMessageMethods {
         message.setFrom(new InternetAddress(from));
         message.addRecipient(Message.RecipientType.TO, new InternetAddress("a@b.com"));
         message.setSubject("a subject by me " + in_suffix);
-        message.setText("a content by yours truely " + in_suffix);
+        message.setText("a content by yours truly " + in_suffix);
         return message;
     }
 
@@ -115,6 +115,8 @@ public class MimeMessageMethods {
         // Step 2: Create a default MimeMessage object
         MimeMessage message = new MimeMessage(session);
 
+        message.setSentDate(new java.util.Date());
+
         // Step 3: Set From, To, Subject
         message.setFrom(new InternetAddress("from@example.com"));
         message.addRecipient(Message.RecipientType.TO, new InternetAddress("to@example.com"));
@@ -137,6 +139,25 @@ public class MimeMessageMethods {
         // Step 7: Set the multipart object to the message content
         message.setContent(multipart);
         return message;
+    }
+
+    public static Multipart createMutliPartHTML() throws MessagingException {
+
+        Multipart multipart = new MimeMultipart();
+
+        // PLAIN TEXT
+        BodyPart messageBodyPart = new MimeBodyPart();
+        messageBodyPart.setText("Here is your plain text message");
+        multipart.addBodyPart(messageBodyPart);
+
+        // HTML TEXT
+        // HTML TEXT
+        BodyPart messageBodyPart2 = new MimeBodyPart();
+        String htmlText = "<H1>I am the html part</H1>";
+        messageBodyPart2.setContent(htmlText, "text/html");
+        multipart.addBodyPart(messageBodyPart2);
+
+        return multipart;
     }
 }
 

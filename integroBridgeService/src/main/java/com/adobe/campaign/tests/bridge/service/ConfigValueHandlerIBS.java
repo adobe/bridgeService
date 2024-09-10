@@ -64,7 +64,9 @@ public enum ConfigValueHandlerIBS {
     SECRETS_BLOCK_OUTPUT("IBS.SECRETS.BLOCK.OUTPUT", "true", false,
             "When set to true, we forbid the system from returning the value in the return payload. This is to avoid XSS attacks. This should ONLY be true when you want to debug."),
     DESERIALIZATION_DEPTH_LIMIT("IBS.DESERIALIZATION.DEPTH.LIMIT", "1", false,
-            "This value sets the maximum depth of the deserialization.");
+            "This value sets the maximum depth of the deserialization."),
+    PLUGIN_DESERIALIZATION_PATH(
+            "IBS.PLUGINS.PATH", null, false, "The package path to look for the plugins.");
 
     public final String systemName;
     public final String defaultValue;

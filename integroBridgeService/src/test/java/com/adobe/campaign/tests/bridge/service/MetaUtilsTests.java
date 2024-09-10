@@ -8,6 +8,8 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.plugins.IBSDeserializerPlugin;
+import com.adobe.campaign.tests.bridge.plugins.deserializer.MimeExtractionPluginDeserializer;
 import com.adobe.campaign.tests.bridge.testdata.nested.NestedExampleA_Level1;
 import com.adobe.campaign.tests.bridge.testdata.nested.NestedExampleA_Level2;
 import com.adobe.campaign.tests.bridge.testdata.nested.NestedExampleA_Level3;
@@ -22,13 +24,8 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.activation.DataHandler;
 import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -41,6 +38,7 @@ public class MetaUtilsTests {
     @AfterClass
     public void setUp() {
         ConfigValueHandlerIBS.resetAllValues();
+        IBSPluginManager.ExtractionPlugins.clearPlugins();
     }
 
     //Tests for extracting data from an object
@@ -139,169 +137,12 @@ public class MetaUtilsTests {
 
     }
 
-    public static MimeMessage createMultiPartMessage(String in_suffix) throws MessagingException {
-        String from = "qa_sender@qamail.rd.campaign.adobe.com";
-        MimeMessage message = new MimeMessage((Session) null);
-        message.setFrom(new InternetAddress(from));
-        message.addRecipient(Message.RecipientType.TO, new InternetAddress("a@b.com"));
-        message.setSubject("a subject by me " + in_suffix);
-
-        // Create a multipart message
-        MimeMultipart multipart = new MimeMultipart("example");
-
-        // Part one is the text
-        MimeBodyPart textPart = new MimeBodyPart();
-        textPart.setText("Part 1 : a content by yours truely " + in_suffix,"utf-8");
-
-        // Part two is an attachment
-        //MimeBodyPart attachmentPart = new MimeBodyPart();
-        //attachmentPart.setText("Part 2 : a content by yours truely " + in_suffix);
-
-        MimeBodyPart attachmentPart = new MimeBodyPart();
-        ByteArrayDataSource ds = new ByteArrayDataSource("attachment content".getBytes(), "text/plain");
-        attachmentPart.setDataHandler(new DataHandler(ds));
-        attachmentPart.setFileName("testaRosa.txt");
-
-
-        // Add parts to the multipart
-        multipart.addBodyPart(textPart);
-        multipart.addBodyPart(attachmentPart);
-
-        // Set the multipart as the message's content
-        message.setContent(multipart);
-        return message;
-    }
-
-    public static MimeMessage createMultiPartAlternativeMessage(String in_suffix) throws MessagingException {
-        // Step 1: Establish a mail session
-        Properties properties = System.getProperties();
-        Session session = Session.getDefaultInstance(properties);
-
-        // Step 2: Create a default MimeMessage object
-        MimeMessage message = new MimeMessage(session);
-
-        // Step 3: Set From, To, Subject
-        message.setFrom(new InternetAddress("from@example.com"));
-        message.addRecipient(Message.RecipientType.TO, new InternetAddress("to@example.com"));
-        message.setSubject("This is the Subject Line!");
-
-        // Step 4: Create a multipart/alternative content
-        Multipart multipart = new MimeMultipart("alternative");
-
-        // Step 5: Create two body parts
-        BodyPart textBodyPart = new MimeBodyPart();
-        textBodyPart.setText("This is the text version of the email.");
-
-        BodyPart htmlBodyPart = new MimeBodyPart();
-        htmlBodyPart.setContent("<h1>This is the HTML version of the email.</h1>", "text/html");
-
-        // Step 6: Add the body parts to the multipart
-        multipart.addBodyPart(textBodyPart);
-        multipart.addBodyPart(htmlBodyPart);
-
-        // Step 7: Set the multipart object to the message content
-        message.setContent(multipart);
-        return message;
-    }
-
-    Message createMPMHTML() throws MessagingException {
-        /*
-        Properties props = new Properties();
-
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.host", "MYMAILSERVER");
-        props.setProperty("mail.smtp.auth", "true");
-        final PasswordAuthentication auth = new PasswordAuthentication(smtpUser, stmpPassword);
-        Session mailSession = Session.getDefaultInstance(props, new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() { return auth; }
-        });
-        Session session = Session.getInstance(props,null);
-        MimeMessage message = new MimeMessage(session);
-        */
-        /*
-        Properties props = new Properties();
-        props.put("mail.smtps.host", "smtp.gmail.com");
-        props.put("mail.smtps.auth", "true");
-
-        props.put("mail.smtps.port", 123);
-
-        // Get the Session object.
-        Session session = Session.getInstance(props, null);
-
-        MimeMessage message = new MimeMessage(session);
-
-         */
-        MimeMessage message = new MimeMessage((Session) null);
-
-        InternetAddress from = new InternetAddress("from@me.com");
-        InternetAddress to = new InternetAddress("to@you.com");
-
-        message.setSubject("I am a multipart text/html email" );
-        message.setFrom(from);
-        message.addRecipient(Message.RecipientType.TO, to);
-
-        Multipart multipart = new MimeMultipart();
-
-        // PLAIN TEXT
-        BodyPart messageBodyPart = new MimeBodyPart();
-        messageBodyPart.setText("Here is your plain text message");
-        multipart.addBodyPart(messageBodyPart);
-
-        // HTML TEXT
-        BodyPart messageBodyPart2 = new MimeBodyPart();
-        String htmlText = "<H1>I am the html part</H1>";
-        messageBodyPart2.setContent(htmlText, "text/html");
-        multipart.addBodyPart(messageBodyPart2);
-
-        message.setContent(multipart);
-        return message;
-    }
-
-    BodyPart createMimePart() throws MessagingException {
-
-        Multipart multipart = new MimeMultipart();
-
-        // PLAIN TEXT
-        BodyPart messageBodyPart = new MimeBodyPart();
-        messageBodyPart.setText("Here is your plain text message");
-        multipart.addBodyPart(messageBodyPart);
-
-        // HTML TEXT
-        // HTML TEXT
-        BodyPart messageBodyPart2 = new MimeBodyPart();
-        String htmlText = "<H1>I am the html part</H1>";
-        messageBodyPart2.setContent(htmlText, "text/html");
-        multipart.addBodyPart(messageBodyPart2);
-
-        return messageBodyPart2;
-    }
-
-    Multipart createMutliPart() throws MessagingException {
-
-        Multipart multipart = new MimeMultipart();
-
-        // PLAIN TEXT
-        BodyPart messageBodyPart = new MimeBodyPart();
-        messageBodyPart.setText("Here is your plain text message");
-        multipart.addBodyPart(messageBodyPart);
-
-        // HTML TEXT
-        // HTML TEXT
-        BodyPart messageBodyPart2 = new MimeBodyPart();
-        String htmlText = "<H1>I am the html part</H1>";
-        messageBodyPart2.setContent(htmlText, "text/html");
-        multipart.addBodyPart(messageBodyPart2);
-
-        return multipart;
-    }
-
     @Test
     public void prepareExtractMultiPartMimeMessage()
             throws MessagingException, JsonProcessingException {
         //List<Message> m1 = Collections.singletonList(createMultiPartMessage("dddd"));
 
-        Object x = createMutliPart();
+        Object x = MimeMessageMethods.createMutliPartHTML();
 
         //assertThat("The values should be extractable", MetaUtils.isExtractable(x.getClass()));
         JavaCallResults jcr = new JavaCallResults();
@@ -412,7 +253,7 @@ public class MetaUtilsTests {
         assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
         assertThat(l_result.get("size"), Matchers.equalTo(-1));
         assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me " + l_suffix));
-        assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truely " + l_suffix));
+        assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truly " + l_suffix));
         assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
 
     }
@@ -436,7 +277,7 @@ public class MetaUtilsTests {
         assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
         assertThat(l_result.get("size"), Matchers.equalTo(-1));
         assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me " + l_suffix));
-        assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truely " + l_suffix));
+        assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truly " + l_suffix));
         assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
 
     }
@@ -518,6 +359,8 @@ public class MetaUtilsTests {
         String result = BridgeServiceFactory.transformJavaCallResultsToJSON(jcr, new HashSet<>());
 
         assertThat("We should see the effects of nesting", ((Map)((Map) l_result3).get("level2")).get("level3"), Matchers.equalTo("... of type "+NestedExampleA_Level3.class.getName()));
+
+
     }
 
     @Test
@@ -528,6 +371,125 @@ public class MetaUtilsTests {
         assertThat("String is basic", MetaUtils.isBasicReturnType(int.class));
         assertThat("String is basic", MetaUtils.isBasicReturnType(float.class));
         assertThat("String is basic", !MetaUtils.isBasicReturnType(MimeMessage.class));
+    }
+
+    /////// Tests for the MultiPartMime plugin
+
+    @Test
+    public void testMutliPartMimePlugin() throws MessagingException, JsonProcessingException {
+        var l_suffix = "abc";
+        Message l_message = MimeMessageMethods.createMultiPartAlternativeMessage(l_suffix);
+        //Message l_message = MimeMessageMethods.createMessage(l_suffix);
+        IBSDeserializerPlugin mimePlugin = new MimeExtractionPluginDeserializer();
+        assertThat("Applies to should be a message", mimePlugin.appliesTo(l_message));
+
+        Map<String, Object> l_result = mimePlugin.apply(l_message);
+
+        assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
+        assertThat(l_result.get("size"), Matchers.equalTo(-1));
+        assertThat(l_result.get("subject"), Matchers.equalTo("This is the Subject Line " + l_suffix));
+        assertThat(l_result.get("content"), Matchers.instanceOf(List.class));
+        var contentList = (List<Map<String, Object>>) l_result.get("content");
+        assertThat(contentList.size(), Matchers.equalTo(2));
+        assertThat(contentList.get(0), Matchers.instanceOf(Map.class));
+        assertThat(contentList.get(0).get("contentType"), Matchers.equalTo("text/plain"));
+        assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
+    }
+
+    @Test
+    public void testThePluginManager() throws MessagingException {
+        var l_suffix = "def";
+
+        Message l_message = MimeMessageMethods.createMultiPartAlternativeMessage(l_suffix);
+
+        assertThat("The plugin should be absent", !IBSPluginManager.ExtractionPlugins.appliesTo(l_message));
+
+        MimeExtractionPluginDeserializer mimePlugin = new MimeExtractionPluginDeserializer();
+
+        //add plugin
+        IBSPluginManager.ExtractionPlugins.plugins.add(mimePlugin);
+        assertThat("The plugin should be added", IBSPluginManager.ExtractionPlugins.appliesTo(l_message));
+
+        //remove plugin
+        IBSPluginManager.ExtractionPlugins.clearPlugins();
+        assertThat("The plugin should be absent", !IBSPluginManager.ExtractionPlugins.appliesTo(l_message));
+    }
+
+    @Test
+    public void testThePluginManagerUsageLevel1() throws MessagingException {
+        var l_suffix = "def";
+
+        Message l_message = MimeMessageMethods.createMultiPartAlternativeMessage(l_suffix);
+
+        MimeExtractionPluginDeserializer mimePlugin = new MimeExtractionPluginDeserializer();
+
+        //add plugin
+        IBSPluginManager.ExtractionPlugins.plugins.add(mimePlugin);
+        assertThat("The plugin should be added", IBSPluginManager.ExtractionPlugins.appliesTo(l_message));
+
+        Map<String, Object> l_result = (Map<String, Object>) IBSPluginManager.ExtractionPlugins.apply(l_message);
+
+        assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
+        assertThat(l_result.get("size"), Matchers.equalTo(-1));
+        assertThat(l_result.get("subject"), Matchers.equalTo("This is the Subject Line " + l_suffix));
+        assertThat(l_result.get("content"), Matchers.instanceOf(List.class));
+        var contentList = (List<Map<String, Object>>) l_result.get("content");
+        assertThat(contentList.size(), Matchers.equalTo(2));
+        assertThat(contentList.get(0), Matchers.instanceOf(Map.class));
+        assertThat(contentList.get(0).get("contentType"), Matchers.equalTo("text/plain"));
+        assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
+    }
+
+
+    @Test
+    public void testUsageOfTheExtractionPlugIn() throws MessagingException {
+        var l_suffix = "abc";
+        Message l_message = MimeMessageMethods.createMultiPartAlternativeMessage(l_suffix);
+
+        Map<String, Object> l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
+        assertThat("Since no plugin has been declared content should be generated by default",l_result.get("content"), Matchers.not(Matchers.instanceOf(List.class)));
+
+        MimeExtractionPluginDeserializer mimePlugin = new MimeExtractionPluginDeserializer();
+        IBSPluginManager.ExtractionPlugins.plugins.add(mimePlugin);
+
+        l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
+
+        assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
+        assertThat(l_result.get("size"), Matchers.equalTo(-1));
+        assertThat(l_result.get("subject"), Matchers.equalTo("This is the Subject Line " + l_suffix));
+        //assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truly " + l_suffix));
+        assertThat(l_result.get("content"), Matchers.instanceOf(List.class));
+        var contentList = (List<Map<String, Object>>) l_result.get("content");
+        assertThat(contentList.size(), Matchers.equalTo(2));
+        assertThat(contentList.get(0), Matchers.instanceOf(Map.class));
+        assertThat(contentList.get(0).get("contentType"), Matchers.equalTo("text/plain"));
+        assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
+    }
+
+    @Test
+    public void testUsageOfTheExtractionPlugInConfigBased() throws MessagingException {
+
+        var l_suffix = "abc";
+        Message l_message = MimeMessageMethods.createMultiPartAlternativeMessage(l_suffix);
+
+        Map<String, Object> l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
+        assertThat("Since no plugin has been declared content should be generated by default",l_result.get("content"), Matchers.not(Matchers.instanceOf(List.class)));
+
+        ConfigValueHandlerIBS.PLUGIN_DESERIALIZATION_PATH.activate("com.adobe.campaign.tests.bridge.plugins.deserializer");
+        IBSPluginManager.loadPlugins();
+
+        l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
+
+        assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
+        assertThat(l_result.get("size"), Matchers.equalTo(-1));
+        assertThat(l_result.get("subject"), Matchers.equalTo("This is the Subject Line " + l_suffix));
+        //assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truly " + l_suffix));
+        assertThat(l_result.get("content"), Matchers.instanceOf(List.class));
+        var contentList = (List<Map<String, Object>>) l_result.get("content");
+        assertThat(contentList.size(), Matchers.equalTo(2));
+        assertThat(contentList.get(0), Matchers.instanceOf(Map.class));
+        assertThat(contentList.get(0).get("contentType"), Matchers.equalTo("text/plain"));
+        assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
     }
 
 

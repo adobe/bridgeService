@@ -72,6 +72,7 @@ public class CallContent {
     /**
      * Returns the method object that is defined by this class
      *
+     * @param in_class Class for which we want to fetch the method from
      * @return the method object
      */
     public Method fetchMethod(Class in_class) {
@@ -87,6 +88,7 @@ public class CallContent {
     /**
      * Returns the method object that is defined by this class
      *
+     * @param in_class the class we want to instantiate
      * @return the method object
      */
     public Constructor fetchConstructor(Class in_class) {
@@ -136,6 +138,7 @@ public class CallContent {
     /**
      * Calls the java method defined in this class
      *
+     * @param iClassLoader The class loader used for loading and executing the class and method.
      * @return the value of this call
      */
     public Object call(IntegroBridgeClassLoader iClassLoader) {

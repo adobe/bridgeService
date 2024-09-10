@@ -591,7 +591,6 @@ public class E2ETests {
         var response = given().body(jc).post(EndPointURL + "call");
         System.out.println(response.thenReturn().getBody().asPrettyString());
         response.then().assertThat().statusCode(200);
-
     }
 
 

@@ -61,10 +61,10 @@ public class JavaCallResults implements Serializable {
     }
 
     /**
-     * If the given object is a key, we return the duration stored for that key. Otherwise we return the
+     * Used for assertions where we assert the duration of the executions. If the given object is a key, we return the duration stored for that key. Otherwise we return the exact 'long' value of the given duration.
      *
      * @param in_keyOrValue An object that is either a key or an
-     * @return
+     * @return A duration in milliseconds
      */
     public Long expandDurations(Object in_keyOrValue) {
         if (getCallDurations().containsKey(in_keyOrValue) ) {

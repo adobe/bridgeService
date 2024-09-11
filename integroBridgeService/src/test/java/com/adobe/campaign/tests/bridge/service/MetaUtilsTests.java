@@ -29,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -71,6 +72,8 @@ public class MetaUtilsTests {
         Method l_failingMethod = l_failingClass.getClass().getMethod("hasMoreElements", null);
         assertThat("This method is not extractable", !MetaUtils.isExtractable(l_failingMethod));
 
+        //issue #162 adding date as extractable
+        assertThat("Date should be extractable", MetaUtils.isExtractable(Date.class));
     }
 
     @Test
@@ -248,14 +251,48 @@ public class MetaUtilsTests {
         Map<String, Object> l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
 
         assertThat(l_result.keySet(),
-                Matchers.containsInAnyOrder("isExpunged","hashCode","contentType", "size", "content", "subject", "lineCount", "messageNumber"));
+                Matchers.containsInAnyOrder("isExpunged","hashCode","contentType", "size", "content", "subject", "lineCount", "messageNumber", "sentDate"));
+
 
         assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
         assertThat(l_result.get("size"), Matchers.equalTo(-1));
         assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me " + l_suffix));
         assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truly " + l_suffix));
         assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
+        Date end = new Date();
+        assertThat("We should have a sent date", ((Date) l_result.get("sentDate")).getTime(), Matchers.lessThanOrEqualTo(
+                end.getTime()));
+    }
 
+    @Test
+    public void testDeserializerDateFormatted()
+            throws MessagingException {
+
+        //Prepare formatting
+        String pattern = "yyyy-MM-dd";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        String myDate = simpleDateFormat.format(new Date());
+
+        ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.activate(pattern);
+
+
+        String l_suffix = "one";
+        Message l_message = MimeMessageMethods.createMessage(l_suffix);
+
+        assertThat("This class should not be serializable", !(l_message instanceof Serializable));
+
+        Map<String, Object> l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
+
+        assertThat(l_result.keySet(),
+                Matchers.containsInAnyOrder("isExpunged","hashCode","contentType", "size", "content", "subject", "lineCount", "messageNumber", "sentDate"));
+
+
+        assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
+        assertThat(l_result.get("size"), Matchers.equalTo(-1));
+        assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me " + l_suffix));
+        assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truly " + l_suffix));
+        assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
+        assertThat("We should have a sent date", l_result.get("sentDate"), Matchers.equalTo(myDate));
     }
 
     @Test
@@ -272,7 +309,7 @@ public class MetaUtilsTests {
 
         assertThat(l_result.keySet(),
                 Matchers.containsInAnyOrder("contentType", "size", "content", "subject", "lineCount", "messageNumber",
-                        "hashCode", "isExpunged"));
+                        "hashCode", "isExpunged","sentDate"));
 
         assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
         assertThat(l_result.get("size"), Matchers.equalTo(-1));
@@ -297,12 +334,8 @@ public class MetaUtilsTests {
                 Matchers.containsInAnyOrder("contentType", "size", "content", "subject", "lineCount", "messageNumber",
                         "hashCode", "isExpunged"));
 
-        //assertThat(l_result.get("contentType").toString(), Matchers.startsWith("multipart"));
-
-
         assertThat(l_result.get("size"), Matchers.equalTo(-1));
         assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me " + l_suffix));
-        //assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truely " + l_suffix));
         assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
     }
 
@@ -394,6 +427,28 @@ public class MetaUtilsTests {
         assertThat(contentList.get(0), Matchers.instanceOf(Map.class));
         assertThat(contentList.get(0).get("contentType"), Matchers.equalTo("text/plain"));
         assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
+    }
+
+    @Test
+    public void testFormatter() {
+
+        assertThat("String formatted", MetaUtils.formatObject("test"), Matchers.equalTo("test"));
+
+        assertThat("int formatted", MetaUtils.formatObject(1), Matchers.equalTo(1));
+
+        Date l_date = new Date();
+        assertThat("Date formatted should be a long", MetaUtils.formatObject(l_date), Matchers.equalTo(l_date));
+
+        String pattern = "yyyy-MM-dd";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        String myDate = simpleDateFormat.format(l_date);
+
+        ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.activate(pattern);
+        assertThat("Date formatted should be a String", MetaUtils.formatObject(l_date), Matchers.equalTo(myDate));
+
+        ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.activate("an arbitrary string");
+        assertThat("Date formatted should be a String", MetaUtils.formatObject(l_date), Matchers.equalTo(l_date));
+
     }
 
 }

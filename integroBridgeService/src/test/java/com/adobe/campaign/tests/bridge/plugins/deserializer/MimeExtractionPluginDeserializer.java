@@ -9,6 +9,7 @@
 package com.adobe.campaign.tests.bridge.plugins.deserializer;
 
 import com.adobe.campaign.tests.bridge.plugins.IBSDeserializerPlugin;
+import com.adobe.campaign.tests.bridge.service.MetaUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -59,7 +60,7 @@ public class MimeExtractionPluginDeserializer implements IBSDeserializerPlugin {
             l_returnMap.put("contentType", l_message.getContentType());
             l_returnMap.put("description", l_message.getDescription());
             l_returnMap.put("receivedDate", l_message.getReceivedDate());
-            l_returnMap.put("sentDate", l_message.getSentDate());
+            l_returnMap.put("sentDate", MetaUtils.formatObject(l_message.getSentDate()));
             l_returnMap.put("size", l_message.getSize());
             l_returnMap.put("flags", l_message.getFlags());
             l_returnMap.put("messageNumber", l_message.getMessageNumber());

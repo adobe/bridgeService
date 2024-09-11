@@ -39,6 +39,7 @@ from any language or framework you are in.
       * [Complex Types](#complex-types)
       * [Files](#files)
   * [Results](#results)
+    * [Formatting Dates](#formatting-dates)
     * [Deserialization Plugins](#deserialization-plugins)
   * [Managing Timeouts](#managing-timeouts)
     * [Setting Timeout Globally](#setting-timeout-globally)
@@ -504,6 +505,9 @@ Results are returned as a JSON Object. Serializable return objects are deseriali
 
 In the case of complex classes where the scraping is not sufficient, you can define a deserialization plugin for that class. This allow you to be specific regarding how the object can be returned. For mor information on this you can refer to the chapter [Deserialization Plugins](#deserialization-plugins).
 
+### Formatting Dates
+We now allow the extraction and the formatting of Dates. This is done by setting the environment variable `IBS.DESERIALIZATION.DATE.FORMAT`. If not set the date is not changed and remains a long. The format we cover is [SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html). A wrong Date format will result in using the default format (long).
+
 ### Deserialization Plugins
 As of version 2.11.17, we introduced the notion of plugins. For now you can customize how an object is deserialized. This can be usefull when the default object serialization is incomplete or not to your liking.
 
@@ -512,7 +516,6 @@ To create your plugin you need to:
 * Add the package of the plugin to the environment variable `IBS.DESERIALIZATION.PLUGINS`.
 
 There is an example of the plugin in the tests under `integroBridgeService/src/test/java/com/adobe/campaign/tests/bridge/plugins/deserializer/MimeExtractionPluginDeserializer.java`.
-
 
 ## Managing Timeouts
 

@@ -16,12 +16,13 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class MetaUtils {
     public static final List<Class<?>> ManagedClasses = Arrays.asList(String.class, int.class, long.class,
-            boolean.class, Integer.class, Long.class, Boolean.class, Object.class);
+            boolean.class, Integer.class, Long.class, Boolean.class, Date.class, Object.class);
     public static final int RECURSION_DEPTH_LIMIT = Integer.parseInt(
             ConfigValueHandlerIBS.DESERIALIZATION_DEPTH_LIMIT.fetchValue());
     private static final Logger log = LogManager.getLogger();
@@ -140,7 +141,7 @@ public class MetaUtils {
                     //TODO Add option with null values (extract null)
                     if (lt_returnValue != null) {
                         lr_value.put(Optional.ofNullable(extractFieldName(lt_m.getName())).orElse("this"),
-                                (lt_returnValue instanceof Serializable) ? lt_returnValue : extractValuesFromObject(
+                                (lt_returnValue instanceof Serializable) ? formatObject(lt_returnValue) : extractValuesFromObject(
                                         lt_returnValue, recursionLevel + 1));
                         log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue);
                     }
@@ -173,4 +174,42 @@ public class MetaUtils {
         }
         return lr_returnObject;
     }
+
+    /**
+     * Performs a default formatting
+     *
+     * @param in_object The object to format
+     * @return The formatted object
+     */
+    public static Object formatObject(Object in_object) {
+        if (in_object instanceof Date) {
+            return formatObject((Date) in_object);
+        }
+        return in_object;
+    }
+
+    /**
+     * Performs a formatting of the date
+     *
+     * @param in_object The object to format
+     * @return The formatted date object
+     */
+    public static Object formatObject(Date in_object) {
+        Object lr_dateString = in_object;
+
+        if (!ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.is("NONE")) {
+            try {
+                SimpleDateFormat l_format = new SimpleDateFormat(
+                        ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.fetchValue());
+
+                lr_dateString = l_format.format(in_object);
+            } catch (IllegalArgumentException e) {
+                log.error("The given format '{}' is not compatible with SimpleDateFormat",
+                        ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.fetchValue());
+            }
+        }
+
+        return lr_dateString;
+    }
+
 }

@@ -27,6 +27,7 @@ public class MimeMessageMethods {
         message.addRecipient(Message.RecipientType.TO, new InternetAddress("a@b.com"));
         message.setSubject("a subject by me " + in_suffix);
         message.setText("a content by yours truly " + in_suffix);
+        message.setSentDate(new java.util.Date());
         return message;
     }
 

@@ -1,10 +1,15 @@
 # Bridge Service - RELEASE NOTES
 ## 2.11.17 In-Progress
 * **New Feature** [#160 Introduce Extraction Plugins](https://github.com/adobe/bridgeService/issues/160). We have now introduced a new plugin mechanism so you can define how an object you are expecting should be deserialized. Please refer to the chapter on ["Deserialization Plugins"](README.md#deserialization-plugins) in the README doc.
+* **New Feature** [#162 Introduce Extraction Plugins](https://github.com/adobe/bridgeService/issues/162). We not only allow the deserialization of Date objects. You can decide the formatting of the value. For more information please refer to [Formatting Dates](README.md#formatting-dates) in the README doc.
 * [#159 Errors when deserializing Milti-Part Mime Object](https://github.com/adobe/bridgeService/issues/159): We have included a couple of resilience features to better handle the deserialization of complex Objects. This includes:
   * Nested scraping. We allow a nested scraping of objects.
   * Ignoring calls that throw errors. We now log the error and continue with the next call.
-  * Ignoring methods returning objects that we do not have the rights to execute/access.  
+  * Ignoring methods returning objects that we do not have the rights to execute/access.
+* **New Environment Variables**
+  * IBS.DESERIALIZATION.DEPTH.LIMIT : This value sets the maximum depth of the deserialization.
+  * IBS.PLUGINS.PATH : The package path in which IBS should search for the plugins.
+  * IBS.DESERIALIZATION.DATE.FORMAT : The format in which the date should be deserialized.
 
 ## 2.11.16
 * **New Feature** [#3 Include an Assertion Feature](https://github.com/adobe/bridgeService/issues/3). We have now included the possibility for users to define assertions. This allows you to clarify accepted results for the call you make with the IBS.

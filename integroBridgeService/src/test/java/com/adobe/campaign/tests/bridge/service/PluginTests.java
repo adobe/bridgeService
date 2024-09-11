@@ -22,6 +22,8 @@ import org.testng.annotations.Test;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -79,6 +81,7 @@ public class PluginTests {
         assertThat(contentList.get(0), Matchers.instanceOf(Map.class));
         assertThat(contentList.get(0).get("contentType"), Matchers.equalTo("text/plain"));
         assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
+
     }
 
     @Test
@@ -137,6 +140,12 @@ public class PluginTests {
                 "com.adobe.campaign.tests.bridge.plugins.deserializer");
         IBSPluginManager.loadPlugins();
 
+        //Activate the dates
+        String pattern = "yyyy-MM-dd";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        String myDate = simpleDateFormat.format(new Date());
+        ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.activate(pattern);
+
         l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
 
         assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
@@ -149,6 +158,7 @@ public class PluginTests {
         assertThat(contentList.get(0), Matchers.instanceOf(Map.class));
         assertThat(contentList.get(0).get("contentType"), Matchers.equalTo("text/plain"));
         assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
+        assertThat(l_result.get("sentDate"), Matchers.equalTo(myDate));
     }
 
     //Negative tests

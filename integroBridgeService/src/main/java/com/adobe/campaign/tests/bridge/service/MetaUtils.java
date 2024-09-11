@@ -141,7 +141,7 @@ public class MetaUtils {
                     //TODO Add option with null values (extract null)
                     if (lt_returnValue != null) {
                         lr_value.put(Optional.ofNullable(extractFieldName(lt_m.getName())).orElse("this"),
-                                (lt_returnValue instanceof Serializable) ? lt_returnValue : extractValuesFromObject(
+                                (lt_returnValue instanceof Serializable) ? formatObject(lt_returnValue) : extractValuesFromObject(
                                         lt_returnValue, recursionLevel + 1));
                         log.debug("Extracting method value {}={}", lt_m.getName(), lt_returnValue);
                     }
@@ -182,6 +182,9 @@ public class MetaUtils {
      * @return The formatted object
      */
     public static Object formatObject(Object in_object) {
+        if (in_object instanceof Date) {
+            return formatObject((Date) in_object);
+        }
         return in_object;
     }
 

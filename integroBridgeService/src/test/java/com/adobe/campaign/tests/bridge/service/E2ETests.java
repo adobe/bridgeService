@@ -26,10 +26,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -581,6 +579,12 @@ public class E2ETests {
 
     @Test(groups = "E2E")
     public void test_issue159_callToAlternativeMultipartMimeMessage() {
+        String pattern = "yyyy-MM-dd";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        String myDate = simpleDateFormat.format(new Date());
+
+        ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.activate(pattern);
+
         JavaCalls jc = new JavaCalls();
         CallContent l_cc = new CallContent();
         l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.one.MimeMessageMethods");
@@ -590,7 +594,7 @@ public class E2ETests {
 
         var response = given().body(jc).post(EndPointURL + "call");
         //System.out.println(response.thenReturn().getBody().asPrettyString());
-        response.then().assertThat().statusCode(200);
+        response.then().assertThat().statusCode(200).body("returnValues.one.sentDate", Matchers.equalTo(myDate));
     }
 
 

@@ -262,9 +262,37 @@ public class MetaUtilsTests {
         Date end = new Date();
         assertThat("We should have a sent date", ((Date) l_result.get("sentDate")).getTime(), Matchers.lessThanOrEqualTo(
                 end.getTime()));
+    }
 
-        assertThat(end, Matchers.instanceOf(Serializable.class));
+    @Test
+    public void testDeserializerDateFormatted()
+            throws MessagingException {
 
+        //Prepare formatting
+        String pattern = "yyyy-MM-dd";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        String myDate = simpleDateFormat.format(new Date());
+
+        ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.activate(pattern);
+
+
+        String l_suffix = "one";
+        Message l_message = MimeMessageMethods.createMessage(l_suffix);
+
+        assertThat("This class should not be serializable", !(l_message instanceof Serializable));
+
+        Map<String, Object> l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
+
+        assertThat(l_result.keySet(),
+                Matchers.containsInAnyOrder("isExpunged","hashCode","contentType", "size", "content", "subject", "lineCount", "messageNumber", "sentDate"));
+
+
+        assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
+        assertThat(l_result.get("size"), Matchers.equalTo(-1));
+        assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me " + l_suffix));
+        assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truly " + l_suffix));
+        assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
+        assertThat("We should have a sent date", l_result.get("sentDate"), Matchers.equalTo(myDate));
     }
 
     @Test

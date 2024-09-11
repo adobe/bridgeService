@@ -66,7 +66,7 @@ public enum ConfigValueHandlerIBS {
     DESERIALIZATION_DEPTH_LIMIT("IBS.DESERIALIZATION.DEPTH.LIMIT", "1", false,
             "This value sets the maximum depth of the deserialization."),
     PLUGIN_DESERIALIZATION_PATH(
-            "IBS.PLUGINS.PATH", null, false, "The package path to look for the plugins.");
+            "IBS.PLUGINS.PATH", null, false, "The package path in which IBS should search for the plugins.");
 
     public final String systemName;
     public final String defaultValue;

@@ -16,6 +16,7 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -173,4 +174,39 @@ public class MetaUtils {
         }
         return lr_returnObject;
     }
+
+    /**
+     * Performs a default formatting
+     *
+     * @param in_object The object to format
+     * @return The formatted object
+     */
+    public static Object formatObject(Object in_object) {
+        return in_object;
+    }
+
+    /**
+     * Performs a formatting of the date
+     *
+     * @param in_object The object to format
+     * @return The formatted date object
+     */
+    public static Object formatObject(Date in_object) {
+        Object lr_dateString = in_object;
+
+        if (!ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.is("NONE")) {
+            try {
+                SimpleDateFormat l_format = new SimpleDateFormat(
+                        ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.fetchValue());
+
+                lr_dateString = l_format.format(in_object);
+            } catch (IllegalArgumentException e) {
+                log.error("The given format '{}' is not compatible with SimpleDateFormat",
+                        ConfigValueHandlerIBS.DESERIALIZATION_DATE_FORMAT.fetchValue());
+            }
+        }
+
+        return lr_dateString;
+    }
+
 }

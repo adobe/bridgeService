@@ -82,6 +82,22 @@ public class PluginTests {
     }
 
     @Test
+    public void testThePluginManagerUsage_negative() throws MessagingException {
+
+        MimeExtractionPluginDeserializer mimePlugin = new MimeExtractionPluginDeserializer();
+
+        String l_message = "This is a string";
+
+        //add plugin
+        IBSPluginManager.ExtractionPlugins.plugins.add(mimePlugin);
+        assertThat("The MimePlugin Manager should not apply to a String", !IBSPluginManager.ExtractionPlugins.appliesTo(l_message));
+
+        Map<String, Object> l_result = (Map<String, Object>) IBSPluginManager.ExtractionPlugins.apply(l_message);
+
+        assertThat("The MimePlugin Manager should not apply to a String", l_result, Matchers.anEmptyMap());
+    }
+
+    @Test
     public void testUsageOfTheExtractionPlugIn() throws MessagingException {
         var l_suffix = "abc";
         Message l_message = MimeMessageMethods.createMultiPartAlternativeMessage(l_suffix);

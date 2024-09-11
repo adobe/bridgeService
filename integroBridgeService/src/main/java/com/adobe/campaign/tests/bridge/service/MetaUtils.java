@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class MetaUtils {
     public static final List<Class<?>> ManagedClasses = Arrays.asList(String.class, int.class, long.class,
-            boolean.class, Integer.class, Long.class, Boolean.class, Object.class);
+            boolean.class, Integer.class, Long.class, Boolean.class, Date.class, Object.class);
     public static final int RECURSION_DEPTH_LIMIT = Integer.parseInt(
             ConfigValueHandlerIBS.DESERIALIZATION_DEPTH_LIMIT.fetchValue());
     private static final Logger log = LogManager.getLogger();

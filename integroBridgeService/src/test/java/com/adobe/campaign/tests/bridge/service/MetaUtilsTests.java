@@ -71,6 +71,8 @@ public class MetaUtilsTests {
         Method l_failingMethod = l_failingClass.getClass().getMethod("hasMoreElements", null);
         assertThat("This method is not extractable", !MetaUtils.isExtractable(l_failingMethod));
 
+        //issue #162 adding date as extractable
+        assertThat("Date should be extractable", MetaUtils.isExtractable(Date.class));
     }
 
     @Test
@@ -248,13 +250,17 @@ public class MetaUtilsTests {
         Map<String, Object> l_result = (Map<String, Object>) MetaUtils.extractValuesFromObject(l_message);
 
         assertThat(l_result.keySet(),
-                Matchers.containsInAnyOrder("isExpunged","hashCode","contentType", "size", "content", "subject", "lineCount", "messageNumber"));
+                Matchers.containsInAnyOrder("isExpunged","hashCode","contentType", "size", "content", "subject", "lineCount", "messageNumber", "sentDate"));
+
 
         assertThat(l_result.get("contentType"), Matchers.equalTo("text/plain"));
         assertThat(l_result.get("size"), Matchers.equalTo(-1));
         assertThat(l_result.get("subject"), Matchers.equalTo("a subject by me " + l_suffix));
         assertThat(l_result.get("content"), Matchers.equalTo("a content by yours truly " + l_suffix));
         assertThat(l_result.get("lineCount"), Matchers.equalTo(-1));
+        Date end = new Date();
+        assertThat("We should have a sent date", ((Date) l_result.get("sentDate")).getTime(), Matchers.lessThanOrEqualTo(
+                end.getTime()));
 
     }
 

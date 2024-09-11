@@ -21,6 +21,7 @@ public class BridgeServiceFactory {
      * Creates a Java Call Object given a JSON as a String
      * @param in_requestJSON A JSON Object as a String
      * @return A Java Call Object
+     * @throws JsonProcessingException thrown when the JSON return object could not be created
      */
     public static JavaCalls createJavaCalls(String in_requestJSON) throws JsonProcessingException {
         LogManagement.logStep(LogManagement.STD_STEPS.ANALYZING_PAYLOAD);
@@ -54,6 +55,7 @@ public class BridgeServiceFactory {
      * Creates a ServiceAccess Object given a JSON as a String
      * @param in_requestJSON A JSON Object as a String
      * @return A Service Access Object
+     * @throws JsonProcessingException thrown when the JSON return object could not be created
      */
     public static ServiceAccess createServiceAccess(String in_requestJSON) throws JsonProcessingException {
         LogManagement.logStep(LogManagement.STD_STEPS.ANALYZING_PAYLOAD);

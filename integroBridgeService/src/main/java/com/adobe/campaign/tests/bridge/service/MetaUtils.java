@@ -97,6 +97,12 @@ public class MetaUtils {
      * @return A Map of serialized Objects
      */
     public static Object extractValuesFromObject(Object in_object) {
+        //Check if there is a plugin for this object
+
+        if (IBSPluginManager.ExtractionPlugins.appliesTo(in_object)) {
+            return IBSPluginManager.ExtractionPlugins.apply(in_object);
+        }
+
         return extractValuesFromObject(in_object, 0);
     }
 

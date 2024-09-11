@@ -11,6 +11,8 @@ from any language or framework you are in.
 ## Table of Contents
 
 <!-- TOC -->
+* [BridgeService](#bridgeservice)
+  * [Table of Contents](#table-of-contents)
   * [Background](#background)
     * [Demo Project](#demo-project)
   * [Release Notes](#release-notes)
@@ -36,6 +38,8 @@ from any language or framework you are in.
       * [Lists and Arrays](#lists-and-arrays)
       * [Complex Types](#complex-types)
       * [Files](#files)
+  * [Results](#results)
+    * [Deserialization Plugins](#deserialization-plugins)
   * [Managing Timeouts](#managing-timeouts)
     * [Setting Timeout Globally](#setting-timeout-globally)
     * [Setting a Timeout for the Call Session](#setting-a-timeout-for-the-call-session)
@@ -49,7 +53,7 @@ from any language or framework you are in.
   * [Making Assertions](#making-assertions)
     * [Duration-Based Assertions](#duration-based-assertions)
   * [Error Management](#error-management)
-  * [Contribution](#contribution)
+  * [Contributing to the Project](#contributing-to-the-project)
   * [Known Errors](#known-errors)
     * [Linked Error](#linked-error)
   * [Known Issues and Limitations](#known-issues-and-limitations)
@@ -495,6 +499,21 @@ The result is then:
 }
 ```
 
+## Results
+Results are returned as a JSON Object. Serializable return objects are deserialized. For objects that are not Serializable, we perform an operatio called scraping, which involves sequentially calling the simple getters of the object, and include the results in the result object.
+
+In the case of complex classes where the scraping is not sufficient, you can define a deserialization plugin for that class. This allow you to be specific regarding how the object can be returned. For mor information on this you can refer to the chapter [Deserialization Plugins](#deserialization-plugins).
+
+### Deserialization Plugins
+As of version 2.11.17, we introduced the notion of plugins. For now you can customize how an object is deserialized. This can be usefull when the default object serialization is incomplete or not to your liking.
+
+To create your plugin you need to:
+* Implement the interface methods of the interface `com.adobe.campaign.tests.bridge.service.plugins.IBSDeserializerPlugin`.
+* Add the package of the plugin to the environment variable `IBS.DESERIALIZATION.PLUGINS`.
+
+There is an example of the plugin in the tests under `integroBridgeService/src/test/java/com/adobe/campaign/tests/bridge/plugins/deserializer/MimeExtractionPluginDeserializer.java`.
+
+
 ## Managing Timeouts
 
 As of version 2.11.6 we now introduce the notion of timeouts. This means that after a declared time a call will be
@@ -873,7 +892,7 @@ The BridgeService exception is how the bridgeService manages underlying errors. 
 * The step at which the error occured
 * The stack trace of the originating exception
 
-## Contribution
+## Contributing to the Project
 
 There are two main docs for contributing:
 

@@ -56,6 +56,8 @@ public class IntegroAPI {
             throw new IBSConfigurationException("The port " + port + " is not currently free.");
         }
 
+        IBSPluginManager.loadPlugins();
+
         if (Boolean.parseBoolean(ConfigValueHandlerIBS.SSL_ACTIVE.fetchValue())) {
             File l_file = new File(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue());
             if (!l_file.exists()) {

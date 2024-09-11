@@ -14,9 +14,7 @@ import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class IBSPluginManager {
 
@@ -29,7 +27,12 @@ public class IBSPluginManager {
         static Set<IBSDeserializerPlugin> plugins = new LinkedHashSet<>();
 
         static Map<String, Object> apply(Object in_object) {
-            return plugins.stream().filter(a -> a.appliesTo(in_object)).findFirst().get().apply(in_object);
+            Optional<IBSDeserializerPlugin> applicablePlugin = plugins.stream().filter(a -> a.appliesTo(in_object)).findFirst();
+
+            if (!applicablePlugin.isPresent()) {
+                return new HashMap<>();
+            }
+            return applicablePlugin.get().apply(in_object);
         }
 
         static void clearPlugins() {

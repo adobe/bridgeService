@@ -65,8 +65,8 @@ public enum ConfigValueHandlerIBS {
             "When set to true, we forbid the system from returning the value in the return payload. This is to avoid XSS attacks. This should ONLY be true when you want to debug."),
     DESERIALIZATION_DEPTH_LIMIT("IBS.DESERIALIZATION.DEPTH.LIMIT", "1", false,
             "This value sets the maximum depth of the deserialization."),
-    PLUGIN_DESERIALIZATION_PATH(
-            "IBS.PLUGINS.PATH", null, false, "The package path in which IBS should search for the plugins."),
+    PLUGINS_PACKAGE(
+            "IBS.PLUGINS.PACKAGE", null, false, "The package path in which IBS should search for the plugins."),
     DESERIALIZATION_DATE_FORMAT(
             "IBS.DESERIALIZATION.DATE.FORMAT", "NONE", false, "The date format to be used for deserialization.");
 

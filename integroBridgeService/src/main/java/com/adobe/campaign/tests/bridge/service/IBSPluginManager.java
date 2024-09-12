@@ -50,9 +50,9 @@ public class IBSPluginManager {
         }
 
         static void loadPlugins() {
-            if (ConfigValueHandlerIBS.PLUGIN_DESERIALIZATION_PATH.isSet()) {
+            if (ConfigValueHandlerIBS.PLUGINS_PACKAGE.isSet()) {
                 Reflections reflections = new Reflections(
-                        ConfigValueHandlerIBS.PLUGIN_DESERIALIZATION_PATH.fetchValue());
+                        ConfigValueHandlerIBS.PLUGINS_PACKAGE.fetchValue());
                 Set<Class<? extends IBSDeserializerPlugin>> classes = reflections.getSubTypesOf(
                         IBSDeserializerPlugin.class);
 

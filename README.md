@@ -511,9 +511,9 @@ We now allow the extraction and the formatting of Dates. This is done by setting
 ### Deserialization Plugins
 As of version 2.11.17, we introduced the notion of plugins. For now you can customize how an object is deserialized. This can be usefull when the default object serialization is incomplete or not to your liking.
 
-To create your plugin you need to:
+To create your own plugin you need to:
 * Implement the interface methods of the interface `com.adobe.campaign.tests.bridge.service.plugins.IBSDeserializerPlugin`.
-* Add the package of the plugin to the environment variable `IBS.DESERIALIZATION.PLUGINS`.
+* Flag the package of the plugin in the environment variable `IBS.PLUGINS.PACKAGE`.
 
 There is an example of the plugin in the tests under `integroBridgeService/src/test/java/com/adobe/campaign/tests/bridge/plugins/deserializer/MimeExtractionPluginDeserializer.java`.
 

@@ -124,4 +124,9 @@ public class SimpleStaticMethods {
     public static String methodAcceptingFile(File fileObject) throws IOException {
         return Files.readString(fileObject.toPath(), StandardCharsets.UTF_8);
     }
+
+    //Issue #176
+    public int methodAcceptingStringAndArray(String stringObject, String[] arrayObject) {
+        return stringObject.length()+arrayObject.length;
+    }
 }

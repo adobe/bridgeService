@@ -15,6 +15,8 @@ import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
@@ -1998,6 +2000,45 @@ public class TestFetchCalls {
     }
 
     @Test
+    public void testInListToArrayTransformationBug176() throws NoSuchMethodException, ClassNotFoundException {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc.setMethodName("methodAcceptingStringAndArray");
+        List<String> l_array = Arrays.asList("value1", "value2");
+        l_cc.setArgs(new Object[]{"ASD", l_array});
+        l_myJavaCall.getCallContent().put("call1", l_cc);
+
+        Method l_myMethod = SimpleStaticMethods.class.getDeclaredMethod(l_cc.getMethodName(), String.class, String[].class);
+        System.out.println(l_myMethod.getParameterTypes()[0]);
+        System.out.println(l_myMethod.getParameterTypes()[1]);
+        assertThat("The second parameter is a String",l_myMethod.getParameterTypes()[0], Matchers.equalTo(String.class));
+
+        assertThat("The second parameter is an array",l_myMethod.getParameterTypes()[1].isArray());
+        assertThat("The Second parameter is an array",l_myMethod.getParameterTypes()[1], Matchers.equalTo(String[].class));
+
+        System.out.println(l_myMethod.getParameterTypes()[1].getComponentType().getTypeName());
+
+        assertThat("We should now have an array of array", l_cc.getArgs()[0], Matchers.instanceOf(String.class));
+
+        System.out.println("arg "+l_cc.getArgs()[0].getClass());
+        System.out.println("arg "+l_cc.getArgs()[1].getClass());
+
+        Object[] newArgs = l_cc.castArgs(l_cc.getArgs(), l_myMethod);
+        assertThat(newArgs, Matchers.notNullValue());
+        assertThat("We should now have an array", newArgs[0].getClass(), Matchers.equalTo(String.class));
+
+        assertThat("We should now have an array", newArgs[1].getClass().isArray());
+
+
+        assertThat("We should now have an array of Strings", newArgs[1].getClass().getComponentType(), Matchers.equalTo(String.class));
+
+        assertThat("We should get the correct return value", l_myJavaCall.call("call1"), Matchers.equalTo(5));
+    }
+
+
+    @Test
     public void testMetaIsListToArray() throws NoSuchMethodException {
         JavaCalls l_myJavaCall = new JavaCalls();
 
@@ -2066,6 +2107,26 @@ public class TestFetchCalls {
         assertThat("we should have our results",
                 fetchSubjects, Matchers.hasItem("a subject by me complexCallsArray_3"));
 
+    }
+
+    @Test
+    public void issue176_callingMethodAcceptingStringAndArray() {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        IntegroBridgeClassLoader iclCL = Mockito.mock(IntegroBridgeClassLoader.class);
+        l_myJavaCall.setLocalClassLoader(iclCL);
+
+        Mockito.when(iclCL.getCallResultCache()).thenThrow(new RuntimeException("We should not have called this method"));
+
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc1.setMethodName("methodAcceptingStringAndArray");
+        String[] l_array = new String[]{"value1", "value2"};
+        l_cc1.setArgs(new Object[]{"ASD", l_array});
+
+        l_myJavaCall.getCallContent().put("fetchResults", l_cc1);
+
+        Assert.assertThrows(IBSRunTimeException.class, () ->  l_myJavaCall.submitCalls());
     }
 
 }

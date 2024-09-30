@@ -956,6 +956,25 @@ public class E2ETests {
 
     }
 
+
+    @Test(groups = "E2E")
+    public void testIssue176_classCastExceptionArrayFollowingString() throws IOException {
+
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc1.setMethodName("methodAcceptingStringAndArray");
+        String[] l_array = new String[]{"value1", "value2"};
+        l_cc1.setArgs(new Object[]{"ASD", l_array});
+
+        l_myJavaCall.getCallContent().put("fetchResults", l_cc1);
+
+        given().body(l_myJavaCall).post(EndPointURL + "call").then().assertThat().statusCode(200).body("returnValues.fetchResults",
+                Matchers.equalTo(5));
+    }
+
+
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {
 

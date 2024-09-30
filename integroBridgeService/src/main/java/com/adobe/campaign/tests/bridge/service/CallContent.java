@@ -260,20 +260,24 @@ public class CallContent {
         return result;
     }
 
+
+
     /**
      * This method transforms the arguments, when necessary to the target objects
-     * @param in_objects
-     * @param in_method
-     * @return
+     * @param in_objects An array of argument objects
+     * @param in_method The method we want to call
+     * @return The transformed array of objects for execution purposes.
      */
-     Object[] castArgs(Object[] in_objects, Method in_method) {
+    Object[] castArgs(Object[] in_objects, Method in_method) {
         List<Object> ltr_objects =  new ArrayList<>();
         for (int i=0; i < in_objects.length; i++) {
             Class lt_type = in_method.getParameterTypes()[i];
+
+            //If object is an array
             if (lt_type.isArray() && in_objects[i] instanceof List) {
                 Class<?> lt_targetClass = lt_type.getComponentType();
-                Object lt_targetObject = Array.newInstance(lt_targetClass, ((List)in_objects[0]).size());
-                for (int i2=0; i2 < ((List)in_objects[0]).size(); i2++) {
+                Object lt_targetObject = Array.newInstance(lt_targetClass, ((List)in_objects[i]).size());
+                for (int i2=0; i2 < ((List)in_objects[i]).size(); i2++) {
                     Array.set(lt_targetObject, i2, ((List<?>) in_objects[i]).get(i2));
                 }
                 ltr_objects.add(lt_targetObject);
@@ -284,4 +288,5 @@ public class CallContent {
 
         return ltr_objects.toArray();
     }
+
 }

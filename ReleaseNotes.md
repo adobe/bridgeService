@@ -10,6 +10,7 @@
   * IBS.DESERIALIZATION.DEPTH.LIMIT : This value sets the maximum depth of the deserialization.
   * IBS.DESERIALIZATION.DATE.FORMAT : The format in which the date should be deserialized.
   * IBS.PLUGINS.PACKAGE : The package path in which the IBS should search for the plugins you write.
+* [#176 ClassCastException when the second call argument is an array](https://github.com/adobe/bridgeService/issues/176). We discovered a bug regarding arrays. Whenever the second argument was an array, we would get a ClassCastException.
 
 ## 2.11.16
 * **New Feature** [#3 Include an Assertion Feature](https://github.com/adobe/bridgeService/issues/3). We have now included the possibility for users to define assertions. This allows you to clarify accepted results for the call you make with the IBS.

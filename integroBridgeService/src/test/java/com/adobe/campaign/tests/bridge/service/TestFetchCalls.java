@@ -15,6 +15,8 @@ import com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
@@ -2106,5 +2108,26 @@ public class TestFetchCalls {
                 fetchSubjects, Matchers.hasItem("a subject by me complexCallsArray_3"));
 
     }
+
+    @Test
+    public void issue176_callingMethodAcceptingStringAndArray() {
+        JavaCalls l_myJavaCall = new JavaCalls();
+
+        IntegroBridgeClassLoader iclCL = Mockito.mock(IntegroBridgeClassLoader.class);
+        l_myJavaCall.setLocalClassLoader(iclCL);
+
+        Mockito.when(iclCL.getCallResultCache()).thenThrow(new RuntimeException("We should not have called this method"));
+
+        CallContent l_cc1 = new CallContent();
+        l_cc1.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc1.setMethodName("methodAcceptingStringAndArray");
+        String[] l_array = new String[]{"value1", "value2"};
+        l_cc1.setArgs(new Object[]{"ASD", l_array});
+
+        l_myJavaCall.getCallContent().put("fetchResults", l_cc1);
+
+        Assert.assertThrows(IBSRunTimeException.class, () ->  l_myJavaCall.submitCalls());
+    }
+
 }
 

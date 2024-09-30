@@ -77,7 +77,7 @@ public class JavaCalls {
                 throw new JavaObjectInaccessibleException(e.getCause().getMessage(), e.getCause().getCause());
 
             } else {
-                throw new IBSRunTimeException(e.getMessage());
+                throw new IBSRunTimeException(e.getMessage(), e.getCause());
             }
 
         } catch (TimeoutException e) {

@@ -19,4 +19,8 @@ public class IBSRunTimeException extends RuntimeException {
     public IBSRunTimeException(String message) {
         super(message);
     }
+
+    public IBSRunTimeException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

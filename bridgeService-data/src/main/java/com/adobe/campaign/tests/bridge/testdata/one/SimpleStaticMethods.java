@@ -129,4 +129,5 @@ public class SimpleStaticMethods {
     public int methodAcceptingStringAndArray(String stringObject, String[] arrayObject) {
         return stringObject.length()+arrayObject.length;
     }
+
 }

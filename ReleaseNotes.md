@@ -1,15 +1,15 @@
 # Bridge Service - RELEASE NOTES
-## 2.11.17 In-Progress
+## 2.11.17
 * **New Feature** [#160 Introduce Extraction Plugins](https://github.com/adobe/bridgeService/issues/160). We have now introduced a new plugin mechanism so you can define how an object you are expecting should be deserialized. Please refer to the chapter on ["Deserialization Plugins"](README.md#deserialization-plugins) in the README doc.
-* **New Feature** [#162 Introduce Extraction Plugins](https://github.com/adobe/bridgeService/issues/162). We not only allow the deserialization of Date objects. You can decide the formatting of the value. For more information please refer to [Formatting Dates](README.md#formatting-dates) in the README doc.
+* **New Feature** [#162 Deserializing Date Objects](https://github.com/adobe/bridgeService/issues/162). We now allow the deserialization of Date objects. You can decide the formatting of the value. For more information please refer to [Formatting Dates](README.md#formatting-dates) in the README doc.
 * [#159 Errors when deserializing Milti-Part Mime Object](https://github.com/adobe/bridgeService/issues/159): We have included a couple of resilience features to better handle the deserialization of complex Objects. This includes:
   * Nested scraping. We allow a nested scraping of objects.
   * Ignoring calls that throw errors. We now log the error and continue with the next call.
   * Ignoring methods returning objects that we do not have the rights to execute/access.
 * **New Environment Variables**
-  * IBS.DESERIALIZATION.DEPTH.LIMIT : This value sets the maximum depth of the deserialization.
-  * IBS.DESERIALIZATION.DATE.FORMAT : The format in which the date should be deserialized.
-  * IBS.PLUGINS.PACKAGE : The package path in which the IBS should search for the plugins you write.
+  * IBS.DESERIALIZATION.DEPTH.LIMIT : This value sets the maximum depth of the deserialization. By default, we go to a depth of 1.
+  * IBS.DESERIALIZATION.DATE.FORMAT : The format in which the date should be deserialized. By default, it is "**NONE**" meaning no date transformation is performed.
+  * IBS.PLUGINS.PACKAGE : The package path in which the IBS should search for the plugins you write. By default, we look in this package : "IBS.PLUGINS.PACKAGE"
 * [#176 ClassCastException when the second call argument is an array](https://github.com/adobe/bridgeService/issues/176). We discovered a bug regarding arrays. Whenever the second argument was an array, we would get a ClassCastException.
 
 ## 2.11.16

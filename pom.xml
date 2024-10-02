@@ -13,7 +13,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.adobe.campaign.tests.bridge</groupId>
     <artifactId>parent</artifactId>
-    <version>2.11.17-SNAPSHOT</version>
+    <version>2.11.18-SNAPSHOT</version>
     <description>Bridge Service Parent Project</description>
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>

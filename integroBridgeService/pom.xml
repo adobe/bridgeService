@@ -154,7 +154,7 @@
             <groupId>com.adobe.campaign.tests.bridge.testdata</groupId>
             <artifactId>bridgeService-data</artifactId>
             <version>${project.parent.version}</version>
-            <scope>${demo.project.mode}</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>

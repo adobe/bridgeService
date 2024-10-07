@@ -137,8 +137,15 @@ public class JavaCalls {
                     "The given environment variables should only contain strings.\n" + badVariables);
         }
 
+
+        //Expand header args
+        Properties l_expandedProperties =  new Properties();
+        getEnvironmentVariables().forEach((k, v) -> {
+            l_expandedProperties.put(k, getLocalClassLoader().getCallResultCache().getOrDefault(v, v));
+        });
+
         //Fetch all environment variables
-        l_setEnvironmentVars.setArgs(new Object[] { environmentVariables });
+        l_setEnvironmentVars.setArgs(new Object[] { l_expandedProperties });
         try {
             l_setEnvironmentVars.call(this.getLocalClassLoader());
         } catch (NonExistentJavaObjectException nejoe) {

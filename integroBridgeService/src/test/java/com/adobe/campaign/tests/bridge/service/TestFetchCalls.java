@@ -1969,6 +1969,60 @@ public class TestFetchCalls {
                         .contains("value2"));
     }
 
+    //Issue #180 problems using heades as environment variables
+    @Test
+    public void testUsingHeadersAsEnvironmentVariables_issue180() {
+        Map<String, String> l_headerMap = Map.of("key1", "value1",
+                ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.defaultValue + "key2", "boom.com");
+
+        JavaCalls l_myJavaCalls = new JavaCalls();
+
+        CallContent l_cc = new CallContent();
+        l_cc.setClassName("com.adobe.campaign.tests.bridge.testdata.two.StaticMethodsIntegrity");
+        l_cc.setMethodName("assembleBySystemValues");
+
+        Properties l_envVars = new Properties();
+        l_envVars.put("PREFIX", "key1");
+        l_envVars.put("SUFFIX", ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.defaultValue +"key2");
+
+        l_myJavaCalls.addHeaders(l_headerMap);
+        l_myJavaCalls.setEnvironmentVariables(l_envVars);
+        l_myJavaCalls.getCallContent().put("call1", l_cc);
+
+        JavaCallResults returnedValue = l_myJavaCalls.submitCalls();
+
+        assertThat("We should get a good answer back from the call",
+                returnedValue.getReturnValues().get("call1").toString(),
+                Matchers.startsWith(l_headerMap.get("key1")));
+
+        assertThat("We should get a good answer back from the call even if it is a secret",
+                returnedValue.getReturnValues().get("call1").toString(),
+                Matchers.endsWith("boom.com"));
+    }
+
+
+    @Test
+    public void testValueReplacement_issue180() {
+        Map<String, String> l_headerMap = Map.of("key1", "XXXX",
+                ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.defaultValue + "key2", "value2");
+
+        JavaCalls jc = new JavaCalls();
+
+        jc.addHeaders(l_headerMap);
+
+        IntegroBridgeClassLoader icl = jc.getLocalClassLoader();
+
+        CallContent l_cc1B = new CallContent();
+        l_cc1B.setClassName(SimpleStaticMethods.class.getTypeName());
+        l_cc1B.setMethodName("methodAcceptingTwoArguments");
+        l_cc1B.setArgs(new Object[] { "key1", "B" });
+
+        Object[] result = l_cc1B.expandArgs(icl);
+        assertThat("We should have replaced the value correctly", result.length, Matchers.equalTo(2));
+        assertThat("We should have replaced the value correctly", result[0].toString(), Matchers.equalTo("XXXX"));
+
+    }
+
     //#111 Var args and list -array interoperability
     @Test
     public void testInListToArrayTransformation() throws NoSuchMethodException, ClassNotFoundException {

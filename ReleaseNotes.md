@@ -1,7 +1,6 @@
 # Bridge Service - RELEASE NOTES
-## 2.11.18 In Progress
+## 2.11.18
 * [#180 Headers not usable as environment variable](https://github.com/adobe/bridgeService/issues/180). We discovered that variable expansion of headers did not cover environment variables.
-
 
 ## 2.11.17
 * **New Feature** [#160 Introduce Extraction Plugins](https://github.com/adobe/bridgeService/issues/160). We have now introduced a new plugin mechanism so you can define how an object you are expecting should be deserialized. Please refer to the chapter on ["Deserialization Plugins"](README.md#deserialization-plugins) in the README doc.

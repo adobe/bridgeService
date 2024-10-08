@@ -102,7 +102,7 @@ The following dependency needs to be added to your pom file:
 <dependency>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <version>2.11.17</version>
+    <version>2.11.18</version>
 </dependency>
 ```
 

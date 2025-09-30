@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+
+    Copyright 2022 Adobe
+    All Rights Reserved.
+
+    NOTICE: Adobe permits you to use, modify, and distribute this file in
+    accordance with the terms of the Adobe license agreement accompanying
+    it.
+
+-->
+<Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
+
+    <Appenders>
+        <RollingFile name="RollingFile" fileName="ibstest_output/logfile.log"
+                     filePattern="ibstest_output/logfile-$${date:yyyy-MM}.log.gz">
+            <PatternLayout>
+                <Pattern>%-5p | %d{yyyy-MM-dd HH:mm:ss} | [%t] %C{2} (%F:%L) - %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="5MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="ibstest_output" maxDepth="2">
+                    <IfFileName glob="logfile*.log.gz" >
+                        <IfAny>
+                            <IfAccumulatedFileSize exceeds="50MB" />
+                            <IfLastModified age="P90D" />
+                        </IfAny>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+
+        </RollingFile>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="%-5p | %d{yyyy-MM-dd HH:mm:ss} | [%t] %C{2} (%F:%L) - %m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="TRACE">
+            <AppenderRef ref="STDOUT" level="DEBUG"/>
+            <AppenderRef ref="RollingFile" level="TRACE"/>
+
+            <!--You can set ref="STDOUT" level ="DEBUG" to allow all the logs in the console locally-->
+        </Root>
+    </Loggers>
+</Configuration>

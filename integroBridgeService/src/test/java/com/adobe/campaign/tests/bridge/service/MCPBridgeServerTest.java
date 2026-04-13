@@ -106,6 +106,21 @@ public class MCPBridgeServerTest {
     }
 
     @Test(groups = "MCP")
+    public void testToolsList_descriptionComesFromJavadoc() {
+        // The description for methodReturningString should be sourced from its Javadoc,
+        // not the fallback "Calls com.example.MyClass.methodName()" string.
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":12,\"method\":\"tools/list\",\"params\":{}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.tools.find { it.name == 'SimpleStaticMethods_methodReturningString' }.description",
+                        containsString("success string"));
+    }
+
+    @Test(groups = "MCP")
     public void testToolsList_noArgToolHasEmptyProperties() {
         Response resp = given()
                 .contentType(CONTENT_TYPE_JSON)

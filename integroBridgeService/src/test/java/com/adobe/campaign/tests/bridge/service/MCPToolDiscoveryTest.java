@@ -71,8 +71,8 @@ public class MCPToolDiscoveryTest {
         assertThat(tool, hasKey("name"));
         assertThat(tool, hasKey("description"));
         assertThat(tool, hasKey("inputSchema"));
-        // Description is sourced from Javadoc when available; verify it is non-empty
-        assertThat((String) tool.get("description"), not(emptyString()));
+        // Description is sourced from Javadoc — verify it reflects the actual comment, not the fallback
+        assertThat((String) tool.get("description"), containsString("success string"));
     }
 
     @Test

@@ -68,7 +68,9 @@ public enum ConfigValueHandlerIBS {
     PLUGINS_PACKAGE(
             "IBS.PLUGINS.PACKAGE", null, false, "The package path in which IBS should search for the plugins."),
     DESERIALIZATION_DATE_FORMAT(
-            "IBS.DESERIALIZATION.DATE.FORMAT", "NONE", false, "The date format to be used for deserialization.");
+            "IBS.DESERIALIZATION.DATE.FORMAT", "NONE", false, "The date format to be used for deserialization."),
+    MCP_ENABLED("IBS.MCP.ENABLED", "false", false,
+            "When set to true, enables the MCP server endpoint at POST /mcp, exposing configured packages as tools.");
 
     public final String systemName;
     public final String defaultValue;

@@ -148,6 +148,12 @@ public class IntegroAPI {
                     fetchedFromJSON.fetchSecrets());
         });
 
+        if (ConfigValueHandlerIBS.MCP_ENABLED.is("true")) {
+            MCPRequestHandler mcpHandler = new MCPRequestHandler();
+            post("/mcp", mcpHandler::handle);
+            log.info("MCP endpoint enabled at POST /mcp");
+        }
+
         after((req, res) -> {
             res.type("application/json");
         });

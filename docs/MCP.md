@@ -98,47 +98,47 @@ With `testdata.one` on the classpath the response includes tools derived from tw
     "tools": [
       {
         "name": "SimpleStaticMethods_methodReturningString",
-        "description": "Calls com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodReturningString()",
+        "description": "Returns the success string constant used for testing.",
         "inputSchema": { "type": "object", "properties": {} }
       },
       {
         "name": "SimpleStaticMethods_methodAcceptingStringArgument",
-        "description": "Calls com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodAcceptingStringArgument()",
+        "description": "Appends the success suffix to the given string.",
         "inputSchema": {
           "type": "object",
-          "properties": { "arg0": { "type": "string" } },
+          "properties": { "arg0": { "type": "string", "description": "the input string" } },
           "required": ["arg0"]
         }
       },
       {
         "name": "SimpleStaticMethods_methodAcceptingTwoArguments",
-        "description": "Calls com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodAcceptingTwoArguments()",
+        "description": "Concatenates two strings with a + separator and appends the success suffix.",
         "inputSchema": {
           "type": "object",
           "properties": {
-            "arg0": { "type": "string" },
-            "arg1": { "type": "string" }
+            "arg0": { "type": "string", "description": "the first string" },
+            "arg1": { "type": "string", "description": "the second string" }
           },
           "required": ["arg0", "arg1"]
         }
       },
       {
         "name": "SimpleStaticMethods_methodAcceptingIntArgument",
-        "description": "Calls com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodAcceptingIntArgument()",
+        "description": "Returns the given integer multiplied by three.",
         "inputSchema": {
           "type": "object",
-          "properties": { "arg0": { "type": "integer" } },
+          "properties": { "arg0": { "type": "integer", "description": "the input integer" } },
           "required": ["arg0"]
         }
       },
       {
         "name": "ClassWithLogger_fetchRandomCountry",
-        "description": "Calls com.adobe.campaign.tests.bridge.testdata.one.ClassWithLogger.fetchRandomCountry()",
+        "description": "Returns a randomly selected ISO 3166-1 alpha-2 country code from the available set (AT, AU, CA, CH, DE).",
         "inputSchema": { "type": "object", "properties": {} }
       },
       {
         "name": "ClassWithLogger_getCountries",
-        "description": "Calls com.adobe.campaign.tests.bridge.testdata.one.ClassWithLogger.getCountries()",
+        "description": "Returns the fixed list of ISO 3166-1 alpha-2 country codes available for testing: AT, AU, CA, CH, DE.",
         "inputSchema": { "type": "object", "properties": {} }
       },
       {
@@ -388,26 +388,32 @@ Without the dependency, tools are still fully functional; only the description q
 
 ### What tools will be generated
 
-Given a project with the following class:
+Given a project with the following class (with `therapi-runtime-javadoc-scribe` on the classpath):
 
 ```java
 package com.example.myproject.services;
 
 public class EmailService {
+    /** Sends an email to the given recipient with the specified subject. */
     public static String sendEmail(String recipient, String subject) { ... }
+    /** Returns the list of message subjects in the given account's inbox. */
     public static List<String> listInbox(String account) { ... }
-    public static void purgeInbox(String account) { ... }  // void return
-    public String getStatus() { ... }                       // instance method — excluded
+    /** Deletes all messages in the given account's inbox. */
+    public static void purgeInbox(String account) { ... }
+    public String getStatus() { ... }  // instance method — excluded
 }
 ```
 
-IBS would register the following MCP tools:
+IBS would register the following MCP tools, with descriptions sourced from Javadoc:
 
-| Tool name | Parameters | Return type |
+| Tool name | Description | Parameters |
 |---|---|---|
-| `EmailService_sendEmail` | `arg0: string`, `arg1: string` | `string` |
-| `EmailService_listInbox` | `arg0: string` | `array` |
-| `EmailService_purgeInbox` | `arg0: string` | `object` (void mapped to object) |
+| `EmailService_sendEmail` | Sends an email to the given recipient with the specified subject. | `arg0: string`, `arg1: string` |
+| `EmailService_listInbox` | Returns the list of message subjects in the given account's inbox. | `arg0: string` |
+| `EmailService_purgeInbox` | Deletes all messages in the given account's inbox. | `arg0: string` |
+
+Without `therapi-runtime-javadoc-scribe`, the descriptions would fall back to
+`"Calls com.example.myproject.services.EmailService.sendEmail()"` etc.
 
 `getStatus()` is excluded because it is an instance method.
 

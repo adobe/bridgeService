@@ -17,6 +17,10 @@ using the built-in demo data, then from an external project that hosts its own J
   - [Configuring tool discovery](#configuring-tool-discovery)
   - [Surfacing Javadoc as tool descriptions](#surfacing-javadoc-as-tool-descriptions)
   - [What tools will be generated](#what-tools-will-be-generated)
+- [Connecting to Claude Code](#connecting-to-claude-code)
+  - [Start BridgeService](#start-bridgeservice)
+  - [Register the MCP server](#register-the-mcp-server)
+  - [Verify the connection](#verify-the-connection)
 
 ---
 
@@ -421,3 +425,79 @@ An AI agent calling `tools/list` would see these tools with their JSON Schema an
 directly using `tools/call`. For scenarios that require instance methods or call chaining, the
 always-present `java_call` tool accepts the full BridgeService `/call` payload format — see the
 [Making Java Calls](../README.md#making-java-calls) section of the main README.
+
+---
+
+## Connecting to Claude Code
+
+Claude Code supports MCP servers over HTTP natively. Once BridgeService is running with MCP
+enabled, you can register it as a named MCP server and Claude Code will automatically call
+`tools/list` at startup and make the tools available during your session.
+
+### Start BridgeService
+
+Using the demo data (quickest way to try it):
+
+```bash
+mvn -pl integroBridgeService exec:java \
+    -Dexec.args="test" \
+    -Ddemo.project.mode=compile \
+    -DIBS.MCP.ENABLED=true \
+    -DIBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES=com.adobe.campaign.tests.bridge.testdata.one
+```
+
+For your own project, start BridgeService with your packages configured instead (see
+[Exposing your own project as MCP tools](#exposing-your-own-project-as-mcp-tools)).
+
+### Register the MCP server
+
+In a separate terminal, register the running BridgeService instance as an MCP server in
+Claude Code. Use `--scope user` to make it available globally across all projects, or omit it
+to register it only for the current project:
+
+```bash
+# Register globally (available in all Claude Code sessions)
+claude mcp add --transport http bridgeService http://localhost:8080/mcp --scope user
+
+# Register for the current project only
+claude mcp add --transport http bridgeService http://localhost:8080/mcp
+```
+
+This writes an entry to `~/.claude/mcp.json` (global) or `.mcp.json` in the project root
+(project-scoped). The resulting config entry looks like:
+
+```json
+{
+  "mcpServers": {
+    "bridgeService": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
+```
+
+If BridgeService is deployed remotely (Docker/K8s), replace `http://localhost:8080` with the
+actual deployment URL.
+
+### Verify the connection
+
+List all registered MCP servers and their status:
+
+```bash
+claude mcp list
+```
+
+You should see `bridgeService` listed as connected. You can also check inside an interactive
+Claude Code session with the `/mcp` slash command.
+
+Once connected, Claude Code will discover all exposed tools via `tools/list` at the start of
+each session. You can then ask Claude to call your Java methods directly — for example:
+
+> "Call `SimpleStaticMethods_methodAcceptingStringArgument` with the argument `hello`"
+
+To remove the server registration when you no longer need it:
+
+```bash
+claude mcp remove bridgeService
+```

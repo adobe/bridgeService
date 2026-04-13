@@ -21,6 +21,14 @@
     </properties>
     <dependencies>
         <dependency>
+            <!-- Annotation processor: embeds Javadoc comments into the compiled JAR so that
+                 MCPToolDiscovery can read them at runtime via therapi-runtime-javadoc. -->
+            <groupId>com.github.therapi</groupId>
+            <artifactId>therapi-runtime-javadoc-scribe</artifactId>
+            <version>0.15.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.24.1</version>

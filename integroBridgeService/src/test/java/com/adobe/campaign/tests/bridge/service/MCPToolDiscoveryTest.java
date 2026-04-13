@@ -71,8 +71,8 @@ public class MCPToolDiscoveryTest {
         assertThat(tool, hasKey("name"));
         assertThat(tool, hasKey("description"));
         assertThat(tool, hasKey("inputSchema"));
-        assertThat((String) tool.get("description"),
-                containsString(SimpleStaticMethods.class.getName()));
+        // Description is sourced from Javadoc when available; verify it is non-empty
+        assertThat((String) tool.get("description"), not(emptyString()));
     }
 
     @Test

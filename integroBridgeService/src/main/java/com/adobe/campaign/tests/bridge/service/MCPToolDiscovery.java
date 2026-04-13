@@ -8,6 +8,10 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.github.therapi.runtimejavadoc.CommentFormatter;
+import com.github.therapi.runtimejavadoc.MethodJavadoc;
+import com.github.therapi.runtimejavadoc.ParamJavadoc;
+import com.github.therapi.runtimejavadoc.RuntimeJavadoc;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;
@@ -26,6 +30,7 @@ import java.util.stream.Collectors;
 public class MCPToolDiscovery {
 
     private static final Logger log = LogManager.getLogger();
+    private static final CommentFormatter COMMENT_FORMATTER = new CommentFormatter();
 
     /**
      * Holds the results of a tool discovery scan.
@@ -125,8 +130,7 @@ public class MCPToolDiscovery {
         }
         Map<String, Object> tool = new LinkedHashMap<>();
         tool.put("name", toolName);
-        tool.put("description",
-                "Calls " + method.getDeclaringClass().getName() + "." + method.getName() + "()");
+        tool.put("description", buildDescription(method));
         tool.put("inputSchema", buildInputSchema(method));
 
         tools.add(tool);
@@ -135,9 +139,30 @@ public class MCPToolDiscovery {
     }
 
     /**
+     * Returns the tool description for a method: the Javadoc comment if available,
+     * otherwise a generated fallback of the form "Calls FullClassName.methodName()".
+     */
+    private static String buildDescription(Method method) {
+        try {
+            MethodJavadoc javadoc = RuntimeJavadoc.getJavadoc(method);
+            if (javadoc != null) {
+                String comment = COMMENT_FORMATTER.format(javadoc.getComment());
+                if (!comment.isEmpty()) {
+                    return comment;
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Could not read Javadoc for {}.{}: {}",
+                    method.getDeclaringClass().getSimpleName(), method.getName(), e.getMessage());
+        }
+        return "Calls " + method.getDeclaringClass().getName() + "." + method.getName() + "()";
+    }
+
+    /**
      * Builds a JSON Schema object describing the input parameters of a method.
      * Parameter names are generated as arg0, arg1, ... since Java reflection
      * does not expose source-level parameter names unless compiled with -parameters.
+     * Parameter descriptions are taken from {@code @param} Javadoc tags when available.
      */
     static Map<String, Object> buildInputSchema(Method method) {
         Map<String, Object> schema = new LinkedHashMap<>();
@@ -149,6 +174,17 @@ public class MCPToolDiscovery {
             return schema;
         }
 
+        List<ParamJavadoc> paramDocs = Collections.emptyList();
+        try {
+            MethodJavadoc javadoc = RuntimeJavadoc.getJavadoc(method);
+            if (javadoc != null) {
+                paramDocs = javadoc.getParams();
+            }
+        } catch (Exception e) {
+            log.debug("Could not read param Javadoc for {}.{}: {}",
+                    method.getDeclaringClass().getSimpleName(), method.getName(), e.getMessage());
+        }
+
         Map<String, Object> properties = new LinkedHashMap<>();
         List<String> required = new ArrayList<>();
 
@@ -156,7 +192,15 @@ public class MCPToolDiscovery {
             String paramName = "arg" + i;
             Map<String, Object> paramSchema = new LinkedHashMap<>();
             paramSchema.put("type", javaTypeToJsonSchemaType(paramTypes[i]));
-            paramSchema.put("description", paramTypes[i].getSimpleName());
+
+            String paramDesc = paramTypes[i].getSimpleName();
+            if (i < paramDocs.size()) {
+                String paramComment = COMMENT_FORMATTER.format(paramDocs.get(i).getComment());
+                if (!paramComment.isEmpty()) {
+                    paramDesc = paramComment;
+                }
+            }
+            paramSchema.put("description", paramDesc);
             properties.put(paramName, paramSchema);
             required.add(paramName);
         }

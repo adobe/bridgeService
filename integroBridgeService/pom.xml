@@ -167,6 +167,13 @@
             <artifactId>reflections</artifactId>
             <version>0.10.2</version>
         </dependency>
+        <dependency>
+            <!-- Runtime reader for Javadoc comments embedded by therapi-runtime-javadoc-scribe.
+                 Used by MCPToolDiscovery to populate MCP tool descriptions from source Javadoc. -->
+            <groupId>com.github.therapi</groupId>
+            <artifactId>therapi-runtime-javadoc</artifactId>
+            <version>0.15.0</version>
+        </dependency>
     </dependencies>
 
     <parent>

@@ -19,43 +19,38 @@ import java.util.Random;
 public class ClassWithLogger {
     protected static Logger log = LogManager.getLogger();
 
-
-
     private static final List<String> countries = Arrays.asList("AT", "AU",
             "CA", "CH", "DE");
 
     private static Random randomGen = new Random();
 
     /**
-     * A getter for the Language Encodings
-     * @return
+     * Returns the fixed list of ISO 3166-1 alpha-2 country codes available for testing:
+     * {@code AT, AU, CA, CH, DE}.
      *
-
-    public static LanguageEncodings getLanguageEncoding(){
-    return languageEncoding;
-    }
+     * @return immutable list of country codes
      */
     public static List<String> getCountries() {
         return countries;
     }
 
-
-
+    /**
+     * Returns the shared {@link Random} generator used by this class.
+     *
+     * @return the shared {@link Random} instance
+     */
     public static Random getRandomGen() {
         return randomGen;
     }
 
-
     /**
-     * This method returns a random country ISOA2 code.
+     * Returns a randomly selected ISO 3166-1 alpha-2 country code from the available set
+     * ({@code AT, AU, CA, CH, DE}).
      *
-     * @return ISOA2 country code
-     *
-     * @author lepolles
+     * @return a random country code
      */
     public static String fetchRandomCountry() {
         int l_countryNr = countries.size();
-
         return countries.get(getRandomGen().nextInt(l_countryNr));
     }
 

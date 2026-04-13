@@ -15,6 +15,7 @@ using the built-in demo data, then from an external project that hosts its own J
   - [Injection model — adding IBS to your project](#injection-model--adding-ibs-to-your-project)
   - [Aggregator model — adding your project to IBS](#aggregator-model--adding-your-project-to-ibs)
   - [Configuring tool discovery](#configuring-tool-discovery)
+  - [Surfacing Javadoc as tool descriptions](#surfacing-javadoc-as-tool-descriptions)
   - [What tools will be generated](#what-tools-will-be-generated)
 
 ---
@@ -355,6 +356,35 @@ Only **public static methods** in classes directly under those packages (and sub
 registered as tools. The same variable also drives the IBS class loader isolation, so every class
 your methods transitively depend on must be reachable under one of the listed prefixes — or in
 the system classpath.
+
+### Surfacing Javadoc as tool descriptions
+
+By default, tool descriptions fall back to a generated string (`"Calls com.example.MyClass.methodName()"`).
+To have the actual Javadoc comment appear as the tool description in `tools/list`, add the
+`therapi-runtime-javadoc-scribe` annotation processor to your project's `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>com.github.therapi</groupId>
+    <artifactId>therapi-runtime-javadoc-scribe</artifactId>
+    <version>0.15.0</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+**No extra Maven goals are required.** The annotation processor runs automatically during the
+`compile` phase, which is already part of your existing `mvn clean package`. It embeds the
+Javadoc comments as resource files inside your compiled JAR
+(e.g. `javadoc/com/example/EmailService.json`).
+
+At startup, `MCPToolDiscovery` reads those embedded resources via `RuntimeJavadoc.getJavadoc(method)`.
+As long as your JAR is on BridgeService's classpath when the server starts, the descriptions are
+picked up transparently — no configuration needed beyond the dependency above.
+
+`@param` Javadoc tags are also read and used as the parameter descriptions in the tool's
+`inputSchema`, helping the AI understand what each argument expects.
+
+Without the dependency, tools are still fully functional; only the description quality is reduced.
 
 ### What tools will be generated
 

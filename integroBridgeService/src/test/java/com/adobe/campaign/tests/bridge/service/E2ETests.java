@@ -687,7 +687,7 @@ public class E2ETests {
                 .body("originalException", Matchers.equalTo("java.lang.IllegalArgumentException"))
                 .body("originalMessage", Matchers.equalTo("Will always throw this"))
                 .body("stackTrace[0]", Matchers.startsWith(
-                        "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowsException(SimpleStaticMethods.java:6"));
+                        "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods.methodThrowsException(SimpleStaticMethods.java:125"));
 
     }
 

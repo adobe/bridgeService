@@ -80,7 +80,14 @@ public enum ConfigValueHandlerIBS {
             + "dependencies work normally. Argument strings matching request header names (including "
             + "ibs-secret-* headers) are resolved to their header values via the standard dependency "
             + "mechanism. Pre-chain return values are stripped from the response. "
-            + "Use for project-specific setup such as authentication.");
+            + "Use for project-specific setup such as authentication."),
+    MCP_ENV_HEADER_PREFIX("IBS.MCP.ENV.HEADER.PREFIX", "ibs-env-", false,
+            "HTTP headers whose name starts with this prefix are extracted and injected as "
+            + "environment variables for every MCP tool call. The prefix is stripped to obtain "
+            + "the variable name. For example, a header named 'ibs-env-AC.UITEST.HOST' with value "
+            + "'example.com' sets the environment variable 'AC.UITEST.HOST=example.com'. "
+            + "Use this to pass project-specific environment variables via the MCP client's "
+            + "headers configuration (e.g. in .claude.json). Set to blank to disable.");
 
     public final String systemName;
     public final String defaultValue;

@@ -12,6 +12,7 @@ using the built-in demo data, then from an external project that hosts its own J
   - [Calling tools](#calling-tools)
   - [Call chaining best practice](#call-chaining-best-practice)
   - [Project-specific pre-call setup (IBS.MCP.PRECHAIN)](#project-specific-pre-call-setup-ibsmcpprechain)
+  - [Passing environment variables via headers (ibs-env-*)](#passing-environment-variables-via-headers-ibs-env-)
   - [Tools that are intentionally excluded](#tools-that-are-intentionally-excluded)
 - [Exposing your own project as MCP tools](#exposing-your-own-project-as-mcp-tools)
   - [Injection model — adding IBS to your project](#injection-model--adding-ibs-to-your-project)
@@ -442,6 +443,77 @@ should:
 - For multi-step scenarios use `java_call` with call chaining (single `callContent` payload).
   State does not persist between separate tool calls.
 ```
+
+---
+
+### Passing environment variables via headers (`ibs-env-*`)
+
+Some Java methods depend on environment variables that must be set before execution — for example,
+a hostname, a port, or a locale that changes per deployment. The standard `/call` endpoint accepts
+these under an `environmentVariables` JSON node. The MCP server provides an equivalent mechanism
+without requiring a dedicated payload node: **encode them as HTTP headers with the `ibs-env-` prefix**.
+
+BridgeService reads every request header whose name begins with `ibs-env-`, strips the prefix to
+obtain the variable name, and injects the key/value pair as an environment variable into the
+`JavaCalls` execution context — exactly as if it had been provided in the `environmentVariables`
+node of a `/call` payload.
+
+This works for both auto-discovered tools and the `java_call` fallback. For `java_call`, the
+headers are merged into the `environmentVariables` map before the payload is parsed, so any
+variables already present in the `arguments` are preserved; headers only add or overwrite.
+
+#### Configuring env vars in `.claude.json`
+
+Add env vars to the `headers` block of the MCP server registration, using the `ibs-env-` prefix:
+
+```json
+{
+  "mcpServers": {
+    "CampaignTests": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp",
+      "headers": {
+        "ibs-secret-login": "admin",
+        "ibs-secret-pass": "mypassword",
+        "ibs-env-AC.UITEST.HOST": "accintg-ci93.rd.campaign.adobe.com",
+        "ibs-env-AC.UITEST.LANGUAGE": "en_US",
+        "ibs-env-AC.UITEST.MAILING.PORT": "143",
+        "ibs-env-AC.UITEST.MAILING.HOST": "mail.example.com"
+      }
+    }
+  }
+}
+```
+
+At runtime the server extracts these headers and injects:
+
+| Environment variable      | Value                              |
+| ------------------------- | ---------------------------------- |
+| `AC.UITEST.HOST`          | `accintg-ci93.rd.campaign.adobe.com` |
+| `AC.UITEST.LANGUAGE`      | `en_US`                            |
+| `AC.UITEST.MAILING.PORT`  | `143`                              |
+| `AC.UITEST.MAILING.HOST`  | `mail.example.com`                 |
+
+#### Prefix configuration
+
+The default prefix is `ibs-env-`. It can be changed via:
+
+```
+IBS.MCP.ENV.HEADER.PREFIX=my-custom-prefix-
+```
+
+Set it to blank to disable the feature entirely:
+
+```
+IBS.MCP.ENV.HEADER.PREFIX=
+```
+
+#### Interaction with `IBS.MCP.PRECHAIN`
+
+Env vars injected from `ibs-env-*` headers are available to the environment variable setter before
+both the pre-chain steps and the actual tool call execute, because `JavaCalls.environmentVariables`
+is populated before `submitCalls()` is called. Pre-chain steps that depend on env vars (e.g., a
+hostname resolution step) will see them.
 
 ---
 

@@ -453,6 +453,85 @@ public class MCPBridgeServerTest {
                         containsString("isolated"));
     }
 
+    // ---- ibs-env-* header injection ----
+
+    @Test(groups = "MCP")
+    public void testToolsCall_envHeadersInjected_discoveredTool() {
+        // Configure the env-var setter to the in-package EnvironmentVariableHandler so the
+        // test can verify that ENVVAR1 and ENVVAR2 were injected into the call context.
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(
+                "com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.activate("setIntegroCache");
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .header("ibs-env-ENVVAR1", "hello")
+                .header("ibs-env-ENVVAR2", "world")
+                .body("{\"jsonrpc\":\"2.0\",\"id\":40,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_usesEnvironmentVariables\","
+                        + "\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("hello_world"));
+
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.reset();
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.reset();
+    }
+
+    @Test(groups = "MCP")
+    public void testToolsCall_envHeadersInjected_javaCallTool() {
+        // Same verification for the java_call path.
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.activate(
+                "com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler");
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.activate("setIntegroCache");
+
+        String payload = "{\"jsonrpc\":\"2.0\",\"id\":41,\"method\":\"tools/call\","
+                + "\"params\":{\"name\":\"java_call\","
+                + "\"arguments\":{"
+                + "\"callContent\":{"
+                + "\"result\":{"
+                + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"usesEnvironmentVariables\","
+                + "\"args\":[]"
+                + "}}}}}";
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .header("ibs-env-ENVVAR1", "foo")
+                .header("ibs-env-ENVVAR2", "bar")
+                .body(payload)
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("foo_bar"));
+
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_CLASS.reset();
+        ConfigValueHandlerIBS.ENVIRONMENT_VARS_SETTER_METHOD.reset();
+    }
+
+    @Test(groups = "MCP")
+    public void testToolsCall_envHeadersDoNotLeakToNonEnvHeaders() {
+        // Headers without the ibs-env- prefix must not be treated as env vars.
+        // If no ibs-env-* headers are sent, result relies on unset cache — no crash expected.
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .header("x-custom-header", "somevalue")
+                .body("{\"jsonrpc\":\"2.0\",\"id\":42,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
+                        + "\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("_Success"));
+    }
+
     // ---- notification handling ----
 
     @Test(groups = "MCP")

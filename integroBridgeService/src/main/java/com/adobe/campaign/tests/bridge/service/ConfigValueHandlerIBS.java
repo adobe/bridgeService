@@ -73,7 +73,14 @@ public enum ConfigValueHandlerIBS {
             "When set to true, enables the MCP server endpoint at POST /mcp, exposing configured packages as tools."),
     MCP_REQUIRE_JAVADOC("IBS.MCP.REQUIRE_JAVADOC", "true", false,
             "When true (default), only methods with a non-empty Javadoc comment are exposed as MCP tools. "
-            + "Methods without Javadoc are silently skipped. Set to false to expose all public static methods.");
+            + "Methods without Javadoc are silently skipped. Set to false to expose all public static methods."),
+    MCP_PRECHAIN("IBS.MCP.PRECHAIN", null, false,
+            "JSON callContent fragment prepended to every auto-discovered MCP tool invocation. "
+            + "Entries execute in the same isolated context as the actual call, so call-chaining "
+            + "dependencies work normally. Argument strings matching request header names (including "
+            + "ibs-secret-* headers) are resolved to their header values via the standard dependency "
+            + "mechanism. Pre-chain return values are stripped from the response. "
+            + "Use for project-specific setup such as authentication.");
 
     public final String systemName;
     public final String defaultValue;

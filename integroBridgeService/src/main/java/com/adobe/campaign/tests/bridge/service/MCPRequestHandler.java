@@ -8,7 +8,9 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +19,7 @@ import spark.Response;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Handles JSON-RPC 2.0 requests arriving at the POST /mcp endpoint.
@@ -75,7 +78,11 @@ public class MCPRequestHandler {
             javaCallTool.put("description",
                     "Generic BridgeService call. Accepts the full /call payload including call chaining, "
                     + "instance methods, environment variables, and timeout. Use for scenarios not covered "
-                    + "by the auto-discovered tools.");
+                    + "by the auto-discovered tools. "
+                    + "Prefer this tool over individual auto-discovered tools for multi-step scenarios: "
+                    + "bundle all operations into one callContent chain so they share a single isolated "
+                    + "execution context. State (including authentication) does not persist between "
+                    + "separate tool calls.");
             javaCallTool.put("inputSchema", mapper.readValue(JAVA_CALL_TOOL_SCHEMA, Map.class));
             this.toolList.add(javaCallTool);
         } catch (JsonProcessingException e) {
@@ -125,7 +132,9 @@ public class MCPRequestHandler {
                 case "tools/call":
                     @SuppressWarnings("unchecked")
                     Map<String, Object> params = (Map<String, Object>) body.getOrDefault("params", Collections.emptyMap());
-                    return handleToolCall(id, params);
+                    Map<String, String> headers = req.headers().stream()
+                            .collect(Collectors.toMap(k -> k, req::headers));
+                    return handleToolCall(id, params, headers);
 
                 default:
                     return buildError(id, -32601, "Method not found: " + method);
@@ -152,7 +161,7 @@ public class MCPRequestHandler {
     }
 
     @SuppressWarnings("unchecked")
-    private String handleToolCall(Object id, Map<String, Object> params) {
+    private String handleToolCall(Object id, Map<String, Object> params, Map<String, String> headers) {
         String toolName = (String) params.get("name");
         Map<String, Object> arguments = (Map<String, Object>) params.getOrDefault("arguments",
                 Collections.emptyMap());
@@ -171,10 +180,11 @@ public class MCPRequestHandler {
                     + ". Use tools/list to see available tools.", true);
         }
 
-        return invokeDiscoveredTool(id, method, arguments);
+        return invokeDiscoveredTool(id, method, arguments, headers);
     }
 
-    private String invokeDiscoveredTool(Object id, Method method, Map<String, Object> arguments) {
+    private String invokeDiscoveredTool(Object id, Method method, Map<String, Object> arguments,
+            Map<String, String> headers) {
         int paramCount = method.getParameterCount();
         Object[] args = new Object[paramCount];
         for (int i = 0; i < paramCount; i++) {
@@ -182,6 +192,13 @@ public class MCPRequestHandler {
         }
 
         JavaCalls calls = new JavaCalls();
+        calls.addHeaders(headers);
+
+        // Prepend pre-chain calls (e.g. auth setup); capture keys to strip from response
+        Map<String, CallContent> prechain = parsePrechainJson(ConfigValueHandlerIBS.MCP_PRECHAIN.fetchValue());
+        Set<String> prechainKeys = new LinkedHashSet<>(prechain.keySet());
+        calls.getCallContent().putAll(prechain);
+
         CallContent cc = new CallContent();
         cc.setClassName(method.getDeclaringClass().getName());
         cc.setMethodName(method.getName());
@@ -190,19 +207,48 @@ public class MCPRequestHandler {
 
         try {
             JavaCallResults results = calls.submitCalls();
+            prechainKeys.forEach(k -> {
+                results.getReturnValues().remove(k);
+                results.getCallDurations().remove(k);
+            });
             String json = mapper.writeValueAsString(results);
             return buildCallToolResult(id, json, false);
         } catch (Exception e) {
             log.debug("Tool call failed for {}.{}: {}", method.getDeclaringClass().getSimpleName(),
                     method.getName(), e.getMessage());
-            String errorMsg = e.getClass().getSimpleName()
-                    + (e.getMessage() != null ? ": " + e.getMessage() : "");
-            return buildCallToolResult(id, errorMsg, true);
+            return buildCallToolResult(id, exceptionToErrorPayload(e), true);
+        }
+    }
+
+    /**
+     * Parses the IBS.MCP.PRECHAIN JSON string into an ordered map of CallContent entries.
+     * Returns an empty map if the value is null, blank, or malformed (logs a warning in
+     * the malformed case without printing the raw value to avoid leaking credentials).
+     *
+     * @param prechainJson the raw JSON string from IBS.MCP.PRECHAIN
+     * @return ordered map of prechain call entries, never null
+     */
+    private Map<String, CallContent> parsePrechainJson(String prechainJson) {
+        if (prechainJson == null || prechainJson.isBlank()) {
+            return Collections.emptyMap();
+        }
+        try {
+            return mapper.readValue(prechainJson,
+                    new TypeReference<LinkedHashMap<String, CallContent>>() {});
+        } catch (JsonProcessingException e) {
+            log.warn("IBS.MCP.PRECHAIN could not be parsed — pre-chain skipped. Check the JSON syntax.");
+            return Collections.emptyMap();
         }
     }
 
     private String handleJavaCall(Object id, Map<String, Object> arguments) {
         try {
+            // MCP clients may serialise complex object arguments as JSON strings rather than
+            // nested objects. Unwrap callContent if it arrived as a pre-serialised string.
+            Object cc = arguments.get("callContent");
+            if (cc instanceof String) {
+                arguments.put("callContent", mapper.readValue((String) cc, Object.class));
+            }
             String json = mapper.writeValueAsString(arguments);
             JavaCalls calls = BridgeServiceFactory.createJavaCalls(json);
             JavaCallResults results = calls.submitCalls();
@@ -210,7 +256,7 @@ public class MCPRequestHandler {
             return buildCallToolResult(id, resultJson, false);
         } catch (Exception e) {
             log.debug("java_call tool failed: {}", e.getMessage());
-            return buildCallToolResult(id, e.getMessage(), true);
+            return buildCallToolResult(id, exceptionToErrorPayload(e), true);
         }
     }
 
@@ -244,6 +290,49 @@ public class MCPRequestHandler {
         result.put("isError", isError);
 
         return buildResult(id, result);
+    }
+
+    /**
+     * Converts an exception into a serialized ErrorObject payload, mirroring the error
+     * structure returned by the /call endpoint so MCP clients receive the same level of
+     * detail (originalException, originalMessage, failureAtStep, stackTrace, etc.).
+     */
+    private String exceptionToErrorPayload(Exception e) {
+        String title;
+        int code;
+        boolean includeStackTrace = true;
+
+        if (e instanceof IBSTimeOutException) {
+            title = IntegroAPI.ERROR_CALL_TIMEOUT;
+            code = 408;
+            includeStackTrace = false;
+        } else if (e instanceof NonExistentJavaObjectException) {
+            title = IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND;
+            code = 404;
+            includeStackTrace = false;
+        } else if (e instanceof AmbiguousMethodException) {
+            title = IntegroAPI.ERROR_AMBIGUOUS_METHOD;
+            code = 404;
+            includeStackTrace = false;
+        } else if (e instanceof IBSConfigurationException) {
+            title = IntegroAPI.ERROR_IBS_CONFIG;
+            code = 500;
+        } else if (e instanceof IBSRunTimeException) {
+            title = IntegroAPI.ERROR_IBS_RUNTIME;
+            code = 500;
+        } else if (e instanceof TargetJavaMethodCallException) {
+            title = IntegroAPI.ERROR_CALLING_JAVA_METHOD;
+            code = 500;
+        } else if (e instanceof JavaObjectInaccessibleException) {
+            title = IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE;
+            code = 404;
+            includeStackTrace = false;
+        } else {
+            title = IntegroAPI.ERROR_IBS_INTERNAL;
+            code = 500;
+        }
+
+        return BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, title, code, includeStackTrace));
     }
 
     private String toJson(Object obj) {

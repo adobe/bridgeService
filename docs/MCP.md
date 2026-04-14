@@ -10,6 +10,8 @@ using the built-in demo data, then from an external project that hosts its own J
   - [MCP handshake](#mcp-handshake)
   - [Discovering tools](#discovering-tools)
   - [Calling tools](#calling-tools)
+  - [Call chaining best practice](#call-chaining-best-practice)
+  - [Project-specific pre-call setup (IBS.MCP.PRECHAIN)](#project-specific-pre-call-setup-ibsmcpprechain)
   - [Tools that are intentionally excluded](#tools-that-are-intentionally-excluded)
 - [Exposing your own project as MCP tools](#exposing-your-own-project-as-mcp-tools)
   - [Injection model — adding IBS to your project](#injection-model--adding-ibs-to-your-project)
@@ -291,6 +293,157 @@ curl -s -X POST http://localhost:8080/mcp \
     }
   }'
 ```
+
+### Call chaining best practice
+
+Each auto-discovered tool call (and each `java_call` invocation) runs inside a freshly isolated
+class loader context. This means:
+
+- Static variables set in one tool call are **not visible** to the next tool call.
+- Authentication state, cached connections, or any other static state established in one call will
+  be gone by the time a second call starts.
+
+**For single, stateless operations** (read a value, compute something, convert data) calling
+individual auto-discovered tools one by one is fine.
+
+**For multi-step scenarios** — especially those involving authentication, object creation followed
+by mutation, or any operation where step N depends on state established by step N−1 — bundle all
+steps into a single `java_call` using call chaining:
+
+```bash
+curl -s -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 10,
+    "method": "tools/call",
+    "params": {
+      "name": "java_call",
+      "arguments": {
+        "callContent": {
+          "step1": {
+            "class": "com.example.Auth",
+            "method": "login",
+            "args": ["user", "password"]
+          },
+          "step2": {
+            "class": "com.example.Resource",
+            "method": "create",
+            "args": ["step1"]
+          }
+        }
+      }
+    }
+  }'
+```
+
+All entries in `callContent` execute in the same isolated context in insertion order. A prior
+call's return value is substituted by referencing its key as a string argument (e.g. `"step1"` in
+the `args` of `step2`).
+
+The `java_call` tool description also makes this explicit, so AI agents reading the tool list
+will see the guidance directly.
+
+---
+
+### Project-specific pre-call setup (`IBS.MCP.PRECHAIN`)
+
+Some projects need one or more setup operations to run before every tool invocation — for example,
+an authentication step that establishes a session token in the class loader's static cache.
+
+`IBS.MCP.PRECHAIN` addresses this at the server level. Set it to a JSON `callContent` fragment and
+BridgeService will prepend those calls to every **auto-discovered** tool invocation, running them
+inside the same isolated context as the actual call. Pre-chain return values are stripped from the
+response before it is returned.
+
+#### Configuration
+
+```
+IBS.MCP.PRECHAIN={"<key1>":{"class":"...","method":"...","args":[...]}, ...}
+```
+
+The value is a standard BridgeService `callContent` JSON object — the same format used in
+`java_call` payloads. Entries execute in insertion order, and call-chaining dependency resolution
+(referencing a prior entry's key in an `args` array) works as normal.
+
+#### Example: CampaignTests authentication
+
+CampaignTests requires two steps before any operation:
+
+1. Fetch an auth token (`ConnectionToken.fetchAuthFromIMSBearerToken`)
+2. Store it as the current authentication (`CampaignUtils.setCurrentAuthentication`)
+
+With `IBS.MCP.PRECHAIN` the auth is injected automatically into every auto-discovered tool call:
+
+```
+IBS.MCP.PRECHAIN={"ibs_auth":{"class":"com.example.ConnectionToken","method":"fetchAuthFromIMSBearerToken","args":["ibs-secret-endpoint","ibs-secret-token"]},"ibs_set_auth":{"class":"com.example.CampaignUtils","method":"setCurrentAuthentication","args":["ibs_auth"]}}
+```
+
+#### Passing secrets securely
+
+Sensitive values (tokens, endpoints) should be passed as HTTP headers in the MCP server
+registration, using the existing `ibs-secret-` prefix. BridgeService injects these headers into
+the class loader result cache at the start of every call, making them available for
+call-chaining dependency resolution — no extra code is required.
+
+Register the server with credentials in the `.mcp.json` `headers` map:
+
+```json
+{
+  "mcpServers": {
+    "CampaignTests": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp",
+      "headers": {
+        "ibs-secret-endpoint": "https://my-instance.campaign.adobe.com",
+        "ibs-secret-token": "eyJ..."
+      }
+    }
+  }
+}
+```
+
+The prechain args reference those header names as plain strings:
+
+```
+IBS.MCP.PRECHAIN={"ibs_auth":{"class":"...","method":"fetchAuthFromIMSBearerToken","args":["ibs-secret-endpoint","ibs-secret-token"]}, ...}
+```
+
+BridgeService resolves the strings `"ibs-secret-endpoint"` and `"ibs-secret-token"` to the
+corresponding header values via the standard dependency mechanism — exactly as call chaining would
+resolve any prior result by key.
+
+**Secrets are always protected:**
+
+- Headers with the `ibs-secret-` prefix are suppressed from all tool responses.
+- Pre-chain return values (e.g. `ibs_auth`, `ibs_set_auth`) are stripped from `returnValues`
+  before the response is returned — only the actual tool result is visible to the caller.
+- The value of `IBS.MCP.PRECHAIN` is never written to logs at INFO or DEBUG level.
+
+#### Prechain is NOT applied to `java_call`
+
+`java_call` invocations bypass the prechain entirely. `java_call` accepts a complete `callContent`
+payload, so callers have full control over what runs in the chain. If your `java_call` payload
+needs the auth setup, include it explicitly as the first entries in `callContent`.
+
+#### Consumer project guidance
+
+Any project registering BridgeService as an MCP server that requires setup before every tool call
+should:
+
+1. Configure `IBS.MCP.PRECHAIN` with the required setup steps.
+2. Pass credentials as `ibs-secret-*` headers in the MCP server registration.
+3. Document the pattern in the project's own `CLAUDE.md` so AI agents understand they do not
+   need to perform auth themselves — it is handled transparently by the server:
+
+```markdown
+## BridgeService MCP usage
+- Auth is pre-configured via IBS.MCP.PRECHAIN; do not include auth calls in your tool payloads.
+- For multi-step scenarios use `java_call` with call chaining (single `callContent` payload).
+  State does not persist between separate tool calls.
+```
+
+---
 
 ### Tools that are intentionally excluded
 

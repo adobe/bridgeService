@@ -212,7 +212,10 @@ public class MCPBridgeServerTest {
         .then()
                 .statusCode(200)
                 .body("result.isError", equalTo(true))
-                .body("result.content[0].text", notNullValue());
+                // Error text must be a full ErrorObject JSON, not a bare exception string
+                .body("result.content[0].text", containsString("\"title\""))
+                .body("result.content[0].text", containsString("\"detail\""))
+                .body("result.content[0].text", containsString("\"originalException\""));
     }
 
     @Test(groups = "MCP")
@@ -229,7 +232,9 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .body("result.isError", equalTo(true));
+                .body("result.isError", equalTo(true))
+                .body("result.content[0].text", containsString("\"title\""))
+                .body("result.content[0].text", containsString("timeout"));
     }
 
     // ---- tools/call (java_call fallback) ----
@@ -245,6 +250,27 @@ public class MCPBridgeServerTest {
                 + "\"method\":\"methodReturningString\","
                 + "\"args\":[]"
                 + "}}}}}";
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body(payload)
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("_Success"));
+    }
+
+    @Test(groups = "MCP")
+    public void testJavaCallTool_callContentAsString_isUnwrapped() {
+        // MCP clients may serialise the callContent object as a JSON string rather than a
+        // nested object. The handler must unwrap it and execute the call normally.
+        String callContentJson = "{\\\"result\\\":{\\\"class\\\":\\\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\\\","
+                + "\\\"method\\\":\\\"methodReturningString\\\",\\\"args\\\":[]}}";
+        String payload = "{\"jsonrpc\":\"2.0\",\"id\":30,\"method\":\"tools/call\","
+                + "\"params\":{\"name\":\"java_call\","
+                + "\"arguments\":{\"callContent\":\"" + callContentJson + "\"}}}";
 
         given()
                 .contentType(CONTENT_TYPE_JSON)
@@ -288,6 +314,143 @@ public class MCPBridgeServerTest {
         .then()
                 .statusCode(200)
                 .body("returnValues.step1", Matchers.equalTo("_Success"));
+    }
+
+    // ---- IBS.MCP.PRECHAIN ----
+
+    @Test(groups = "MCP")
+    public void testPrechain_isExecutedAndResultStripped() {
+        // Pre-chain runs a no-arg method; its key must be absent from returnValues,
+        // while the actual tool result ("result") must be present.
+        ConfigValueHandlerIBS.MCP_PRECHAIN.activate(
+                "{\"ibs_pre\":{\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"methodReturningString\",\"args\":[]}}");
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":20,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
+                        + "\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", not(containsString("\"ibs_pre\"")))
+                .body("result.content[0].text", containsString("\"result\""));
+
+        ConfigValueHandlerIBS.MCP_PRECHAIN.reset();
+    }
+
+    @Test(groups = "MCP")
+    public void testPrechain_dependencyResolutionBetweenPrechainSteps() {
+        // Second pre-chain entry references the first by key — both must execute without error.
+        ConfigValueHandlerIBS.MCP_PRECHAIN.activate(
+                "{\"ibs_pre1\":{\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"methodReturningString\",\"args\":[]},"
+                + "\"ibs_pre2\":{\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"methodAcceptingStringArgument\",\"args\":[\"ibs_pre1\"]}}");
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":21,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
+                        + "\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false));
+
+        ConfigValueHandlerIBS.MCP_PRECHAIN.reset();
+    }
+
+    @Test(groups = "MCP")
+    public void testPrechain_secretHeaderArgIsResolved() {
+        // A prechain arg that matches an ibs-secret-* request header is resolved to the
+        // header value via the existing expandArgs mechanism (no error expected).
+        ConfigValueHandlerIBS.MCP_PRECHAIN.activate(
+                "{\"ibs_pre\":{\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"methodAcceptingStringArgument\",\"args\":[\"ibs-secret-test-val\"]}}");
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .header("ibs-secret-test-val", "RESOLVED")
+                .body("{\"jsonrpc\":\"2.0\",\"id\":22,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
+                        + "\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", not(containsString("ibs-secret-test-val")));
+
+        ConfigValueHandlerIBS.MCP_PRECHAIN.reset();
+    }
+
+    @Test(groups = "MCP")
+    public void testPrechain_malformedJsonIsSkippedGracefully() {
+        ConfigValueHandlerIBS.MCP_PRECHAIN.activate("not valid json {{{");
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":23,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
+                        + "\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("_Success"));
+
+        ConfigValueHandlerIBS.MCP_PRECHAIN.reset();
+    }
+
+    @Test(groups = "MCP")
+    public void testPrechain_notAppliedToJavaCall() {
+        // java_call must be unaffected even when IBS.MCP.PRECHAIN is set to an invalid entry
+        // that would cause an error if executed.
+        ConfigValueHandlerIBS.MCP_PRECHAIN.activate(
+                "{\"ibs_pre\":{\"class\":\"com.example.NonExistentClass\","
+                + "\"method\":\"nonExistentMethod\",\"args\":[]}}");
+
+        String payload = "{\"jsonrpc\":\"2.0\",\"id\":24,\"method\":\"tools/call\","
+                + "\"params\":{\"name\":\"java_call\","
+                + "\"arguments\":{"
+                + "\"callContent\":{"
+                + "\"result\":{"
+                + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"methodReturningString\","
+                + "\"args\":[]"
+                + "}}}}}";
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body(payload)
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("_Success"));
+
+        ConfigValueHandlerIBS.MCP_PRECHAIN.reset();
+    }
+
+    @Test(groups = "MCP")
+    public void testJavaCall_descriptionMentionsCallChaining() {
+        // The java_call tool description must contain guidance about call chaining.
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":25,\"method\":\"tools/list\",\"params\":{}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.tools.find { it.name == 'java_call' }.description",
+                        containsString("isolated"));
     }
 
     // ---- notification handling ----

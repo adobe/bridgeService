@@ -94,8 +94,14 @@ public class MCPToolDiscovery {
 
                 if (overloads.size() == 1) {
                     // Unique method name on this class — use simple tool name
-                    String toolName = clazz.getSimpleName() + "_" + methodName;
-                    registerTool(tools, registry, toolName, overloads.get(0));
+                    Method method = overloads.get(0);
+                    if (ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("true") && !hasJavadoc(method)) {
+                        log.debug("Skipping {}.{} — no Javadoc (IBS.MCP.REQUIRE_JAVADOC=true)",
+                                clazz.getSimpleName(), methodName);
+                    } else {
+                        String toolName = clazz.getSimpleName() + "_" + methodName;
+                        registerTool(tools, registry, toolName, method);
+                    }
                 } else {
                     // Multiple overloads — disambiguate by parameter count
                     Map<Integer, List<Method>> byParamCount = overloads.stream()
@@ -107,8 +113,14 @@ public class MCPToolDiscovery {
                                     + "use the java_call tool to invoke them directly.",
                                     clazz.getName(), methodName, countEntry.getKey());
                         } else {
-                            String toolName = clazz.getSimpleName() + "_" + methodName + "_" + countEntry.getKey();
-                            registerTool(tools, registry, toolName, countEntry.getValue().get(0));
+                            Method method = countEntry.getValue().get(0);
+                            if (ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("true") && !hasJavadoc(method)) {
+                                log.debug("Skipping {}.{} — no Javadoc (IBS.MCP.REQUIRE_JAVADOC=true)",
+                                        clazz.getSimpleName(), methodName);
+                            } else {
+                                String toolName = clazz.getSimpleName() + "_" + methodName + "_" + countEntry.getKey();
+                                registerTool(tools, registry, toolName, method);
+                            }
                         }
                     }
                 }
@@ -156,6 +168,18 @@ public class MCPToolDiscovery {
                     method.getDeclaringClass().getSimpleName(), method.getName(), e.getMessage());
         }
         return "Calls " + method.getDeclaringClass().getName() + "." + method.getName() + "()";
+    }
+
+    /**
+     * Returns true if the method has a non-empty Javadoc comment available at runtime.
+     */
+    static boolean hasJavadoc(Method method) {
+        try {
+            MethodJavadoc javadoc = RuntimeJavadoc.getJavadoc(method);
+            return javadoc != null && !COMMENT_FORMATTER.format(javadoc.getComment()).isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

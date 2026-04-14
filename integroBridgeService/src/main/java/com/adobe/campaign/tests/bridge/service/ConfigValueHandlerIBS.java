@@ -70,7 +70,10 @@ public enum ConfigValueHandlerIBS {
     DESERIALIZATION_DATE_FORMAT(
             "IBS.DESERIALIZATION.DATE.FORMAT", "NONE", false, "The date format to be used for deserialization."),
     MCP_ENABLED("IBS.MCP.ENABLED", "false", false,
-            "When set to true, enables the MCP server endpoint at POST /mcp, exposing configured packages as tools.");
+            "When set to true, enables the MCP server endpoint at POST /mcp, exposing configured packages as tools."),
+    MCP_REQUIRE_JAVADOC("IBS.MCP.REQUIRE_JAVADOC", "true", false,
+            "When true (default), only methods with a non-empty Javadoc comment are exposed as MCP tools. "
+            + "Methods without Javadoc are silently skipped. Set to false to expose all public static methods.");
 
     public final String systemName;
     public final String defaultValue;

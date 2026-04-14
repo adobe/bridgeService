@@ -8,7 +8,9 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.testdata.one.EnvironmentVariableHandler;
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
@@ -131,6 +133,50 @@ public class MCPToolDiscoveryTest {
         assertThat(m, notNullValue());
         assertThat(m.getDeclaringClass(), equalTo(SimpleStaticMethods.class));
         assertThat(m.getName(), equalTo("methodReturningString"));
+    }
+
+    // ---- hasJavadoc ----
+
+    @Test
+    public void testHasJavadoc_methodWithJavadoc_returnsTrue() throws Exception {
+        java.lang.reflect.Method m = SimpleStaticMethods.class.getMethod("methodReturningString");
+        assertThat(MCPToolDiscovery.hasJavadoc(m), is(true));
+    }
+
+    @Test
+    public void testHasJavadoc_methodWithoutJavadoc_returnsFalse() throws Exception {
+        java.lang.reflect.Method m = EnvironmentVariableHandler.class.getMethod("getCacheProperty", String.class);
+        assertThat(MCPToolDiscovery.hasJavadoc(m), is(false));
+    }
+
+    // ---- MCP_REQUIRE_JAVADOC gate ----
+
+    @AfterMethod
+    public void resetConfig() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+    }
+
+    @Test
+    public void testDiscoverTools_requireJavadocTrue_excludesUndocumentedMethods() {
+        // Default is true — EnvironmentVariableHandler methods have no Javadoc
+        MCPToolDiscovery.DiscoveryResult result = MCPToolDiscovery.discoverTools(TESTDATA_ONE_PACKAGE);
+
+        assertThat(result.methodRegistry.keySet(),
+                not(hasItem("EnvironmentVariableHandler_getCacheProperty")));
+        assertThat(result.methodRegistry.keySet(),
+                not(hasItem("EnvironmentVariableHandler_setIntegroCache")));
+        // Documented methods are still present
+        assertThat(result.methodRegistry.keySet(),
+                hasItem("SimpleStaticMethods_methodReturningString"));
+    }
+
+    @Test
+    public void testDiscoverTools_requireJavadocFalse_includesUndocumentedMethods() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("false");
+        MCPToolDiscovery.DiscoveryResult result = MCPToolDiscovery.discoverTools(TESTDATA_ONE_PACKAGE);
+
+        assertThat(result.methodRegistry.keySet(),
+                hasItem("EnvironmentVariableHandler_getCacheProperty"));
     }
 
     // ---- buildInputSchema ----

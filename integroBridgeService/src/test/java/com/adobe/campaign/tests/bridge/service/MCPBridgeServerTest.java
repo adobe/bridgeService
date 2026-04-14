@@ -137,6 +137,20 @@ public class MCPBridgeServerTest {
         assertThat(idx, greaterThanOrEqualTo(0));
     }
 
+    @Test(groups = "MCP")
+    public void testToolsList_undocumentedMethodExcluded() {
+        // EnvironmentVariableHandler methods have no Javadoc — must be absent with default REQUIRE_JAVADOC=true
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":13,\"method\":\"tools/list\",\"params\":{}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.tools.name", not(hasItem("EnvironmentVariableHandler_getCacheProperty")))
+                .body("result.tools.name", not(hasItem("EnvironmentVariableHandler_setIntegroCache")));
+    }
+
     // ---- tools/call (discovered tools) ----
 
     @Test(groups = "MCP")

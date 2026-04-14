@@ -16,8 +16,10 @@ using the built-in demo data, then from an external project that hosts its own J
   - [Aggregator model — adding your project to IBS](#aggregator-model--adding-your-project-to-ibs)
   - [Configuring tool discovery](#configuring-tool-discovery)
   - [Surfacing Javadoc as tool descriptions](#surfacing-javadoc-as-tool-descriptions)
+  - [Javadoc quality gate](#javadoc-quality-gate)
   - [What tools will be generated](#what-tools-will-be-generated)
 - [Connecting to Claude Code](#connecting-to-claude-code)
+  - [Naming your MCP server](#naming-your-mcp-server)
   - [Start BridgeService](#start-bridgeservice)
   - [Register the MCP server](#register-the-mcp-server)
   - [Verify the connection](#verify-the-connection)
@@ -110,7 +112,9 @@ With `testdata.one` on the classpath the response includes tools derived from tw
         "description": "Appends the success suffix to the given string.",
         "inputSchema": {
           "type": "object",
-          "properties": { "arg0": { "type": "string", "description": "the input string" } },
+          "properties": {
+            "arg0": { "type": "string", "description": "the input string" }
+          },
           "required": ["arg0"]
         }
       },
@@ -131,7 +135,9 @@ With `testdata.one` on the classpath the response includes tools derived from tw
         "description": "Returns the given integer multiplied by three.",
         "inputSchema": {
           "type": "object",
-          "properties": { "arg0": { "type": "integer", "description": "the input integer" } },
+          "properties": {
+            "arg0": { "type": "integer", "description": "the input integer" }
+          },
           "required": ["arg0"]
         }
       },
@@ -148,7 +154,7 @@ With `testdata.one` on the classpath the response includes tools derived from tw
       {
         "name": "java_call",
         "description": "Generic BridgeService call. Accepts the full /call payload including call chaining, instance methods, environment variables, and timeout.",
-        "inputSchema": { "..." : "see README" }
+        "inputSchema": { "...": "see README" }
       }
     ]
   }
@@ -180,7 +186,12 @@ Response:
   "jsonrpc": "2.0",
   "id": 3,
   "result": {
-    "content": [{ "type": "text", "text": "{\"returnValues\":{\"result\":\"_Success\"},\"callDurations\":{\"result\":2}}" }],
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"returnValues\":{\"result\":\"_Success\"},\"callDurations\":{\"result\":2}}"
+      }
+    ],
     "isError": false
   }
 }
@@ -209,7 +220,12 @@ Response:
   "jsonrpc": "2.0",
   "id": 4,
   "result": {
-    "content": [{ "type": "text", "text": "{\"returnValues\":{\"result\":\"hello_Success\"},\"callDurations\":{\"result\":1}}" }],
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"returnValues\":{\"result\":\"hello_Success\"},\"callDurations\":{\"result\":1}}"
+      }
+    ],
     "isError": false
   }
 }
@@ -280,11 +296,11 @@ curl -s -X POST http://localhost:8080/mcp \
 
 Some methods in `SimpleStaticMethods` are not exposed as auto-discovered tools:
 
-| Method | Reason excluded |
-|---|---|
-| `overLoadedMethod1Arg(String)` and `overLoadedMethod1Arg(int)` | Both have one parameter — ambiguous, cannot be disambiguated by parameter count |
-| `methodAcceptingFile(File)` | `File` parameters require multi-part upload, which is not supported by the MCP tool schema |
-| Any instance method | Only `public static` methods are discovered |
+| Method                                                         | Reason excluded                                                                            |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `overLoadedMethod1Arg(String)` and `overLoadedMethod1Arg(int)` | Both have one parameter — ambiguous, cannot be disambiguated by parameter count            |
+| `methodAcceptingFile(File)`                                    | `File` parameters require multi-part upload, which is not supported by the MCP tool schema |
+| Any instance method                                            | Only `public static` methods are discovered                                                |
 
 These methods remain accessible via the `java_call` fallback tool.
 
@@ -390,6 +406,35 @@ picked up transparently — no configuration needed beyond the dependency above.
 
 Without the dependency, tools are still fully functional; only the description quality is reduced.
 
+### Javadoc quality gate
+
+By default (`IBS.MCP.REQUIRE_JAVADOC=true`), BridgeService **only exposes methods that have a
+non-empty Javadoc comment**. Methods without Javadoc are silently skipped at startup and will not
+appear in `tools/list`.
+
+This is intentional. A method with no Javadoc would receive a generic fallback description such as
+`"Calls com.example.MyClass.method()"`, which gives an AI agent no useful information about when
+or why to call it. Exposing such tools increases the risk of accidental invocations.
+
+**To opt out** (expose all public static methods regardless of documentation):
+
+```
+IBS.MCP.REQUIRE_JAVADOC=false
+```
+
+**Writing good Javadoc for MCP tools** goes beyond just satisfying the gate. Descriptions should
+make the testing or domain purpose self-evident so an AI agent can distinguish your tools from
+others in a multi-server session:
+
+| Weak                                  | Better                                                                                                                          |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `/** Returns a list of countries. */` | `/** Returns the fixed list of ISO 3166-1 country codes (AT, AU, CA, CH, DE) used as test fixtures for campaign validation. */` |
+| `/** Sends an email. */`              | `/** Sends a test email via the configured SMTP mock and returns the delivery receipt ID. */`                                   |
+| `/** Gets the cache value. */`        | `/** Returns the value stored under the given key in the in-process integro test-execution cache. */`                           |
+
+Include `@param` tags for each argument — BridgeService uses them to populate the parameter
+descriptions in the tool's `inputSchema`.
+
 ### What tools will be generated
 
 Given a project with the following class (with `therapi-runtime-javadoc-scribe` on the classpath):
@@ -410,11 +455,11 @@ public class EmailService {
 
 IBS would register the following MCP tools, with descriptions sourced from Javadoc:
 
-| Tool name | Description | Parameters |
-|---|---|---|
-| `EmailService_sendEmail` | Sends an email to the given recipient with the specified subject. | `arg0: string`, `arg1: string` |
-| `EmailService_listInbox` | Returns the list of message subjects in the given account's inbox. | `arg0: string` |
-| `EmailService_purgeInbox` | Deletes all messages in the given account's inbox. | `arg0: string` |
+| Tool name                 | Description                                                        | Parameters                     |
+| ------------------------- | ------------------------------------------------------------------ | ------------------------------ |
+| `EmailService_sendEmail`  | Sends an email to the given recipient with the specified subject.  | `arg0: string`, `arg1: string` |
+| `EmailService_listInbox`  | Returns the list of message subjects in the given account's inbox. | `arg0: string`                 |
+| `EmailService_purgeInbox` | Deletes all messages in the given account's inbox.                 | `arg0: string`                 |
 
 Without `therapi-runtime-javadoc-scribe`, the descriptions would fall back to
 `"Calls com.example.myproject.services.EmailService.sendEmail()"` etc.
@@ -434,6 +479,25 @@ Claude Code supports MCP servers over HTTP natively. Once BridgeService is runni
 enabled, you can register it as a named MCP server and Claude Code will automatically call
 `tools/list` at startup and make the tools available during your session.
 
+### Naming your MCP server
+
+BridgeService is generic infrastructure that can be deployed for many different projects. The name
+you give it at registration time becomes the namespace for all its tools in MCP clients —
+Claude Code, for example, exposes tools as `mcp__<serverName>__ClassName_method`.
+
+**Always name the server after your project**, not `"bridgeService"`. This makes tools
+self-contextualising in a multi-server session:
+
+| Registration name                    | Tool name seen by agent                        |
+| ------------------------------------ | ---------------------------------------------- |
+| `bridgeService` (generic, avoid)     | `mcp__bridgeService__EmailService_sendEmail`   |
+| `CampaignTests` (project-specific)   | `mcp__CampaignTests__EmailService_sendEmail`   |
+| `EmailAutomation` (feature-specific) | `mcp__EmailAutomation__EmailService_sendEmail` |
+
+The name is set entirely on the client side when you register the server — no BridgeService
+configuration is needed. See [Register the MCP server](#register-the-mcp-server) for the
+exact command.
+
 ### Start BridgeService
 
 Using the demo data (quickest way to try it):
@@ -452,15 +516,16 @@ For your own project, start BridgeService with your packages configured instead 
 ### Register the MCP server
 
 In a separate terminal, register the running BridgeService instance as an MCP server in
-Claude Code. Use `--scope user` to make it available globally across all projects, or omit it
-to register it only for the current project:
+Claude Code. Replace `CampaignTests` with the name of your project (see
+[Naming your MCP server](#naming-your-mcp-server)). Use `--scope user` to make it available
+globally across all projects, or omit it to register it only for the current project:
 
 ```bash
 # Register globally (available in all Claude Code sessions)
-claude mcp add --transport http bridgeService http://localhost:8080/mcp --scope user
+claude mcp add --transport http CampaignTests http://localhost:8080/mcp --scope user
 
 # Register for the current project only
-claude mcp add --transport http bridgeService http://localhost:8080/mcp
+claude mcp add --transport http CampaignTests http://localhost:8080/mcp
 ```
 
 This writes an entry to `~/.claude/mcp.json` (global) or `.mcp.json` in the project root
@@ -469,7 +534,7 @@ This writes an entry to `~/.claude/mcp.json` (global) or `.mcp.json` in the proj
 ```json
 {
   "mcpServers": {
-    "bridgeService": {
+    "CampaignTests": {
       "type": "http",
       "url": "http://localhost:8080/mcp"
     }

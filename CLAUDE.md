@@ -73,16 +73,16 @@ parent (pom.xml)
 
 ### Key Environment Variables
 
-| Variable | Purpose | Default |
-|---|---|---|
-| `IBS.TIMEOUT.DEFAULT` | Global execution timeout (ms) | 10000 |
-| `IBS.CLASSLOADER.AUTOMATIC.INTEGRITY.INJECTION` | Class loader mode | AUTO |
-| `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` | Packages to load in static mode | — |
-| `IBS.DESERIALIZATION.DEPTH.LIMIT` | Object scraping recursion depth | 1 |
-| `IBS.DESERIALIZATION.DATE.FORMAT` | SimpleDateFormat pattern for date fields | — |
-| `IBS.PLUGINS.PACKAGE` | Package to scan for deserializer plugins | — |
-| `IBS.SECRETS.FILTER.PREFIX` | HTTP header prefix for secrets | `ibs-secret-` |
-| `IBS.ENVVARS.SETTER.CLASS` / `IBS.ENVVARS.SETTER.METHOD` | Custom env var injection handler | — |
+| Variable                                                 | Purpose                                  | Default       |
+| -------------------------------------------------------- | ---------------------------------------- | ------------- |
+| `IBS.TIMEOUT.DEFAULT`                                    | Global execution timeout (ms)            | 10000         |
+| `IBS.CLASSLOADER.AUTOMATIC.INTEGRITY.INJECTION`          | Class loader mode                        | AUTO          |
+| `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES`              | Packages to load in static mode          | —             |
+| `IBS.DESERIALIZATION.DEPTH.LIMIT`                        | Object scraping recursion depth          | 1             |
+| `IBS.DESERIALIZATION.DATE.FORMAT`                        | SimpleDateFormat pattern for date fields | —             |
+| `IBS.PLUGINS.PACKAGE`                                    | Package to scan for deserializer plugins | —             |
+| `IBS.SECRETS.FILTER.PREFIX`                              | HTTP header prefix for secrets           | `ibs-secret-` |
+| `IBS.ENVVARS.SETTER.CLASS` / `IBS.ENVVARS.SETTER.METHOD` | Custom env var injection handler         | —             |
 
 These are managed by `ConfigValueHandlerIBS.java`.
 
@@ -115,3 +115,4 @@ These are managed by `ConfigValueHandlerIBS.java`.
 - Coverage must not decrease.
 - SonarCloud quality gate must be green.
 - A signed CLA is required for external contributors.
+- All features need to be documented, if they are functional they go in README, otherwise there is a dedicated document called docs/Technical.md

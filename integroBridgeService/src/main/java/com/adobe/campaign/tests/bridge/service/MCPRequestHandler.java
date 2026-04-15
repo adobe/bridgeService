@@ -195,7 +195,6 @@ public class MCPRequestHandler {
         calls.addHeaders(headers);
         extractEnvHeaders(headers).forEach((k, v) -> calls.getEnvironmentVariables().setProperty(k, v));
 
-        // Prepend pre-chain calls (e.g. auth setup); capture keys to strip from response
         Map<String, CallContent> prechain = parsePrechainJson(ConfigValueHandlerIBS.MCP_PRECHAIN.fetchValue());
         Set<String> prechainKeys = new LinkedHashSet<>(prechain.keySet());
         calls.getCallContent().putAll(prechain);
@@ -212,8 +211,7 @@ public class MCPRequestHandler {
                 results.getReturnValues().remove(k);
                 results.getCallDurations().remove(k);
             });
-            String json = mapper.writeValueAsString(results);
-            return buildCallToolResult(id, json, false);
+            return buildCallToolResult(id, mapper.writeValueAsString(results), false);
         } catch (Exception e) {
             log.debug("Tool call failed for {}.{}: {}", method.getDeclaringClass().getSimpleName(),
                     method.getName(), e.getMessage());

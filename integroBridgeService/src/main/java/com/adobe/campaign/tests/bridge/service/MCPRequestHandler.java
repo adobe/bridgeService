@@ -279,9 +279,29 @@ public class MCPRequestHandler {
                         .computeIfAbsent("environmentVariables", k -> new LinkedHashMap<>());
                 envVars.putAll(envFromHeaders);
             }
+            // Prepend PRECHAIN entries to callContent so java_call chains share the same
+            // server-level setup (e.g. auth) as auto-discovered tools. PRECHAIN keys are
+            // stripped from the result just as they are in invokeDiscoveredTool.
+            Map<String, CallContent> prechain = parsePrechainJson(ConfigValueHandlerIBS.MCP_PRECHAIN.fetchValue());
+            if (!prechain.isEmpty()) {
+                Map<String, Object> callContent = (Map<String, Object>) arguments
+                        .computeIfAbsent("callContent", k -> new LinkedHashMap<>());
+                // Build a new map with prechain entries first, then the user's entries
+                Map<String, Object> merged = new LinkedHashMap<>();
+                for (Map.Entry<String, CallContent> e : prechain.entrySet()) {
+                    merged.put(e.getKey(), mapper.convertValue(e.getValue(), Map.class));
+                }
+                merged.putAll(callContent);
+                arguments.put("callContent", merged);
+            }
             String json = mapper.writeValueAsString(arguments);
             JavaCalls calls = BridgeServiceFactory.createJavaCalls(json);
+            calls.addHeaders(headers);
             JavaCallResults results = calls.submitCalls();
+            prechain.keySet().forEach(k -> {
+                results.getReturnValues().remove(k);
+                results.getCallDurations().remove(k);
+            });
             String resultJson = mapper.writeValueAsString(results);
             return buildCallToolResult(id, resultJson, false);
         } catch (Exception e) {

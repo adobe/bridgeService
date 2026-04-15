@@ -409,12 +409,12 @@ public class MCPBridgeServerTest {
     }
 
     @Test(groups = "MCP")
-    public void testPrechain_notAppliedToJavaCall() {
-        // java_call must be unaffected even when IBS.MCP.PRECHAIN is set to an invalid entry
-        // that would cause an error if executed.
+    public void testPrechain_appliedToJavaCall_andResultStripped() {
+        // PRECHAIN must run before the user's java_call chain, and its keys must be
+        // stripped from the result — consistent with auto-discovered tool behaviour.
         ConfigValueHandlerIBS.MCP_PRECHAIN.activate(
-                "{\"ibs_pre\":{\"class\":\"com.example.NonExistentClass\","
-                + "\"method\":\"nonExistentMethod\",\"args\":[]}}");
+                "{\"ibs_pre\":{\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"methodReturningString\",\"args\":[]}}");
 
         String payload = "{\"jsonrpc\":\"2.0\",\"id\":24,\"method\":\"tools/call\","
                 + "\"params\":{\"name\":\"java_call\","
@@ -434,9 +434,77 @@ public class MCPBridgeServerTest {
         .then()
                 .statusCode(200)
                 .body("result.isError", equalTo(false))
-                .body("result.content[0].text", containsString("_Success"));
+                .body("result.content[0].text", not(containsString("\"ibs_pre\"")))
+                .body("result.content[0].text", containsString("\"result\""));
 
         ConfigValueHandlerIBS.MCP_PRECHAIN.reset();
+    }
+
+    @Test(groups = "MCP")
+    public void testPrechain_javaCallCanReferenceToPrechain() {
+        // A java_call step can reference a PRECHAIN step's result by key — enabling
+        // the auth-object pattern where PRECHAIN establishes auth and the chain passes it along.
+        ConfigValueHandlerIBS.MCP_PRECHAIN.activate(
+                "{\"ibs_pre\":{\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"methodReturningString\",\"args\":[]}}");
+
+        // The user's step references "ibs_pre" — BridgeService substitutes the return value.
+        String payload = "{\"jsonrpc\":\"2.0\",\"id\":26,\"method\":\"tools/call\","
+                + "\"params\":{\"name\":\"java_call\","
+                + "\"arguments\":{"
+                + "\"callContent\":{"
+                + "\"result\":{"
+                + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"methodAcceptingStringArgument\","
+                + "\"args\":[\"ibs_pre\"]"
+                + "}}}}}";
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body(payload)
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                // "ibs_pre" resolved to "_Success"; methodAcceptingStringArgument appends "_Success"
+                .body("result.content[0].text", containsString("_Success_Success"));
+
+        ConfigValueHandlerIBS.MCP_PRECHAIN.reset();
+    }
+
+    @Test(groups = "MCP")
+    public void testJavaCallTool_callChaining_complexObjectPassedByReference() {
+        // Proves that java_call call chaining works end-to-end through the MCP HTTP layer:
+        // step A returns a List<MimeMessage> (a complex, non-JSON-serializable object);
+        // step B receives it by reference inside the same classloader context and extracts subjects.
+        // This mirrors the chainingComplexCalls unit test in TestFetchCalls but exercises
+        // the full JSON-RPC 2.0 → MCPRequestHandler → JavaCalls.submitCalls() path.
+        String payload = "{\"jsonrpc\":\"2.0\",\"id\":50,\"method\":\"tools/call\","
+                + "\"params\":{\"name\":\"java_call\","
+                + "\"arguments\":{"
+                + "\"callContent\":{"
+                + "\"fetchMessages\":{"
+                + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.MimeMessageMethods\","
+                + "\"method\":\"fetchMessages\","
+                + "\"args\":[\"mcpChain\",4]"
+                + "},"
+                + "\"fetchSubjects\":{"
+                + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.MimeMessageMethods\","
+                + "\"method\":\"fetchMessageSubjects\","
+                + "\"args\":[\"fetchMessages\"]"
+                + "}}}}}";
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body(payload)
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("fetchSubjects"))
+                .body("result.content[0].text", containsString("mcpChain_3"));
     }
 
     @Test(groups = "MCP")

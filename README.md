@@ -57,7 +57,9 @@ from any language or framework you are in.
     * [Enabling MCP](#enabling-mcp)
     * [Discovering Tools](#discovering-tools-toolslist)
     * [Calling a Discovered Tool](#calling-a-discovered-tool-toolscall)
-    * [The java_call Fallback Tool](#the-java_call-fallback-tool)
+    * [The java_call Tool](#the-java_call-tool)
+    * [Diagnostics](#diagnostics-ibs_diagnostics)
+    * [MCP Configuration](#mcp-configuration)
     * [MCP Limitations](#mcp-limitations)
   * [Error Management](#error-management)
   * [Contributing to the Project](#contributing-to-the-project)
@@ -108,7 +110,7 @@ The following dependency needs to be added to your pom file:
 <dependency>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <version>2.11.18</version>
+    <version>3.11.1</version>
 </dependency>
 ```
 
@@ -882,6 +884,8 @@ Example:
 
 BridgeService can act as an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server, allowing AI agents to discover and invoke your Java methods as typed tools over HTTP. The MCP endpoint uses JSON-RPC 2.0 and is served on the **same port** as the existing REST API.
 
+For full configuration details, advanced usage, and integration with Claude Code and Cursor, see [docs/MCP.md](docs/MCP.md).
+
 ### Enabling MCP
 
 Set the environment variable `IBS.MCP.ENABLED` to `true` before starting BridgeService:
@@ -890,7 +894,7 @@ Set the environment variable `IBS.MCP.ENABLED` to `true` before starting BridgeS
 mvn exec:java -Dexec.args="test" -DIBS.MCP.ENABLED=true -DIBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES=com.example.mypackage
 ```
 
-At startup, BridgeService scans the packages listed in `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` and registers every **public static method** as a named MCP tool. The naming convention is `{SimpleClassName}_{methodName}`.
+At startup, BridgeService scans the packages listed in `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` and builds a **method catalog** from every **public static method** found. The catalog is embedded in the `java_call` tool description so that AI agents can read it via `tools/list`.
 
 The MCP endpoint is available at:
 ```
@@ -920,13 +924,15 @@ Response:
   "id": 1,
   "result": {
     "protocolVersion": "2024-11-05",
-    "serverInfo": { "name": "bridgeService", "version": "2.11.19" },
+    "serverInfo": { "name": "bridgeService", "version": "3.11.1" },
     "capabilities": { "tools": {} }
   }
 }
 ```
 
 ### Discovering Tools (tools/list)
+
+`tools/list` always returns exactly **one tool — `java_call`**. Its `description` contains the full catalog of all discovered methods. AI agents read the catalog to learn which class and method names to place in their `callContent` payloads.
 
 ```json
 {
@@ -937,7 +943,7 @@ Response:
 }
 ```
 
-Response:
+Response (abbreviated):
 
 ```json
 {
@@ -946,19 +952,8 @@ Response:
   "result": {
     "tools": [
       {
-        "name": "SimpleStaticMethods_methodAcceptingStringArgument",
-        "description": "Calls com.example.SimpleStaticMethods.methodAcceptingStringArgument()",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "arg0": { "type": "string" }
-          },
-          "required": ["arg0"]
-        }
-      },
-      {
         "name": "java_call",
-        "description": "Generic BridgeService call. Accepts the full /call payload including call chaining, instance methods, environment variables, and timeout.",
+        "description": "Generic BridgeService call. ...\n\nDiscovered methods:\n\nSimpleStaticMethods_methodAcceptingStringArgument\n  class:  com.example.SimpleStaticMethods\n  method: methodAcceptingStringArgument\n  Appends the success suffix to the given string.\n  arg0 (string): the input string\n...",
         "inputSchema": { "..." : "..." }
       }
     ]
@@ -966,18 +961,11 @@ Response:
 }
 ```
 
-The JSON Schema for each tool is derived from the method's parameter types:
-
-| Java type | JSON Schema type |
-|---|---|
-| `String` | `string` |
-| `int` / `Integer` / `long` / `Long` | `integer` |
-| `double` / `Double` / `float` / `Float` | `number` |
-| `boolean` / `Boolean` | `boolean` |
-| `List` / array | `array` |
-| anything else | `object` |
+Each catalog entry follows the format `{SimpleClassName}_{methodName}` and includes the fully qualified class name, method name, Javadoc description, and parameter descriptions. See [docs/MCP.md](docs/MCP.md) for the full catalog format.
 
 ### Calling a Discovered Tool (tools/call)
+
+All calls go through `java_call`. Use the class and method names from the catalog in `callContent`:
 
 ```json
 {
@@ -985,9 +973,15 @@ The JSON Schema for each tool is derived from the method's parameter types:
   "id": 3,
   "method": "tools/call",
   "params": {
-    "name": "SimpleStaticMethods_methodAcceptingStringArgument",
+    "name": "java_call",
     "arguments": {
-      "arg0": "hello"
+      "callContent": {
+        "result": {
+          "class": "com.example.SimpleStaticMethods",
+          "method": "methodAcceptingStringArgument",
+          "args": ["hello"]
+        }
+      }
     }
   }
 }
@@ -1006,39 +1000,28 @@ On success the result contains the standard BridgeService return payload seriali
 }
 ```
 
-If the method throws an exception or the tool name is unknown, `isError` is `true` and `content[0].text` contains the error description. The HTTP status code is always `200` for `tools/call` — errors are reported inside the MCP result, not as HTTP errors.
+If the method throws an exception, `isError` is `true` and `content[0].text` contains the error description. The HTTP status code is always `200` for `tools/call` — errors are reported inside the MCP result, not as HTTP errors.
 
-### The `java_call` Fallback Tool
+### The `java_call` Tool
 
-A generic `java_call` tool is always included alongside the auto-discovered tools. Its `callContent` argument accepts exactly the same payload as the standard `POST /call` endpoint, making call chaining, instance methods, environment variables, and file uploads all accessible to MCP clients:
+`java_call` accepts the same payload as the standard `POST /call` endpoint, making call chaining, instance methods, environment variables, and file uploads all accessible to MCP clients. **Bundle all related operations into a single `java_call`** using call chaining — static variable state (including authentication) does not persist between separate tool calls.
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 4,
-  "method": "tools/call",
-  "params": {
-    "name": "java_call",
-    "arguments": {
-      "callContent": {
-        "step1": {
-          "class": "com.example.MyClass",
-          "method": "doSomething",
-          "args": ["hello"]
-        }
-      },
-      "environmentVariables": {
-        "MY_ENV_VAR": "value"
-      }
-    }
-  }
-}
-```
+### Diagnostics (`ibs_diagnostics`)
+
+A built-in `ibs_diagnostics` tool is always available alongside `java_call`. It requires no arguments and reports the running IBS version, MCP configuration state, received headers, and the number of methods in the catalog — useful for verifying a new server connection without touching HOST code.
+
+### MCP Configuration
+
+| Variable | Default | Description |
+|---|---|---|
+| `IBS.MCP.ENABLED` | `false` | Enables the MCP endpoint at `/mcp` |
+| `IBS.MCP.PRECHAIN` | — | `callContent` fragment prepended to every `java_call` invocation (e.g. shared auth) |
+| `IBS.MCP.REQUIRE_JAVADOC` | `true` | When `true`, only methods with a Javadoc comment are included in the catalog |
 
 ### MCP Limitations
 
-* Only **public static methods** are auto-discovered. Instance methods are accessible via the `java_call` fallback tool.
-* Overloaded methods with the **same number of parameters** are skipped during discovery (same restriction as the `/call` endpoint). Use `java_call` to call them explicitly.
+* Only **public static methods** are auto-discovered. Instance methods are accessible via `java_call`.
+* Overloaded methods with the **same number of parameters** are skipped during discovery. Use `java_call` to call them explicitly.
 * Parameter names are exposed as `arg0`, `arg1`, … — Java reflection does not retain source-level parameter names at runtime.
 
 ## Error Management

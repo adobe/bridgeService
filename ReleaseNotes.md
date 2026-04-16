@@ -1,4 +1,9 @@
 # Bridge Service - RELEASE NOTES
+## 3.11.1
+* **MCP** [#12 Expose BridgeService as an MCP Server](https://github.com/adobe/bridgeService/issues/12) Extended MCP documentation. See [docs/MCP.md](docs/MCP.md) for the full reference.
+* **Dependency Updates** Routine dependency and plugin version bumps.
+* **CI** Fixed GPG signing configuration to address a deprecation warning introduced by `maven-gpg-plugin` 3.2.8.
+
 ## 2.11.19
 * **New Feature** [#12 Expose BridgeService as an MCP Server](https://github.com/adobe/bridgeService/issues/12). BridgeService can now act as a Model Context Protocol (MCP) server. When `IBS.MCP.ENABLED=true`, a `POST /mcp` endpoint is registered on the existing port. It scans `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` at startup and exposes each public static method as a named MCP tool discoverable via `tools/list`. A generic `java_call` fallback tool is always included for call chaining and instance methods. Please refer to ["Using BridgeService as an MCP Server"](README.md#using-bridgeservice-as-an-mcp-server) in the README for full details.
 * **New Environment Variable** `IBS.MCP.ENABLED`: Set to `true` to enable the MCP endpoint (default: `false`).

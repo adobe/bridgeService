@@ -111,6 +111,17 @@ These are managed by `ConfigValueHandlerIBS.java`.
 - JSON: Jackson 2.18.x
 - Logging: Log4j 2 (50MB rotation, 3GB cleanup, 10-day retention per `docs/Technical.md`)
 
+## Java Naming Conventions
+
+Apply these prefixes consistently in all new and modified Java code:
+
+| Prefix | Applies to | Example |
+|---|---|---|
+| `in_` | Method parameters | `in_serverUrl`, `in_userId` |
+| `l_` | Local variables | `l_result`, `l_callContent` |
+| `lt_` | Variables scoped to a loop or condition block (do not escape the block) | `lt_entry`, `lt_key` |
+| *(none)* | `for` loop counters | `i`, `j` |
+
 ## Contribution Rules
 
 - All new source files must have the Adobe license header (`mvn license:format` adds it).

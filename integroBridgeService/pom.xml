@@ -80,7 +80,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>3.4.1</version>
+                <version>3.6.3</version>
                 <configuration>
                     <mainClass>MainContainer</mainClass>
                 </configuration>
@@ -88,7 +88,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
+                <version>0.8.14</version>
                 <executions>
                     <execution>
                         <goals>

@@ -23,11 +23,28 @@ using the built-in demo data, then from an external project that hosts its own J
   - [Surfacing Javadoc as tool descriptions](#surfacing-javadoc-as-tool-descriptions)
   - [Javadoc quality gate](#javadoc-quality-gate)
   - [What tools will be generated](#what-tools-will-be-generated)
+- [MCP Configuration Reference](#mcp-configuration-reference)
 - [Connecting to Claude Code](#connecting-to-claude-code)
   - [Naming your MCP server](#naming-your-mcp-server)
   - [Start BridgeService](#start-bridgeservice)
   - [Register the MCP server](#register-the-mcp-server)
   - [Verify the connection](#verify-the-connection)
+  - [Connecting from Cursor](#connecting-from-cursor)
+  - [Other MCP clients](#other-mcp-clients)
+- [Best Practices](#best-practices)
+  - [Javadoc is your tool description — garbage in, garbage out](#javadoc-is-your-tool-description--garbage-in-garbage-out)
+
+---
+
+## MCP Configuration Reference
+
+| Variable | Default | Description |
+|---|---|---|
+| `IBS.MCP.ENABLED` | `false` | Enables the MCP endpoint at `/mcp`. Must be `true` for any MCP usage. |
+| `IBS.MCP.PRECHAIN` | — | JSON `callContent` fragment prepended to every `java_call` invocation. Used for server-wide setup such as shared authentication. Can also be supplied per-client via the `ibs-prechain` HTTP header (env var takes precedence). |
+| `IBS.MCP.REQUIRE_JAVADOC` | `true` | When `true`, only methods with a non-empty Javadoc comment are included in the tool catalog. Methods without Javadoc are silently excluded from `tools/list`. |
+
+See the relevant sections below for full configuration details and examples.
 
 ---
 
@@ -905,3 +922,83 @@ To remove the server registration when you no longer need it:
 ```bash
 claude mcp remove bridgeService
 ```
+
+### Connecting from Cursor
+
+Cursor reads MCP server configuration from `~/.cursor/mcp.json` (global) or `.cursor/mcp.json`
+in the project root. The format is identical to Claude Code's config. Add an entry manually:
+
+```json
+{
+  "mcpServers": {
+    "CampaignTests": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp",
+      "headers": {
+        "ibs-secret-login": "admin",
+        "ibs-secret-pass": "mypassword",
+        "ibs-secret-url": "https://my-instance.example.com/nl/jsp/soaprouter.jsp",
+        "ibs-prechain": "{\"ibs_auth\":{\"class\":\"utils.CampaignUtils\",\"method\":\"setCurrentAuthenticationToLocal\",\"args\":[\"ibs-secret-url\",\"ibs-secret-login\",\"ibs-secret-pass\"]}}"
+      }
+    }
+  }
+}
+```
+
+Restart Cursor after editing the file. Cursor will call `tools/list` at session start and the
+`java_call` catalog will be available to the AI.
+
+### Other MCP clients
+
+Any MCP client that supports the `2024-11-05` protocol version over HTTP can connect to
+BridgeService. The registration format varies by client but the required values are always the
+same:
+
+| Field | Value |
+|---|---|
+| Transport | HTTP (stateless JSON-RPC over POST) |
+| URL | `http://<host>:8080/mcp` |
+| Headers | `ibs-secret-*` for credentials, `ibs-env-*` for env vars, `ibs-prechain` for per-client prechain |
+
+Consult your client's documentation for where to place the config file and how to pass custom
+HTTP headers.
+
+---
+
+## Best Practices
+
+### Javadoc is your tool description — garbage in, garbage out
+
+The AI agent sees exactly what you write in Javadoc. Nothing more, nothing less.
+
+BridgeService embeds Javadoc comments into the `java_call` catalog at startup. When an AI reads
+`tools/list`, the catalog is its only source of truth about what each method does, what its
+parameters mean, and when to call it. A vague or missing description produces a vague or wrong
+tool invocation.
+
+**Treat every Javadoc comment as a prompt you are writing for the AI.**
+
+| Weak | Why it fails | Better |
+|---|---|---|
+| `/** Creates a recipient. */` | No context — the AI cannot tell when or why | `/** Creates a randomly generated test recipient in the nms:recipient schema and returns its internal ID. */` |
+| `/** @param auth the auth */` | Circular — adds no information | `/** @param auth Authentication object returned by setCurrentAuthenticationToLocal */` |
+| `/** Sends email. */` | Too generic — ambiguous in a multi-tool session | `/** Sends the prepared delivery to all recipients in its target list and returns the delivery log ID. */` |
+| No `@param` tags | AI has to guess argument purpose and order | One `@param` per argument, describing what value is expected |
+
+**What to include in every exposed method's Javadoc:**
+
+1. **What the method does** — in domain terms, not implementation terms.
+2. **What it returns** — the type and meaning of the return value.
+3. **What each parameter expects** — use `@param` tags; BridgeService uses them as argument descriptions in the tool schema.
+4. **When to use it vs similar methods** — if overloads or related methods exist, say which scenario each is for.
+
+**The quality gate enforces the minimum bar.** `IBS.MCP.REQUIRE_JAVADOC=true` (the default)
+silently drops any method with no Javadoc from the catalog entirely — it will not appear in
+`tools/list` and cannot be called via auto-discovery. Passing the gate (a non-empty comment)
+is necessary but not sufficient: a one-word description passes the gate but still produces a
+useless tool entry.
+
+**Good Javadoc pays compound interest.** A well-described method is discovered correctly the
+first time, requires no follow-up prompting, and stays reliable as the AI session context
+grows. Poor descriptions lead to incorrect calls, wasted round-trips, and subtle bugs that are
+hard to trace back to a missing `@param`.

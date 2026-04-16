@@ -42,11 +42,6 @@ jobs:
           OSSRH_ARTIFACTORY_USER: ${{ secrets.OSSRH_ARTIFACTORY_USER }}
           OSSRH_ARTIFACTORY_API_TOKEN: ${{ secrets.OSSRH_ARTIFACTORY_API_TOKEN }}
 
-      - name: Log coverage percentage
-        run: |
-          echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
-          echo "branch coverage = ${{ steps.jacoco.outputs.branches }}"
-
       - name: publish coverage onto codecov
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
         with:

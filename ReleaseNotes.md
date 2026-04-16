@@ -1,10 +1,8 @@
 # Bridge Service - RELEASE NOTES
 ## 3.11.0
-* **Documentation** Corrected the MCP section in README to match the actual `tools/list` behaviour: a single `java_call` tool is returned with all discovered methods embedded as a catalog in its description — not one tool per method. Updated calling examples accordingly.
-* **Documentation** Added [`docs/MCP.md`](docs/MCP.md): full MCP reference covering `java_call`, `ibs_diagnostics`, `IBS.MCP.PRECHAIN`, `IBS.MCP.REQUIRE_JAVADOC`, secrets/env-var headers, Claude Code and Cursor integration, and Javadoc quality gate.
-* **New Environment Variables** `IBS.MCP.PRECHAIN`, `IBS.MCP.REQUIRE_JAVADOC` — see [MCP Configuration](docs/MCP.md#mcp-configuration-reference) for details.
-* **Dependency Updates** Bumped `rest-assured` to 5.5.7, `gson` to 2.13.2, `exec-maven-plugin` to 3.6.3, `jacoco-maven-plugin` to 0.8.14, `maven-dependency-plugin` to 3.10.0, `maven-javadoc-plugin` to 3.12.0, `maven-gpg-plugin` to 3.2.8, `maven-deploy-plugin` to 3.1.4.
-* **CI** Fixed `maven-gpg-plugin` 3.2.8 passphrase deprecation warning: replaced `gpg.passphrase` property in `settings.xml` with the `MAVEN_GPG_PASSPHRASE` environment variable.
+* **MCP** Extended MCP documentation. See [docs/MCP.md](docs/MCP.md) for the full reference.
+* **Dependency Updates** Routine dependency and plugin version bumps.
+* **CI** Fixed GPG signing configuration to address a deprecation warning introduced by `maven-gpg-plugin` 3.2.8.
 
 ## 2.11.19
 * **New Feature** [#12 Expose BridgeService as an MCP Server](https://github.com/adobe/bridgeService/issues/12). BridgeService can now act as a Model Context Protocol (MCP) server. When `IBS.MCP.ENABLED=true`, a `POST /mcp` endpoint is registered on the existing port. It scans `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` at startup and exposes each public static method as a named MCP tool discoverable via `tools/list`. A generic `java_call` fallback tool is always included for call chaining and instance methods. Please refer to ["Using BridgeService as an MCP Server"](README.md#using-bridgeservice-as-an-mcp-server) in the README for full details.

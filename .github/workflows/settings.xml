@@ -27,7 +27,6 @@
                 <snapshotRepository-URL>https://central.sonatype.com/repository/maven-snapshots/</snapshotRepository-URL>
                 <project.scm.id>github</project.scm.id>
                 <gpg.executable>gpg</gpg.executable>
-                <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
             </properties>
         </profile>
     </profiles>

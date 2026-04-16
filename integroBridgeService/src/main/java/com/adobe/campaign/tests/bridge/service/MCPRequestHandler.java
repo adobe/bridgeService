@@ -8,7 +8,6 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
-import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,9 +24,13 @@ import java.util.stream.Collectors;
  * Handles JSON-RPC 2.0 requests arriving at the POST /mcp endpoint.
  *
  * Implements the MCP (Model Context Protocol) Streamable HTTP transport for tool access:
- * - initialize       : MCP handshake
- * - tools/list       : returns all discovered public static methods as MCP tools
- * - tools/call       : invokes a discovered tool or the generic java_call fallback
+ * - initialize    : MCP handshake
+ * - tools/list    : returns a single {@code java_call} tool whose description embeds a
+ *                   catalog of auto-discovered methods
+ * - tools/call    : invokes the {@code java_call} tool, which accepts arbitrary BridgeService
+ *                   call chains; auto-discovered methods are not directly callable as
+ *                   separate MCP tools — the catalog in the description tells the LLM which
+ *                   class and method names to place in the callContent payload
  *
  * Tool discovery is performed once at construction time using IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES.
  */
@@ -60,36 +63,29 @@ public class MCPRequestHandler {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final List<Map<String, Object>> toolList;
-    private final Map<String, Method> methodRegistry;
 
     /**
-     * Constructs the handler and performs tool discovery from IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES.
+     * Constructs the handler, performs tool discovery from IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES,
+     * and builds a single {@code java_call} tool whose description embeds a catalog of all
+     * discovered methods.
      */
     public MCPRequestHandler() {
         MCPToolDiscovery.DiscoveryResult discovery = MCPToolDiscovery.discoverTools(
                 ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.fetchValue());
-        this.toolList = new ArrayList<>(discovery.tools);
-        this.methodRegistry = new LinkedHashMap<>(discovery.methodRegistry);
+        String catalog = buildCatalog(discovery.tools, discovery.methodRegistry);
 
-        // Add the generic java_call fallback tool
+        List<Map<String, Object>> tools = new ArrayList<>();
         try {
             Map<String, Object> javaCallTool = new LinkedHashMap<>();
             javaCallTool.put("name", JAVA_CALL_TOOL_NAME);
-            javaCallTool.put("description",
-                    "Generic BridgeService call. Accepts the full /call payload including call chaining, "
-                    + "instance methods, environment variables, and timeout. Use for scenarios not covered "
-                    + "by the auto-discovered tools. "
-                    + "Prefer this tool over individual auto-discovered tools for multi-step scenarios: "
-                    + "bundle all operations into one callContent chain so they share a single isolated "
-                    + "execution context. State (including authentication) does not persist between "
-                    + "separate tool calls.");
+            javaCallTool.put("description", buildJavaCallDescription(catalog));
             javaCallTool.put("inputSchema", mapper.readValue(JAVA_CALL_TOOL_SCHEMA, Map.class));
-            this.toolList.add(javaCallTool);
+            tools.add(javaCallTool);
         } catch (JsonProcessingException e) {
             log.error("Failed to parse java_call tool schema — the tool will not be available.", e);
         }
-
-        log.info("MCPRequestHandler ready: {} auto-discovered tool(s) + java_call.", this.methodRegistry.size());
+        this.toolList = Collections.unmodifiableList(tools);
+        log.info("MCPRequestHandler ready: {} method(s) in catalog via java_call.", discovery.methodRegistry.size());
     }
 
     /**
@@ -174,72 +170,80 @@ public class MCPRequestHandler {
             return handleJavaCall(id, arguments, headers);
         }
 
-        Method method = methodRegistry.get(toolName);
-        if (method == null) {
-            return buildCallToolResult(id, "Unknown tool: " + toolName
-                    + ". Use tools/list to see available tools.", true);
-        }
-
-        return invokeDiscoveredTool(id, method, arguments, headers);
-    }
-
-    private String invokeDiscoveredTool(Object id, Method method, Map<String, Object> arguments,
-            Map<String, String> headers) {
-        int paramCount = method.getParameterCount();
-        Object[] args = new Object[paramCount];
-        for (int i = 0; i < paramCount; i++) {
-            args[i] = arguments.get("arg" + i);
-        }
-
-        JavaCalls calls = new JavaCalls();
-        calls.addHeaders(headers);
-        extractEnvHeaders(headers).forEach((k, v) -> calls.getEnvironmentVariables().setProperty(k, v));
-
-        Map<String, CallContent> prechain = parsePrechainJson(ConfigValueHandlerIBS.MCP_PRECHAIN.fetchValue());
-        Set<String> prechainKeys = new LinkedHashSet<>(prechain.keySet());
-        calls.getCallContent().putAll(prechain);
-
-        CallContent cc = new CallContent();
-        cc.setClassName(method.getDeclaringClass().getName());
-        cc.setMethodName(method.getName());
-        cc.setArgs(args);
-        calls.getCallContent().put("result", cc);
-
-        try {
-            JavaCallResults results = calls.submitCalls();
-            prechainKeys.forEach(k -> {
-                results.getReturnValues().remove(k);
-                results.getCallDurations().remove(k);
-            });
-            return buildCallToolResult(id, mapper.writeValueAsString(results), false);
-        } catch (Exception e) {
-            log.debug("Tool call failed for {}.{}: {}", method.getDeclaringClass().getSimpleName(),
-                    method.getName(), e.getMessage());
-            return buildCallToolResult(id, exceptionToErrorPayload(e), true);
-        }
+        return buildCallToolResult(id, "Unknown tool: " + toolName
+                + ". The only executable tool is java_call — use the class and method from its description catalog.",
+                true);
     }
 
     /**
-     * Extracts environment variable entries from the request headers using the configured
-     * {@code IBS.MCP.ENV.HEADER.PREFIX} (default {@code ibs-env-}). The prefix is stripped
-     * from each matching header name to produce the variable name.
-     *
-     * @param headers all request headers
-     * @return ordered map of variable name → value, never null
+     * Builds the catalog text embedded in the java_call tool description. Each discovered
+     * method is listed with its fully qualified class name, method name, Javadoc description,
+     * and argument list so the LLM can construct the correct callContent payload.
      */
-    private Map<String, String> extractEnvHeaders(Map<String, String> headers) {
-        String prefix = ConfigValueHandlerIBS.MCP_ENV_HEADER_PREFIX.fetchValue();
-        if (prefix == null || prefix.isBlank()) {
-            return Collections.emptyMap();
+    private String buildCatalog(List<Map<String, Object>> tools, Map<String, Method> methodRegistry) {
+        if (methodRegistry.isEmpty()) {
+            return "";
         }
-        String lowerPrefix = prefix.toLowerCase(java.util.Locale.ROOT);
-        Map<String, String> result = new LinkedHashMap<>();
-        headers.entrySet().stream()
-                .filter(e -> e.getKey().toLowerCase(java.util.Locale.ROOT).startsWith(lowerPrefix))
-                .forEach(e -> result.put(
-                        e.getKey().substring(prefix.length()).toUpperCase(java.util.Locale.ROOT),
-                        e.getValue()));
-        return result;
+        StringBuilder sb = new StringBuilder();
+        sb.append("Discovered methods (use class/method values in callContent for java_call):\n\n");
+        for (Map.Entry<String, Method> entry : methodRegistry.entrySet()) {
+            String toolName = entry.getKey();
+            Method method = entry.getValue();
+
+            sb.append(toolName).append("\n");
+            sb.append("  class:  ").append(method.getDeclaringClass().getName()).append("\n");
+            sb.append("  method: ").append(method.getName()).append("\n");
+
+            Map<String, Object> toolDef = tools.stream()
+                    .filter(t -> toolName.equals(t.get("name")))
+                    .findFirst()
+                    .orElse(null);
+
+            if (toolDef != null) {
+                String desc = (String) toolDef.get("description");
+                if (desc != null && !desc.isEmpty()) {
+                    sb.append("  ").append(desc).append("\n");
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> schema = (Map<String, Object>) toolDef.get("inputSchema");
+                if (schema != null) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> props = (Map<String, Object>) schema.get("properties");
+                    if (props == null || props.isEmpty()) {
+                        sb.append("  args: (none)\n");
+                    } else {
+                        for (Map.Entry<String, Object> propEntry : props.entrySet()) {
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> propSchema = (Map<String, Object>) propEntry.getValue();
+                            String type = (String) propSchema.get("type");
+                            String propDesc = (String) propSchema.get("description");
+                            sb.append("  ").append(propEntry.getKey())
+                                    .append(" (").append(type).append("): ")
+                                    .append(propDesc).append("\n");
+                        }
+                    }
+                }
+            }
+            sb.append("\n");
+        }
+        return sb.toString().trim();
+    }
+
+    /**
+     * Assembles the full java_call tool description, combining the base usage guidance with
+     * the auto-discovered method catalog (when methods are found in the configured packages).
+     */
+    private String buildJavaCallDescription(String catalog) {
+        String base = "Generic BridgeService call. Accepts the full /call payload including call chaining, "
+                + "instance methods, environment variables, and timeout. "
+                + "Bundle all operations into one callContent chain so they share a single isolated "
+                + "execution context. State (including authentication) does not persist between "
+                + "separate tool calls.";
+        if (catalog.isEmpty()) {
+            return base;
+        }
+        return base + "\n\n" + catalog;
     }
 
     /**
@@ -272,16 +276,9 @@ public class MCPRequestHandler {
             if (cc instanceof String) {
                 arguments.put("callContent", mapper.readValue((String) cc, Object.class));
             }
-            // Merge ibs-env-* headers into the environmentVariables map before serialising
-            Map<String, String> envFromHeaders = extractEnvHeaders(headers);
-            if (!envFromHeaders.isEmpty()) {
-                Map<String, Object> envVars = (Map<String, Object>) arguments
-                        .computeIfAbsent("environmentVariables", k -> new LinkedHashMap<>());
-                envVars.putAll(envFromHeaders);
-            }
             // Prepend PRECHAIN entries to callContent so java_call chains share the same
-            // server-level setup (e.g. auth) as auto-discovered tools. PRECHAIN keys are
-            // stripped from the result just as they are in invokeDiscoveredTool.
+            // server-level setup (e.g. auth) as the rest of the catalog. PRECHAIN keys are
+            // stripped from the result.
             Map<String, CallContent> prechain = parsePrechainJson(ConfigValueHandlerIBS.MCP_PRECHAIN.fetchValue());
             if (!prechain.isEmpty()) {
                 Map<String, Object> callContent = (Map<String, Object>) arguments
@@ -348,41 +345,7 @@ public class MCPRequestHandler {
      * detail (originalException, originalMessage, failureAtStep, stackTrace, etc.).
      */
     private String exceptionToErrorPayload(Exception e) {
-        String title;
-        int code;
-        boolean includeStackTrace = true;
-
-        if (e instanceof IBSTimeOutException) {
-            title = IntegroAPI.ERROR_CALL_TIMEOUT;
-            code = 408;
-            includeStackTrace = false;
-        } else if (e instanceof NonExistentJavaObjectException) {
-            title = IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND;
-            code = 404;
-            includeStackTrace = false;
-        } else if (e instanceof AmbiguousMethodException) {
-            title = IntegroAPI.ERROR_AMBIGUOUS_METHOD;
-            code = 404;
-            includeStackTrace = false;
-        } else if (e instanceof IBSConfigurationException) {
-            title = IntegroAPI.ERROR_IBS_CONFIG;
-            code = 500;
-        } else if (e instanceof IBSRunTimeException) {
-            title = IntegroAPI.ERROR_IBS_RUNTIME;
-            code = 500;
-        } else if (e instanceof TargetJavaMethodCallException) {
-            title = IntegroAPI.ERROR_CALLING_JAVA_METHOD;
-            code = 500;
-        } else if (e instanceof JavaObjectInaccessibleException) {
-            title = IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE;
-            code = 404;
-            includeStackTrace = false;
-        } else {
-            title = IntegroAPI.ERROR_IBS_INTERNAL;
-            code = 500;
-        }
-
-        return BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, title, code, includeStackTrace));
+        return BridgeServiceFactory.createExceptionPayLoad(e);
     }
 
     private String toJson(Object obj) {

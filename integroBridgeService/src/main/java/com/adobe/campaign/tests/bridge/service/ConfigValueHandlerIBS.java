@@ -8,7 +8,9 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Properties;
 
 public enum ConfigValueHandlerIBS {
     DEPLOYMENT_MODEL("IBS.DEPLOYMENT.MODEL", "TEST", false,
@@ -33,7 +35,7 @@ public enum ConfigValueHandlerIBS {
             "When set, we use the given method to store the static execution variables."),
     STATIC_INTEGRITY_PACKAGES("IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES", "", false,
             "This parameter is used for flagging the packages that are to to be used by the IBS class loader. When used, the static variables are not stored between java calls."),
-    PRODUCT_VERSION("IBS.PRODUCT.VERSION", "2.11.16", false,
+    PRODUCT_VERSION("IBS.PRODUCT.VERSION", readVersion(), false,
             "The version of the BridgeService, which is used to identify the version that is accessed."),
     PRODUCT_USER_VERSION("IBS.PRODUCT.USER.VERSION", "not set", false,
             "The version of the BridgeService, which is used to identify the version that is accessed."),
@@ -81,13 +83,12 @@ public enum ConfigValueHandlerIBS {
             + "ibs-secret-* headers) are resolved to their header values via the standard dependency "
             + "mechanism. Pre-chain return values are stripped from the response. "
             + "Use for project-specific setup such as authentication."),
-    MCP_ENV_HEADER_PREFIX("IBS.MCP.ENV.HEADER.PREFIX", "ibs-env-", false,
+    ENV_HEADER_PREFIX("IBS.ENV.HEADER.PREFIX", "ibs-env-", false,
             "HTTP headers whose name starts with this prefix are extracted and injected as "
-            + "environment variables for every MCP tool call. The prefix is stripped to obtain "
-            + "the variable name. For example, a header named 'ibs-env-AC.UITEST.HOST' with value "
-            + "'example.com' sets the environment variable 'AC.UITEST.HOST=example.com'. "
-            + "Use this to pass project-specific environment variables via the MCP client's "
-            + "headers configuration (e.g. in .claude.json). Set to blank to disable.");
+            + "environment variables into every call (REST /call and MCP tools/call). The prefix "
+            + "is stripped and the remainder uppercased to obtain the variable name. For example, "
+            + "a header named 'ibs-env-AC.UITEST.HOST' with value 'example.com' sets the "
+            + "environment variable 'AC.UITEST.HOST=example.com'. Set to blank to disable.");
 
     public final String systemName;
     public final String defaultValue;
@@ -162,5 +163,20 @@ public enum ConfigValueHandlerIBS {
     public boolean is(String... in_values) {
 
         return Arrays.stream(in_values).anyMatch(this::is);
+    }
+
+    static String readVersion() {
+        try (InputStream is = ConfigValueHandlerIBS.class.getResourceAsStream("/bridge-service.properties")) {
+            if (is != null) {
+                Properties props = new Properties();
+                props.load(is);
+                String version = props.getProperty("version");
+                if (version != null && !version.isEmpty()) {
+                    return version;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return "unknown";
     }
 }

@@ -705,10 +705,42 @@ Sometimes you may want to debug the system. In these cases you can deactivate th
 variable `IBS.SECRETS.BLOCK.OUTPUT` to false. However, this should only be temporary, and in production it is best to
 keep this control.
 
+### Environment Variables via Headers
+
+Headers prefixed with `ibs-env-` are injected as environment variables into the Java execution context — equivalent
+to supplying them in the `environmentVariables` JSON node, but without modifying the payload. The prefix is stripped
+and the remainder uppercased to form the variable name.
+
+Example — pass a hostname and a locale without touching the payload:
+
+```shell
+curl --request POST \
+  --url http://localhost:8080/call \
+  --header 'Content-Type: application/json' \
+  --header 'ibs-env-AC.UITEST.HOST: my-instance.example.com' \
+  --header 'ibs-env-AC.UITEST.LANGUAGE: en_US' \
+  --data '{
+    "callContent": {
+      "result": {
+        "class": "com.example.MyService",
+        "method": "run",
+        "args": []
+      }
+    }
+  }'
+```
+
+IBS injects `AC.UITEST.HOST=my-instance.example.com` and `AC.UITEST.LANGUAGE=en_US` before the call executes.
+
+The prefix can be changed via `IBS.ENV.HEADER.PREFIX` or set to blank to disable the feature entirely.
+Env-var headers are distinct from regular headers: they are not stored in the call-chain resolution cache and
+cannot be referenced in `args`.
+
 ### Steamlining Headers
 
 By default, IBS stores all the headers when you send a call. You have the possibility to filter the headers you want to
-use by setting the run-time variable `IBS.HEADERS.FILTER.PREFIX`.
+use by setting the run-time variable `IBS.HEADERS.FILTER.PREFIX`. Secret headers (`ibs-secret-*`) and env-var
+headers (`ibs-env-*`) are always handled by their own mechanisms and are not affected by this filter.
 
 ## Making Assertions
 

@@ -108,7 +108,7 @@ public class E2ETests {
         JavaCallResults jcr = new JavaCallResults();
 
         given().body(jcr).post(EndPointURL + "call").then().statusCode(404).and().assertThat()
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JSON_TRANSFORMATION))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_JSON_TRANSFORMATION))
                 .body("detail", Matchers.startsWith(
                         "Unrecognized field \"callDurations\" (class com.adobe.campaign.tests.bridge.service.JavaCalls), not marked as ignorable"))
                 .body("code", Matchers.equalTo(404))
@@ -146,7 +146,7 @@ public class E2ETests {
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
                 .contentType(IntegroAPI.ERROR_CONTENT_TYPE)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALLING_JAVA_METHOD))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_CALLING_JAVA_METHOD))
                 .body("detail", Matchers.containsString(
                         "We do not allow numbers that are equal."))
                 .body("code", Matchers.equalTo(500))
@@ -173,7 +173,7 @@ public class E2ETests {
         l_call.getCallContent().put("call1PL", myContent);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_AMBIGUOUS_METHOD))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_AMBIGUOUS_METHOD))
                 .body("detail", Matchers.containsString(
                         "We could not find a unique method for"))
                 .body("code", Matchers.equalTo(404))
@@ -205,7 +205,7 @@ public class E2ETests {
         l_call.setEnvironmentVariables(l_envVars);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_CONFIG))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_IBS_CONFIG))
                 .body("detail", Matchers.containsString(
                         "The given environment value handler"))
                 .body("detail", Matchers.containsString(
@@ -229,7 +229,7 @@ public class E2ETests {
         l_call.getCallContent().put("call1PL", myContent);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_JAVA_OBJECT_NOT_FOUND))
                 .body("detail", Matchers.containsString(
                         "The given class com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExisting could not be found."))
                 .body("code", Matchers.equalTo(404))
@@ -280,7 +280,7 @@ public class E2ETests {
                         + "}";
 
         given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(404)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JSON_TRANSFORMATION))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_JSON_TRANSFORMATION))
                 .body("failureAtStep", Matchers.equalTo(LogManagement.STD_STEPS.ANALYZING_PAYLOAD.value));
 
     }
@@ -408,7 +408,7 @@ public class E2ETests {
         jc.getCallContent().put("call1", cc1);
 
         given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(408)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALL_TIMEOUT))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_CALL_TIMEOUT))
                 .body("detail", Matchers.containsString(
                         "took longer than the set time limit of"))
                 .body("code", Matchers.equalTo(408))
@@ -452,7 +452,7 @@ public class E2ETests {
         jc.getCallContent().put("call1", cc1);
 
         given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(408)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALL_TIMEOUT));
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_CALL_TIMEOUT));
     }
 
     /**
@@ -550,7 +550,7 @@ public class E2ETests {
         l_myJavaCalls.getCallContent().put("call2", l_cc2);
 
         given().body(l_myJavaCalls).post(EndPointURL + "call").then().assertThat().statusCode(500).
-                body("title", Matchers.equalTo(IntegroAPI.ERROR_IBS_CONFIG))
+                body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_IBS_CONFIG))
                 .body("code", Matchers.equalTo(500))
                 .body("detail", Matchers.startsWith("Linkage Error detected"))
                 .body("bridgeServiceException", Matchers.equalTo(IBSConfigurationException.class.getTypeName()))
@@ -568,7 +568,7 @@ public class E2ETests {
         jc.getCallContent().put("one", l_cc);
 
         given().body(jc).post(EndPointURL + "call").then().assertThat().statusCode(404)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE))
                 .body("bridgeServiceException", Matchers.equalTo(JavaObjectInaccessibleException.class.getTypeName()))
                 .body("detail", Matchers.startsWith(
                         "We do not have the right to execute the given class."))
@@ -749,11 +749,11 @@ public class E2ETests {
         }
 
         assertThat("We should be able to get the body", l_call1Result[0].get("title"),
-                Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE));
+                Matchers.equalTo(BridgeServiceFactory.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE));
         assertThat("We should be able to get the body", l_call1Result[0].get("failureAtStep"),
                 Matchers.equalTo("step1"));
         assertThat("We should be able to get the body", l_call2Result[0].get("title"),
-                Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE));
+                Matchers.equalTo(BridgeServiceFactory.ERROR_JAVA_OBJECT_NOT_ACCESSIBLE));
         assertThat("We should be able to get the body", l_call2Result[0].get("failureAtStep"),
                 Matchers.equalTo("step2"));
     }
@@ -819,7 +819,7 @@ public class E2ETests {
 
         given().body(l_myJavaCall).header("IBS_HEADER_1", "REAL").post(EndPointURL + "call").then().statusCode(404)
                 .assertThat()
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_PAYLOAD_INCONSISTENCY));
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_PAYLOAD_INCONSISTENCY));
 
     }
 
@@ -838,7 +838,7 @@ public class E2ETests {
 
         given().body(l_myJavaCall).header("ibs-header-1", "REAL").post(EndPointURL + "call").then().statusCode(404)
                 .assertThat()
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_PAYLOAD_INCONSISTENCY));
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_PAYLOAD_INCONSISTENCY));
     }
 
     @Test(groups = "E2E")

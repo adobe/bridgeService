@@ -2091,6 +2091,70 @@ public class TestFetchCalls {
         assertThat("We should get the correct return value", l_myJavaCall.call("call1"), Matchers.equalTo(5));
     }
 
+    // ---- coerceArg unit tests ----
+
+    @Test
+    public void testCoerceArg_stringToInt() {
+        assertThat(new CallContent().coerceArg("42", int.class), Matchers.equalTo(42));
+    }
+
+    @Test
+    public void testCoerceArg_stringToBoxedInteger() {
+        assertThat(new CallContent().coerceArg("42", Integer.class), Matchers.equalTo(42));
+    }
+
+    @Test
+    public void testCoerceArg_stringToLong() {
+        assertThat(new CallContent().coerceArg("123456789012", long.class), Matchers.equalTo(123456789012L));
+    }
+
+    @Test
+    public void testCoerceArg_stringToDouble() {
+        assertThat((Double) new CallContent().coerceArg("3.14", double.class),
+                Matchers.closeTo(3.14, 0.001));
+    }
+
+    @Test
+    public void testCoerceArg_stringToFloat() {
+        assertThat(new CallContent().coerceArg("1.5", float.class), Matchers.equalTo(1.5f));
+    }
+
+    @Test
+    public void testCoerceArg_stringToBooleanTrue() {
+        assertThat(new CallContent().coerceArg("true", boolean.class), Matchers.equalTo(true));
+    }
+
+    @Test
+    public void testCoerceArg_stringToBooleanFalse() {
+        assertThat(new CallContent().coerceArg("false", Boolean.class), Matchers.equalTo(false));
+    }
+
+    @Test
+    public void testCoerceArg_stringTargetPassthrough() {
+        // String → String: no conversion needed, value passes through unchanged.
+        assertThat(new CallContent().coerceArg("hello", String.class), Matchers.equalTo("hello"));
+    }
+
+    @Test
+    public void testCoerceArg_nonStringPassthrough() {
+        // Integer → Integer: already the right type, passes through.
+        assertThat(new CallContent().coerceArg(42, Integer.class), Matchers.equalTo(42));
+    }
+
+    @Test(expectedExceptions = NonExistentJavaObjectException.class)
+    public void testCoerceArg_unparsableString_throwsNonExistentJavaObjectException() {
+        // "hello" cannot be parsed as int → NonExistentJavaObjectException with a clear message.
+        new CallContent().coerceArg("hello", int.class);
+    }
+
+    @Test
+    public void testCoerceArg_listToArray() {
+        // List → Array: existing behaviour verified via the extracted method.
+        Object result = new CallContent().coerceArg(List.of("a", "b"), String[].class);
+        assertThat(result.getClass().isArray(), Matchers.equalTo(true));
+        assertThat(result.getClass().getComponentType(), Matchers.equalTo(String.class));
+    }
+
 
     @Test
     public void testMetaIsListToArray() throws NoSuchMethodException {

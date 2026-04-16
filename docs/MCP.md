@@ -10,6 +10,7 @@ using the built-in demo data, then from an external project that hosts its own J
   - [MCP handshake](#mcp-handshake)
   - [Discovering tools](#discovering-tools)
   - [Calling tools](#calling-tools)
+  - [How the method catalog works](#how-the-method-catalog-works)
   - [Call chaining best practice](#call-chaining-best-practice)
   - [Project-specific pre-call setup (IBS.MCP.PRECHAIN)](#project-specific-pre-call-setup-ibsmcpprechain)
   - [Passing environment variables via headers (ibs-env-*)](#passing-environment-variables-via-headers-ibs-env-)
@@ -96,8 +97,9 @@ curl -s -X POST http://localhost:8080/mcp \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
 ```
 
-With `testdata.one` on the classpath the response includes tools derived from two classes:
-`SimpleStaticMethods` and `ClassWithLogger`. Some representative entries:
+`tools/list` always returns exactly **one tool — `java_call`**. Its `description` contains a
+catalog of all methods discovered from the configured packages. AI agents read that catalog to
+learn which class and method names to place in their `callContent` payloads.
 
 ```json
 {
@@ -106,58 +108,29 @@ With `testdata.one` on the classpath the response includes tools derived from tw
   "result": {
     "tools": [
       {
-        "name": "SimpleStaticMethods_methodReturningString",
-        "description": "Returns the success string constant used for testing.",
-        "inputSchema": { "type": "object", "properties": {} }
-      },
-      {
-        "name": "SimpleStaticMethods_methodAcceptingStringArgument",
-        "description": "Appends the success suffix to the given string.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "arg0": { "type": "string", "description": "the input string" }
-          },
-          "required": ["arg0"]
-        }
-      },
-      {
-        "name": "SimpleStaticMethods_methodAcceptingTwoArguments",
-        "description": "Concatenates two strings with a + separator and appends the success suffix.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "arg0": { "type": "string", "description": "the first string" },
-            "arg1": { "type": "string", "description": "the second string" }
-          },
-          "required": ["arg0", "arg1"]
-        }
-      },
-      {
-        "name": "SimpleStaticMethods_methodAcceptingIntArgument",
-        "description": "Returns the given integer multiplied by three.",
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "arg0": { "type": "integer", "description": "the input integer" }
-          },
-          "required": ["arg0"]
-        }
-      },
-      {
-        "name": "ClassWithLogger_fetchRandomCountry",
-        "description": "Returns a randomly selected ISO 3166-1 alpha-2 country code from the available set (AT, AU, CA, CH, DE).",
-        "inputSchema": { "type": "object", "properties": {} }
-      },
-      {
-        "name": "ClassWithLogger_getCountries",
-        "description": "Returns the fixed list of ISO 3166-1 alpha-2 country codes available for testing: AT, AU, CA, CH, DE.",
-        "inputSchema": { "type": "object", "properties": {} }
-      },
-      {
         "name": "java_call",
-        "description": "Generic BridgeService call. Accepts the full /call payload including call chaining, instance methods, environment variables, and timeout.",
-        "inputSchema": { "...": "see README" }
+        "description": "Generic BridgeService call. Accepts the full /call payload including call chaining, instance methods, environment variables, and timeout. Bundle all operations into one callContent chain so they share a single isolated execution context. State (including authentication) does not persist between separate tool calls.\n\nDiscovered methods (use class/method values in callContent for java_call):\n\nSimpleStaticMethods_methodReturningString\n  class:  com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\n  method: methodReturningString\n  Returns the success string constant used for testing.\n  args: (none)\n\nSimpleStaticMethods_methodAcceptingStringArgument\n  class:  com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\n  method: methodAcceptingStringArgument\n  Appends the success suffix to the given string.\n  arg0 (string): the input string\n\n... (further entries for ClassWithLogger methods etc.)",
+        "inputSchema": {
+          "type": "object",
+          "required": ["callContent"],
+          "properties": {
+            "callContent": {
+              "type": "object",
+              "description": "Map of call IDs to call definitions.",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["class", "method"],
+                "properties": {
+                  "class":  { "type": "string" },
+                  "method": { "type": "string" },
+                  "args":   { "type": "array"  }
+                }
+              }
+            },
+            "environmentVariables": { "type": "object" },
+            "timeout": { "type": "integer" }
+          }
+        }
       }
     ]
   }
@@ -165,6 +138,9 @@ With `testdata.one` on the classpath the response includes tools derived from tw
 ```
 
 ### Calling tools
+
+All calls go through `java_call`. Use the class and method names from the catalog in
+`callContent`.
 
 **No-argument method:**
 
@@ -176,8 +152,16 @@ curl -s -X POST http://localhost:8080/mcp \
     "id": 3,
     "method": "tools/call",
     "params": {
-      "name": "SimpleStaticMethods_methodReturningString",
-      "arguments": {}
+      "name": "java_call",
+      "arguments": {
+        "callContent": {
+          "result": {
+            "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+            "method": "methodReturningString",
+            "args": []
+          }
+        }
+      }
     }
   }'
 ```
@@ -210,63 +194,21 @@ curl -s -X POST http://localhost:8080/mcp \
     "id": 4,
     "method": "tools/call",
     "params": {
-      "name": "SimpleStaticMethods_methodAcceptingStringArgument",
-      "arguments": { "arg0": "hello" }
-    }
-  }'
-```
-
-Response:
-
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 4,
-  "result": {
-    "content": [
-      {
-        "type": "text",
-        "text": "{\"returnValues\":{\"result\":\"hello_Success\"},\"callDurations\":{\"result\":1}}"
+      "name": "java_call",
+      "arguments": {
+        "callContent": {
+          "result": {
+            "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+            "method": "methodAcceptingStringArgument",
+            "args": ["hello"]
+          }
+        }
       }
-    ],
-    "isError": false
-  }
-}
-```
-
-**Method with two String arguments:**
-
-```bash
-curl -s -X POST http://localhost:8080/mcp \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 5,
-    "method": "tools/call",
-    "params": {
-      "name": "SimpleStaticMethods_methodAcceptingTwoArguments",
-      "arguments": { "arg0": "hello", "arg1": "world" }
     }
   }'
 ```
 
-**Fetching a random country from ClassWithLogger:**
-
-```bash
-curl -s -X POST http://localhost:8080/mcp \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 6,
-    "method": "tools/call",
-    "params": {
-      "name": "ClassWithLogger_fetchRandomCountry",
-      "arguments": {}
-    }
-  }'
-```
-
-**Using the `java_call` fallback for call chaining** (get a country list, then pass it to another method):
+**Call chaining** (get a country list, then pass it to another method):
 
 ```bash
 curl -s -X POST http://localhost:8080/mcp \
@@ -295,21 +237,50 @@ curl -s -X POST http://localhost:8080/mcp \
   }'
 ```
 
+### How the method catalog works
+
+`tools/list` returns a single tool — `java_call`. Auto-discovery does not produce separately
+callable tools; instead it builds a **catalog** that is embedded in the `java_call` description.
+
+When an AI agent calls `tools/list` it reads the catalog to learn which class and method names
+exist, then constructs the appropriate `callContent` payload and calls `java_call`. The catalog is
+rebuilt every time the server starts, so it stays in sync with the Java library automatically.
+
+**Why not separate tools per method?**
+
+Separate tools per method force the AI to make one HTTP round-trip per method call and lose
+execution context between calls. With `java_call`, any number of steps can be bundled into one
+request inside a single isolated class loader — enabling call chaining, where the return value
+of step N is passed directly to step N+1 as a live Java object (not serialized JSON). This is
+essential for scenarios involving authentication, object creation, or anything with mutable state.
+
+The catalog format in the description for each entry is:
+
+```
+ClassName_methodName
+  class:  com.example.package.ClassName
+  method: methodName
+  <Javadoc description>
+  arg0 (type): <param description>
+  arg1 (type): <param description>
+```
+
+**Project skills and `CLAUDE.md`** can reference catalog entries by class/method name to give the
+AI more context about when and how to use each one. For per-user auth or multi-step flows, the
+skill prepends an auth step to the `java_call` callContent chain.
+
+---
+
 ### Call chaining best practice
 
-Each auto-discovered tool call (and each `java_call` invocation) runs inside a freshly isolated
-class loader context. This means:
+Each `java_call` invocation runs inside a freshly isolated class loader context. Static variables
+set in one call are **not visible** to the next call — authentication state, cached connections,
+or any other static state established in one invocation will be gone by the time a second
+invocation starts.
 
-- Static variables set in one tool call are **not visible** to the next tool call.
-- Authentication state, cached connections, or any other static state established in one call will
-  be gone by the time a second call starts.
-
-**For single, stateless operations** (read a value, compute something, convert data) calling
-individual auto-discovered tools one by one is fine.
-
-**For multi-step scenarios** — especially those involving authentication, object creation followed
-by mutation, or any operation where step N depends on state established by step N−1 — bundle all
-steps into a single `java_call` using call chaining:
+**Bundle related operations into a single `java_call`** using call chaining: all entries in
+`callContent` share the same isolated context and execute in insertion order. The return value of
+an earlier step is referenced by key in the `args` of a later step:
 
 ```bash
 curl -s -X POST http://localhost:8080/mcp \
@@ -353,9 +324,9 @@ Some projects need one or more setup operations to run before every tool invocat
 an authentication step that establishes a session token in the class loader's static cache.
 
 `IBS.MCP.PRECHAIN` addresses this at the server level. Set it to a JSON `callContent` fragment and
-BridgeService will prepend those calls to every **auto-discovered** tool invocation, running them
-inside the same isolated context as the actual call. Pre-chain return values are stripped from the
-response before it is returned.
+BridgeService will prepend those calls to every `java_call` invocation, running them inside the
+same isolated context as the actual call. Pre-chain return values are stripped from the response
+before it is returned.
 
 #### Configuration
 
@@ -374,7 +345,7 @@ CampaignTests requires two steps before any operation:
 1. Fetch an auth token (`ConnectionToken.fetchAuthFromIMSBearerToken`)
 2. Store it as the current authentication (`CampaignUtils.setCurrentAuthentication`)
 
-With `IBS.MCP.PRECHAIN` the auth is injected automatically into every auto-discovered tool call:
+With `IBS.MCP.PRECHAIN` the auth is injected automatically into every `java_call` invocation:
 
 ```
 IBS.MCP.PRECHAIN={"ibs_auth":{"class":"com.example.ConnectionToken","method":"fetchAuthFromIMSBearerToken","args":["ibs-secret-endpoint","ibs-secret-token"]},"ibs_set_auth":{"class":"com.example.CampaignUtils","method":"setCurrentAuthentication","args":["ibs_auth"]}}
@@ -421,11 +392,71 @@ resolve any prior result by key.
   before the response is returned — only the actual tool result is visible to the caller.
 - The value of `IBS.MCP.PRECHAIN` is never written to logs at INFO or DEBUG level.
 
-#### Prechain is NOT applied to `java_call`
+#### How prechain integrates with your call chain
 
-`java_call` invocations bypass the prechain entirely. `java_call` accepts a complete `callContent`
-payload, so callers have full control over what runs in the chain. If your `java_call` payload
-needs the auth setup, include it explicitly as the first entries in `callContent`.
+The user's `callContent` steps execute after the prechain steps inside the same isolated context.
+User steps can reference prechain keys by name in their `args` and receive the return values by
+reference (same JVM heap). Prechain keys are stripped from `returnValues` and `callDurations`
+before the response is returned.
+
+```json
+{
+  "callContent": {
+    "result": {
+      "class": "com.example.Resource",
+      "method": "create",
+      "args": ["ibs_auth"]
+    }
+  }
+}
+```
+
+Here `"ibs_auth"` is the key of a prechain step that returned an `Authentication` object. It is
+resolved at runtime — it is never passed as a literal string.
+
+#### PRECHAIN is deployment-wide — not suitable for per-user auth
+
+`IBS.MCP.PRECHAIN` is a server environment variable. It is the same for every user connecting to
+that deployment. This makes it the right mechanism for setup that is **uniform across all callers**
+— classloader configuration, plugin initialisation, or auth that uses a shared service account.
+
+**It is the wrong mechanism for per-user auth.** On a shared IBS deployment two testers may need
+to connect to different Campaign instances, use different auth methods (local session vs IMS
+bearer), or supply different credentials. A single PRECHAIN value cannot satisfy both.
+
+Per-user auth belongs in the **project skill** — a `CLAUDE.md` or a
+`~/.claude/skills/<project>.md` file that each user maintains locally. The skill instructs the AI
+to open every `java_call` chain with the auth step appropriate for that user:
+
+```markdown
+## BridgeService MCP usage
+Always start every java_call chain with your auth step:
+
+    "ibs_auth": {
+      "class": "utils.CampaignUtils",
+      "method": "setCurrentAuthenticationToLocal",
+      "args": ["https://my-instance.campaign.adobe.com", "myuser", "mypassword"]
+    }
+```
+
+User A's skill might call `setCurrentAuthenticationToLocal`; User B's might call
+`fetchAuthFromIMSBearerToken`. Both connect to the same IBS server with no server-side changes.
+
+Credentials in skills should reference `ibs-secret-*` headers (configured in the user's
+`.mcp.json`) rather than be written in plain text:
+
+```markdown
+    "args": ["ibs-secret-endpoint", "ibs-secret-token"]
+```
+
+**Summary: what belongs where**
+
+| Concern | Right place | Why |
+|---|---|---|
+| Per-user auth credentials and method | User's skill / `CLAUDE.md` | Differs across callers — cannot be a server-side default |
+| Shared service-account auth | `IBS.MCP.PRECHAIN` | Truly uniform across all users |
+| Classloader / plugin setup | `IBS.MCP.PRECHAIN` | Deployment-wide, same for everyone |
+| Class/method names and call patterns | Skill / `CLAUDE.md` | LLM guidance, not execution |
 
 #### Consumer project guidance
 
@@ -449,18 +480,17 @@ should:
 ### Passing environment variables via headers (`ibs-env-*`)
 
 Some Java methods depend on environment variables that must be set before execution — for example,
-a hostname, a port, or a locale that changes per deployment. The standard `/call` endpoint accepts
-these under an `environmentVariables` JSON node. The MCP server provides an equivalent mechanism
-without requiring a dedicated payload node: **encode them as HTTP headers with the `ibs-env-` prefix**.
+a hostname, a port, or a locale that changes per deployment. Both the `/call` and `/mcp` endpoints
+accept these as HTTP headers with the `ibs-env-` prefix, as an alternative to the
+`environmentVariables` JSON node.
 
-BridgeService reads every request header whose name begins with `ibs-env-`, strips the prefix to
-obtain the variable name, and injects the key/value pair as an environment variable into the
+BridgeService reads every request header whose name begins with `ibs-env-`, strips the prefix,
+uppercases the remainder, and injects the key/value pair as an environment variable into the
 `JavaCalls` execution context — exactly as if it had been provided in the `environmentVariables`
-node of a `/call` payload.
+node of a `/call` payload. Header-supplied variables are merged with any variables already in the
+payload; payload variables take precedence for the same key.
 
-This works for both auto-discovered tools and the `java_call` fallback. For `java_call`, the
-headers are merged into the `environmentVariables` map before the payload is parsed, so any
-variables already present in the `arguments` are preserved; headers only add or overwrite.
+This works for the REST `/call` endpoint, auto-discovered MCP tools, and the `java_call` fallback.
 
 #### Configuring env vars in `.claude.json`
 
@@ -499,35 +529,35 @@ At runtime the server extracts these headers and injects:
 The default prefix is `ibs-env-`. It can be changed via:
 
 ```
-IBS.MCP.ENV.HEADER.PREFIX=my-custom-prefix-
+IBS.ENV.HEADER.PREFIX=my-custom-prefix-
 ```
 
 Set it to blank to disable the feature entirely:
 
 ```
-IBS.MCP.ENV.HEADER.PREFIX=
+IBS.ENV.HEADER.PREFIX=
 ```
 
 #### Interaction with `IBS.MCP.PRECHAIN`
 
-Env vars injected from `ibs-env-*` headers are available to the environment variable setter before
-both the pre-chain steps and the actual tool call execute, because `JavaCalls.environmentVariables`
-is populated before `submitCalls()` is called. Pre-chain steps that depend on env vars (e.g., a
-hostname resolution step) will see them.
+Env vars injected from `ibs-env-*` headers are populated into `JavaCalls.environmentVariables`
+inside `addHeaders()`, which is called before `submitCalls()`. Pre-chain steps that depend on
+env vars (e.g., a hostname resolution step) will therefore see them.
 
 ---
 
-### Tools that are intentionally excluded
+### Methods intentionally excluded from the catalog
 
-Some methods in `SimpleStaticMethods` are not exposed as auto-discovered tools:
+Some methods in `SimpleStaticMethods` are not included in the auto-discovery catalog:
 
-| Method                                                         | Reason excluded                                                                            |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `overLoadedMethod1Arg(String)` and `overLoadedMethod1Arg(int)` | Both have one parameter — ambiguous, cannot be disambiguated by parameter count            |
-| `methodAcceptingFile(File)`                                    | `File` parameters require multi-part upload, which is not supported by the MCP tool schema |
-| Any instance method                                            | Only `public static` methods are discovered                                                |
+| Method                                                         | Reason excluded                                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `overLoadedMethod1Arg(String)` and `overLoadedMethod1Arg(int)` | Both have one parameter — ambiguous, cannot be disambiguated by parameter count |
+| `methodAcceptingFile(File)`                                    | `File` parameters require multi-part upload, not representable as a JSON arg    |
+| Any instance method                                            | Only `public static` methods are discovered                                     |
 
-These methods remain accessible via the `java_call` fallback tool.
+These methods are still fully accessible via `java_call` — simply specify the class and method
+name directly in the `callContent` payload.
 
 ---
 
@@ -678,9 +708,10 @@ public class EmailService {
 }
 ```
 
-IBS would register the following MCP tools, with descriptions sourced from Javadoc:
+IBS would embed the following catalog entries in the `java_call` description, with descriptions
+sourced from Javadoc:
 
-| Tool name                 | Description                                                        | Parameters                     |
+| Catalog entry             | Description                                                        | Args                           |
 | ------------------------- | ------------------------------------------------------------------ | ------------------------------ |
 | `EmailService_sendEmail`  | Sends an email to the given recipient with the specified subject.  | `arg0: string`, `arg1: string` |
 | `EmailService_listInbox`  | Returns the list of message subjects in the given account's inbox. | `arg0: string`                 |
@@ -691,10 +722,10 @@ Without `therapi-runtime-javadoc-scribe`, the descriptions would fall back to
 
 `getStatus()` is excluded because it is an instance method.
 
-An AI agent calling `tools/list` would see these tools with their JSON Schema and can invoke them
-directly using `tools/call`. For scenarios that require instance methods or call chaining, the
-always-present `java_call` tool accepts the full BridgeService `/call` payload format — see the
-[Making Java Calls](../README.md#making-java-calls) section of the main README.
+An AI agent calling `tools/list` reads the catalog, then invokes methods via `java_call` by
+placing the listed class and method values in a `callContent` entry. For instance methods,
+overloaded methods, or call chaining across multiple steps, the same `java_call` payload handles
+all cases — see the [Making Java Calls](../README.md#making-java-calls) section of the main README.
 
 ---
 
@@ -781,10 +812,11 @@ claude mcp list
 You should see `bridgeService` listed as connected. You can also check inside an interactive
 Claude Code session with the `/mcp` slash command.
 
-Once connected, Claude Code will discover all exposed tools via `tools/list` at the start of
-each session. You can then ask Claude to call your Java methods directly — for example:
+Once connected, Claude Code will discover the `java_call` tool and its method catalog via
+`tools/list` at the start of each session. You can then ask Claude to call your Java methods —
+for example:
 
-> "Call `SimpleStaticMethods_methodAcceptingStringArgument` with the argument `hello`"
+> "Use java_call to call `SimpleStaticMethods.methodAcceptingStringArgument` with the argument `hello`"
 
 To remove the server registration when you no longer need it:
 

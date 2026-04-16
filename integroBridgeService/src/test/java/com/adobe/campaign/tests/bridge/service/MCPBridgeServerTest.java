@@ -79,6 +79,8 @@ public class MCPBridgeServerTest {
 
     @Test(groups = "MCP")
     public void testToolsList_returnsDiscoveredTools() {
+        // Only java_call is a callable tool; the catalog of discovered methods is embedded
+        // in its description so the LLM can construct the right callContent payload.
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{}}")
@@ -86,9 +88,10 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .body("result.tools", not(empty()))
-                .body("result.tools.name", hasItem("SimpleStaticMethods_methodReturningString"))
-                .body("result.tools.name", hasItem("java_call"));
+                .body("result.tools", hasSize(1))
+                .body("result.tools.name", hasItem("java_call"))
+                .body("result.tools.find { it.name == 'java_call' }.description",
+                        containsString("SimpleStaticMethods_methodReturningString"));
     }
 
     @Test(groups = "MCP")
@@ -107,8 +110,8 @@ public class MCPBridgeServerTest {
 
     @Test(groups = "MCP")
     public void testToolsList_descriptionComesFromJavadoc() {
-        // The description for methodReturningString should be sourced from its Javadoc,
-        // not the fallback "Calls com.example.MyClass.methodName()" string.
+        // The catalog entry for methodReturningString uses its Javadoc text, not the
+        // fallback "Calls com.example.MyClass.methodName()" string.
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":12,\"method\":\"tools/list\",\"params\":{}}")
@@ -116,7 +119,7 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .body("result.tools.find { it.name == 'SimpleStaticMethods_methodReturningString' }.description",
+                .body("result.tools.find { it.name == 'java_call' }.description",
                         containsString("success string"));
     }
 
@@ -131,15 +134,15 @@ public class MCPBridgeServerTest {
                 .statusCode(200)
                 .extract().response();
 
-        // methodReturningString takes no args — inputSchema.properties should be empty
-        int idx = resp.path("result.tools.name").toString()
-                .indexOf("SimpleStaticMethods_methodReturningString");
-        assertThat(idx, greaterThanOrEqualTo(0));
+        // methodReturningString is in the catalog — its entry must appear in java_call description
+        String desc = resp.path("result.tools.find { it.name == 'java_call' }.description");
+        assertThat(desc, containsString("SimpleStaticMethods_methodReturningString"));
     }
 
     @Test(groups = "MCP")
     public void testToolsList_undocumentedMethodExcluded() {
-        // EnvironmentVariableHandler methods have no Javadoc — must be absent with default REQUIRE_JAVADOC=true
+        // EnvironmentVariableHandler methods have no Javadoc — must be absent from the
+        // catalog (IBS.MCP.REQUIRE_JAVADOC defaults to true).
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":13,\"method\":\"tools/list\",\"params\":{}}")
@@ -147,19 +150,97 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .body("result.tools.name", not(hasItem("EnvironmentVariableHandler_getCacheProperty")))
-                .body("result.tools.name", not(hasItem("EnvironmentVariableHandler_setIntegroCache")));
+                .body("result.tools", hasSize(1))
+                .body("result.tools.find { it.name == 'java_call' }.description",
+                        not(containsString("EnvironmentVariableHandler_getCacheProperty")))
+                .body("result.tools.find { it.name == 'java_call' }.description",
+                        not(containsString("EnvironmentVariableHandler_setIntegroCache")));
     }
 
-    // ---- tools/call (discovered tools) ----
+    // ---- type handling ----
+
+    @Test(groups = "MCP")
+    public void testJavaCall_intArgument_jsonIntegerSucceeds() {
+        // A JSON integer (42) must be accepted by a method expecting int.
+        // Jackson deserialises it as Integer; Java reflection widens Integer → int.
+        // Expected return: 42 * 3 = 126.
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":70,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodAcceptingIntArgument\","
+                        + "\"args\":[42]}}}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("126"));
+    }
+
+    @Test(groups = "MCP")
+    public void testJavaCall_intArgument_jsonStringCoerced() {
+        // A JSON string "42" is coerced to int by castArgs before invocation.
+        // Expected return: 42 * 3 = 126.
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":71,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodAcceptingIntArgument\","
+                        + "\"args\":[\"42\"]}}}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("126"));
+    }
+
+    @Test(groups = "MCP")
+    public void testJavaCall_intArgument_unparsableStringFails() {
+        // A JSON string that cannot be parsed as int ("hello") → isError with a structured
+        // ErrorObject that names the problematic value and target type.
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":72,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodAcceptingIntArgument\","
+                        + "\"args\":[\"hello\"]}}}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(true))
+                .body("result.content[0].text", containsString("\"title\""))
+                .body("result.content[0].text", containsString("hello"));
+    }
+
+    // ---- tools/call (via java_call) ----
 
     @Test(groups = "MCP")
     public void testToolsCall_noArgMethod_returnsResult() {
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\","
-                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
-                        + "\"arguments\":{}}}")
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodReturningString\","
+                        + "\"args\":[]}}}}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()
@@ -174,8 +255,13 @@ public class MCPBridgeServerTest {
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":6,\"method\":\"tools/call\","
-                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodAcceptingStringArgument\","
-                        + "\"arguments\":{\"arg0\":\"hello\"}}}")
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodAcceptingStringArgument\","
+                        + "\"args\":[\"hello\"]}}}}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()
@@ -205,8 +291,13 @@ public class MCPBridgeServerTest {
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":8,\"method\":\"tools/call\","
-                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodThrowsException\","
-                        + "\"arguments\":{}}}")
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodThrowsException\","
+                        + "\"args\":[]}}}}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()
@@ -226,8 +317,13 @@ public class MCPBridgeServerTest {
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":9,\"method\":\"tools/call\","
-                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodWithTimeOut\","
-                        + "\"arguments\":{\"arg0\":5000}}}")
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodWithTimeOut\","
+                        + "\"args\":[5000]}}}}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()
@@ -321,7 +417,7 @@ public class MCPBridgeServerTest {
     @Test(groups = "MCP")
     public void testPrechain_isExecutedAndResultStripped() {
         // Pre-chain runs a no-arg method; its key must be absent from returnValues,
-        // while the actual tool result ("result") must be present.
+        // while the actual call result ("result") must be present.
         ConfigValueHandlerIBS.MCP_PRECHAIN.activate(
                 "{\"ibs_pre\":{\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
                 + "\"method\":\"methodReturningString\",\"args\":[]}}");
@@ -329,8 +425,13 @@ public class MCPBridgeServerTest {
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":20,\"method\":\"tools/call\","
-                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
-                        + "\"arguments\":{}}}")
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodReturningString\","
+                        + "\"args\":[]}}}}}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()
@@ -354,8 +455,13 @@ public class MCPBridgeServerTest {
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":21,\"method\":\"tools/call\","
-                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
-                        + "\"arguments\":{}}}")
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodReturningString\","
+                        + "\"args\":[]}}}}}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()
@@ -377,8 +483,13 @@ public class MCPBridgeServerTest {
                 .contentType(CONTENT_TYPE_JSON)
                 .header("ibs-secret-test-val", "RESOLVED")
                 .body("{\"jsonrpc\":\"2.0\",\"id\":22,\"method\":\"tools/call\","
-                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
-                        + "\"arguments\":{}}}")
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodReturningString\","
+                        + "\"args\":[]}}}}}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()
@@ -396,8 +507,13 @@ public class MCPBridgeServerTest {
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":23,\"method\":\"tools/call\","
-                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
-                        + "\"arguments\":{}}}")
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodReturningString\","
+                        + "\"args\":[]}}}}}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()
@@ -536,8 +652,13 @@ public class MCPBridgeServerTest {
                 .header("ibs-env-ENVVAR1", "hello")
                 .header("ibs-env-ENVVAR2", "world")
                 .body("{\"jsonrpc\":\"2.0\",\"id\":40,\"method\":\"tools/call\","
-                        + "\"params\":{\"name\":\"SimpleStaticMethods_usesEnvironmentVariables\","
-                        + "\"arguments\":{}}}")
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"usesEnvironmentVariables\","
+                        + "\"args\":[]}}}}}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()
@@ -590,8 +711,13 @@ public class MCPBridgeServerTest {
                 .contentType(CONTENT_TYPE_JSON)
                 .header("x-custom-header", "somevalue")
                 .body("{\"jsonrpc\":\"2.0\",\"id\":42,\"method\":\"tools/call\","
-                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
-                        + "\"arguments\":{}}}")
+                        + "\"params\":{\"name\":\"java_call\","
+                        + "\"arguments\":{"
+                        + "\"callContent\":{"
+                        + "\"result\":{"
+                        + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                        + "\"method\":\"methodReturningString\","
+                        + "\"args\":[]}}}}}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()

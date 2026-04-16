@@ -8,7 +8,7 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
-import com.adobe.campaign.tests.bridge.service.exceptions.IBSPayloadException;
+import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -17,6 +17,17 @@ import java.util.Map;
 import java.util.Set;
 
 public class BridgeServiceFactory {
+
+    public static final String ERROR_CALL_TIMEOUT = "The call you made exceeds the set timeout limit.";
+    public static final String ERROR_IBS_INTERNAL = "Internal IBS error. Please file a bug report with the project and provide this JSON in the report.";
+    public static final String ERROR_PAYLOAD_INCONSISTENCY = "We detected an inconsistency in your payload.";
+    static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
+    static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
+    static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
+    static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
+    static final String ERROR_IBS_RUNTIME = "Problems with payload.";
+    static final String ERROR_AMBIGUOUS_METHOD = "No unique method could be identified that matches your request.";
+    static final String ERROR_JAVA_OBJECT_NOT_ACCESSIBLE = "The java object you want to call is inaccessible. This is very possibly a scope problem.";
     /**
      * Creates a Java Call Object given a JSON as a String
      * @param in_requestJSON A JSON Object as a String
@@ -99,6 +110,53 @@ public class BridgeServiceFactory {
      */
     public static String createExceptionPayLoad(ErrorObject in_errorObject) {
         return getErrorPayloadAsString(in_errorObject);
+    }
+
+    /**
+     * Maps a runtime exception to a serialized error payload using the standard IBS
+     * exception-to-error-code mapping. Centralises the mapping so both the REST /call
+     * endpoint and the MCP tools/call endpoint produce consistent error responses and
+     * a new exception type only needs to be added in one place.
+     *
+     * @param e the exception to map
+     * @return serialized JSON error payload
+     */
+    public static String createExceptionPayLoad(Exception e) {
+        String title;
+        int code;
+        boolean includeStackTrace = true;
+
+        if (e instanceof IBSTimeOutException) {
+            title = ERROR_CALL_TIMEOUT;
+            code = 408;
+            includeStackTrace = false;
+        } else if (e instanceof NonExistentJavaObjectException) {
+            title = ERROR_JAVA_OBJECT_NOT_FOUND;
+            code = 404;
+            includeStackTrace = false;
+        } else if (e instanceof AmbiguousMethodException) {
+            title = ERROR_AMBIGUOUS_METHOD;
+            code = 404;
+            includeStackTrace = false;
+        } else if (e instanceof IBSConfigurationException) {
+            title = ERROR_IBS_CONFIG;
+            code = 500;
+        } else if (e instanceof IBSRunTimeException) {
+            title = ERROR_IBS_RUNTIME;
+            code = 500;
+        } else if (e instanceof TargetJavaMethodCallException) {
+            title = ERROR_CALLING_JAVA_METHOD;
+            code = 500;
+        } else if (e instanceof JavaObjectInaccessibleException) {
+            title = ERROR_JAVA_OBJECT_NOT_ACCESSIBLE;
+            code = 404;
+            includeStackTrace = false;
+        } else {
+            title = ERROR_IBS_INTERNAL;
+            code = 500;
+        }
+
+        return createExceptionPayLoad(new ErrorObject(e, title, code, includeStackTrace));
     }
 
     //Calls the testable getPayloadAdString

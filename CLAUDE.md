@@ -82,6 +82,8 @@ parent (pom.xml)
 | `IBS.DESERIALIZATION.DATE.FORMAT`                        | SimpleDateFormat pattern for date fields | —             |
 | `IBS.PLUGINS.PACKAGE`                                    | Package to scan for deserializer plugins | —             |
 | `IBS.SECRETS.FILTER.PREFIX`                              | HTTP header prefix for secrets           | `ibs-secret-` |
+| `IBS.HEADERS.FILTER.PREFIX`                              | Restrict which headers enter call-chain cache | `""` (all) |
+| `IBS.ENV.HEADER.PREFIX`                                  | HTTP header prefix for env-var injection | `ibs-env-`    |
 | `IBS.ENVVARS.SETTER.CLASS` / `IBS.ENVVARS.SETTER.METHOD` | Custom env var injection handler         | —             |
 
 These are managed by `ConfigValueHandlerIBS.java`.

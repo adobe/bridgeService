@@ -191,7 +191,11 @@ public class CallContent {
         } catch (InstantiationException e) {
             throw new NonExistentJavaObjectException(
                     "Could not instantiate class. The given class " + this.getClassName() + " could not be found.");
-        } catch (NonExistentJavaObjectException | NoSuchMethodException e) {
+        } catch (NonExistentJavaObjectException e) {
+            // Re-throw as-is to preserve the specific message (e.g. type coercion failure,
+            // method-not-found from fetchMethodCandidates).
+            throw e;
+        } catch (NoSuchMethodException e) {
             throw new NonExistentJavaObjectException(
                     "Could not find the method " + this.getFullName() + ".");
         } catch (LinkageError e) {
@@ -269,24 +273,68 @@ public class CallContent {
      * @return The transformed array of objects for execution purposes.
      */
     Object[] castArgs(Object[] in_objects, Method in_method) {
-        List<Object> ltr_objects =  new ArrayList<>();
-        for (int i=0; i < in_objects.length; i++) {
-            Class lt_type = in_method.getParameterTypes()[i];
+        List<Object> ltr_objects = new ArrayList<>();
+        for (int i = 0; i < in_objects.length; i++) {
+            ltr_objects.add(coerceArg(in_objects[i], in_method.getParameterTypes()[i]));
+        }
+        return ltr_objects.toArray();
+    }
 
-            //If object is an array
-            if (lt_type.isArray() && in_objects[i] instanceof List) {
-                Class<?> lt_targetClass = lt_type.getComponentType();
-                Object lt_targetObject = Array.newInstance(lt_targetClass, ((List)in_objects[i]).size());
-                for (int i2=0; i2 < ((List)in_objects[i]).size(); i2++) {
-                    Array.set(lt_targetObject, i2, ((List<?>) in_objects[i]).get(i2));
-                }
-                ltr_objects.add(lt_targetObject);
-            } else {
-                ltr_objects.add(in_objects[i]);
+    /**
+     * Coerces a single argument value to match the expected parameter type.
+     *
+     * <p>Handles two conversion cases:
+     * <ul>
+     *   <li><b>List → Array</b>: when the target type is an array and the value is a
+     *       {@link List} (the typical result of JSON deserialisation of a JSON array).</li>
+     *   <li><b>String → numeric/boolean primitive</b>: when the target type is a numeric
+     *       or boolean primitive (or its boxed equivalent) and the value is a {@link String}.
+     *       This covers the case where an MCP or REST client sends {@code "42"} instead of
+     *       {@code 42} for an {@code int} parameter.</li>
+     * </ul>
+     *
+     * <p>All other values are returned unchanged; Java reflection handles the remaining
+     * widening/unboxing (e.g. {@code Integer} → {@code long}) transparently.
+     *
+     * @param in_value      the argument value to coerce
+     * @param in_targetType the Java parameter type the method expects
+     * @return the coerced value, ready to pass to {@link java.lang.reflect.Method#invoke}
+     * @throws NonExistentJavaObjectException if the value is a String that cannot be parsed
+     *         into the required numeric type (e.g. {@code "hello"} for an {@code int} parameter)
+     */
+    Object coerceArg(Object in_value, Class<?> in_targetType) {
+        // List → Array
+        if (in_targetType.isArray() && in_value instanceof List) {
+            Class<?> lt_componentType = in_targetType.getComponentType();
+            Object lt_array = Array.newInstance(lt_componentType, ((List<?>) in_value).size());
+            for (int i = 0; i < ((List<?>) in_value).size(); i++) {
+                Array.set(lt_array, i, ((List<?>) in_value).get(i));
+            }
+            return lt_array;
+        }
+
+        // String → numeric/boolean primitive or boxed equivalent
+        if (in_value instanceof String) {
+            String strVal = (String) in_value;
+            try {
+                if (in_targetType == int.class || in_targetType == Integer.class)
+                    return Integer.parseInt(strVal);
+                if (in_targetType == long.class || in_targetType == Long.class)
+                    return Long.parseLong(strVal);
+                if (in_targetType == double.class || in_targetType == Double.class)
+                    return Double.parseDouble(strVal);
+                if (in_targetType == float.class || in_targetType == Float.class)
+                    return Float.parseFloat(strVal);
+                if (in_targetType == boolean.class || in_targetType == Boolean.class)
+                    return Boolean.parseBoolean(strVal);
+            } catch (NumberFormatException e) {
+                throw new NonExistentJavaObjectException(
+                        "Argument value \"" + strVal + "\" could not be converted to "
+                                + in_targetType.getSimpleName() + ".");
             }
         }
 
-        return ltr_objects.toArray();
+        return in_value;
     }
 
 }

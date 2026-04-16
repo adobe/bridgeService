@@ -38,7 +38,7 @@ public class MCPToolDiscovery {
     public static class DiscoveryResult {
         /** MCP tool definitions ready for serialisation in a tools/list response. */
         public final List<Map<String, Object>> tools;
-        /** Maps each tool name to the Java Method it represents, for dispatch in tools/call. */
+        /** Maps each tool name to the Java Method it represents, used to build the catalog in the java_call description. */
         public final Map<String, Method> methodRegistry;
 
         public DiscoveryResult(List<Map<String, Object>> tools, Map<String, Method> methodRegistry) {

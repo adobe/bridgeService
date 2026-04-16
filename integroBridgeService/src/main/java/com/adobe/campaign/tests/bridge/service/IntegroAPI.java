@@ -29,26 +29,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.adobe.campaign.tests.bridge.service.BridgeServiceFactory.*;
 import static spark.Spark.*;
 
 public class IntegroAPI {
-    public static final String ERROR_CALL_TIMEOUT = "The call you made exceeds the set timeout limit.";
     public static final String ERROR_CONTENT_TYPE = "application/problem+json";
     public static final String SYSTEM_UP_MESSAGE = "All systems up";
-    public static final String ERROR_IBS_INTERNAL = "Internal IBS error. Please file a bug report with the project and provide this JSON in the report.";
-    public static final String ERROR_PAYLOAD_INCONSISTENCY = "We detected an inconsistency in your payload.";
     public static final String UPLOADED_FILE_REF = "uploaded_file";
     public static final String JAVA_CALL_REF = "call_part";
-    protected static final String ERROR_JSON_TRANSFORMATION = "JSON Transformation issue : Problem processing request. The given json could not be mapped to a Java Call";
-    protected static final String ERROR_CALLING_JAVA_METHOD = "Error during call of target Java Class and Method.";
-    protected static final String ERROR_JAVA_OBJECT_NOT_FOUND = "Could not find the given class or method.";
-    protected static final String ERROR_IBS_CONFIG = "The provided class and method for setting environment variables is not valid.";
-    protected static final String ERROR_IBS_RUNTIME = "Problems with payload.";
-    protected static final String ERROR_AMBIGUOUS_METHOD = "No unique method could be identified that matches your request.";
-    protected static final String ERROR_JAVA_OBJECT_NOT_ACCESSIBLE = "The java object you want to call is inaccessible. This is very possibly a scope problem.";
-    private static final Logger log = LogManager.getLogger();
     public static final String ERROR_BAD_MULTI_PART_REQUEST = "When sending a multi-part request, you need to at least have a payload for the callContent.";
     public static final String STD_UPLOAD_DIR = "upload";
+    private static final Logger log = LogManager.getLogger();
 
     public static void startServices(int port) {
 
@@ -147,6 +138,16 @@ public class IntegroAPI {
             return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls(),
                     fetchedFromJSON.fetchSecrets());
         });
+
+        if (ConfigValueHandlerIBS.MCP_ENABLED.is("true")) {
+            MCPRequestHandler mcpHandler = new MCPRequestHandler();
+            post("/mcp", mcpHandler::handle);
+            log.info("MCP endpoint enabled at POST /mcp");
+            get("/.well-known/oauth-authorization-server", (req, res) -> {
+                res.status(404);
+                return "{\"error\":\"not_found\",\"error_description\":\"This server does not support OAuth\"}";
+            });
+        }
 
         after((req, res) -> {
             res.type("application/json");

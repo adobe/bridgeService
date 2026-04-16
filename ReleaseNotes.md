@@ -1,4 +1,8 @@
 # Bridge Service - RELEASE NOTES
+## 2.11.19
+* **New Feature** [#12 Expose BridgeService as an MCP Server](https://github.com/adobe/bridgeService/issues/12). BridgeService can now act as a Model Context Protocol (MCP) server. When `IBS.MCP.ENABLED=true`, a `POST /mcp` endpoint is registered on the existing port. It scans `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` at startup and exposes each public static method as a named MCP tool discoverable via `tools/list`. A generic `java_call` fallback tool is always included for call chaining and instance methods. Please refer to ["Using BridgeService as an MCP Server"](README.md#using-bridgeservice-as-an-mcp-server) in the README for full details.
+* **New Environment Variable** `IBS.MCP.ENABLED`: Set to `true` to enable the MCP endpoint (default: `false`).
+
 ## 2.11.18
 * [#180 Headers not usable as environment variable](https://github.com/adobe/bridgeService/issues/180). We discovered that variable expansion of headers did not cover environment variables.
 

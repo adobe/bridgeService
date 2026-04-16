@@ -53,6 +53,12 @@ from any language or framework you are in.
     * [Steamlining Headers](#steamlining-headers)
   * [Making Assertions](#making-assertions)
     * [Duration-Based Assertions](#duration-based-assertions)
+  * [Using BridgeService as an MCP Server](#using-bridgeservice-as-an-mcp-server)
+    * [Enabling MCP](#enabling-mcp)
+    * [Discovering Tools](#discovering-tools-toolslist)
+    * [Calling a Discovered Tool](#calling-a-discovered-tool-toolscall)
+    * [The java_call Fallback Tool](#the-java_call-fallback-tool)
+    * [MCP Limitations](#mcp-limitations)
   * [Error Management](#error-management)
   * [Contributing to the Project](#contributing-to-the-project)
   * [Known Errors](#known-errors)
@@ -699,10 +705,42 @@ Sometimes you may want to debug the system. In these cases you can deactivate th
 variable `IBS.SECRETS.BLOCK.OUTPUT` to false. However, this should only be temporary, and in production it is best to
 keep this control.
 
+### Environment Variables via Headers
+
+Headers prefixed with `ibs-env-` are injected as environment variables into the Java execution context — equivalent
+to supplying them in the `environmentVariables` JSON node, but without modifying the payload. The prefix is stripped
+and the remainder uppercased to form the variable name.
+
+Example — pass a hostname and a locale without touching the payload:
+
+```shell
+curl --request POST \
+  --url http://localhost:8080/call \
+  --header 'Content-Type: application/json' \
+  --header 'ibs-env-AC.UITEST.HOST: my-instance.example.com' \
+  --header 'ibs-env-AC.UITEST.LANGUAGE: en_US' \
+  --data '{
+    "callContent": {
+      "result": {
+        "class": "com.example.MyService",
+        "method": "run",
+        "args": []
+      }
+    }
+  }'
+```
+
+IBS injects `AC.UITEST.HOST=my-instance.example.com` and `AC.UITEST.LANGUAGE=en_US` before the call executes.
+
+The prefix can be changed via `IBS.ENV.HEADER.PREFIX` or set to blank to disable the feature entirely.
+Env-var headers are distinct from regular headers: they are not stored in the call-chain resolution cache and
+cannot be referenced in `args`.
+
 ### Steamlining Headers
 
 By default, IBS stores all the headers when you send a call. You have the possibility to filter the headers you want to
-use by setting the run-time variable `IBS.HEADERS.FILTER.PREFIX`.
+use by setting the run-time variable `IBS.HEADERS.FILTER.PREFIX`. Secret headers (`ibs-secret-*`) and env-var
+headers (`ibs-env-*`) are always handled by their own mechanisms and are not affected by this filter.
 
 ## Making Assertions
 
@@ -839,6 +877,169 @@ Example:
   }
 }
 ```
+
+## Using BridgeService as an MCP Server
+
+BridgeService can act as an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server, allowing AI agents to discover and invoke your Java methods as typed tools over HTTP. The MCP endpoint uses JSON-RPC 2.0 and is served on the **same port** as the existing REST API.
+
+### Enabling MCP
+
+Set the environment variable `IBS.MCP.ENABLED` to `true` before starting BridgeService:
+
+```bash
+mvn exec:java -Dexec.args="test" -DIBS.MCP.ENABLED=true -DIBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES=com.example.mypackage
+```
+
+At startup, BridgeService scans the packages listed in `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` and registers every **public static method** as a named MCP tool. The naming convention is `{SimpleClassName}_{methodName}`.
+
+The MCP endpoint is available at:
+```
+POST /mcp
+```
+
+An MCP client begins with the standard handshake:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "clientInfo": { "name": "my-client", "version": "1.0" },
+    "capabilities": {}
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "serverInfo": { "name": "bridgeService", "version": "2.11.19" },
+    "capabilities": { "tools": {} }
+  }
+}
+```
+
+### Discovering Tools (tools/list)
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/list",
+  "params": {}
+}
+```
+
+Response:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "tools": [
+      {
+        "name": "SimpleStaticMethods_methodAcceptingStringArgument",
+        "description": "Calls com.example.SimpleStaticMethods.methodAcceptingStringArgument()",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "arg0": { "type": "string" }
+          },
+          "required": ["arg0"]
+        }
+      },
+      {
+        "name": "java_call",
+        "description": "Generic BridgeService call. Accepts the full /call payload including call chaining, instance methods, environment variables, and timeout.",
+        "inputSchema": { "..." : "..." }
+      }
+    ]
+  }
+}
+```
+
+The JSON Schema for each tool is derived from the method's parameter types:
+
+| Java type | JSON Schema type |
+|---|---|
+| `String` | `string` |
+| `int` / `Integer` / `long` / `Long` | `integer` |
+| `double` / `Double` / `float` / `Float` | `number` |
+| `boolean` / `Boolean` | `boolean` |
+| `List` / array | `array` |
+| anything else | `object` |
+
+### Calling a Discovered Tool (tools/call)
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "SimpleStaticMethods_methodAcceptingStringArgument",
+    "arguments": {
+      "arg0": "hello"
+    }
+  }
+}
+```
+
+On success the result contains the standard BridgeService return payload serialised as text:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "content": [{ "type": "text", "text": "{\"returnValues\":{\"result\":\"hello_Success\"},\"callDurations\":{\"result\":3}}" }],
+    "isError": false
+  }
+}
+```
+
+If the method throws an exception or the tool name is unknown, `isError` is `true` and `content[0].text` contains the error description. The HTTP status code is always `200` for `tools/call` — errors are reported inside the MCP result, not as HTTP errors.
+
+### The `java_call` Fallback Tool
+
+A generic `java_call` tool is always included alongside the auto-discovered tools. Its `callContent` argument accepts exactly the same payload as the standard `POST /call` endpoint, making call chaining, instance methods, environment variables, and file uploads all accessible to MCP clients:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "java_call",
+    "arguments": {
+      "callContent": {
+        "step1": {
+          "class": "com.example.MyClass",
+          "method": "doSomething",
+          "args": ["hello"]
+        }
+      },
+      "environmentVariables": {
+        "MY_ENV_VAR": "value"
+      }
+    }
+  }
+}
+```
+
+### MCP Limitations
+
+* Only **public static methods** are auto-discovered. Instance methods are accessible via the `java_call` fallback tool.
+* Overloaded methods with the **same number of parameters** are skipped during discovery (same restriction as the `/call` endpoint). Use `java_call` to call them explicitly.
+* Parameter names are exposed as `arg0`, `arg1`, … — Java reflection does not retain source-level parameter names at runtime.
 
 ## Error Management
 

@@ -208,25 +208,59 @@ public class JavaCalls {
     }
 
     /**
-     * Adds headers to the results cache of the ClassLoader. We throw an exception o the header corresponds to a
-     * callContent
+     * Processes incoming request headers into three strictly disjoint namespaces:
+     *
+     * <ol>
+     *   <li><b>Secret headers</b> ({@code IBS.SECRETS.FILTER.PREFIX}, default {@code ibs-secret-}) — stored in
+     *       the classloader result cache and marked as secrets so their values are suppressed from the response.
+     *       They can be referenced by key in {@code args} for call-chain dependency resolution.</li>
+     *   <li><b>Env-var headers</b> ({@code IBS.ENV.HEADER.PREFIX}, default {@code ibs-env-}) — injected directly
+     *       into {@code environmentVariables} as Java execution env vars. The prefix is stripped and the
+     *       remainder uppercased to form the variable name (e.g. {@code ibs-env-AC.HOST} → {@code AC.HOST}).
+     *       These headers are <em>not</em> added to the classloader cache and cannot be used as call-chain args.</li>
+     *   <li><b>Regular headers</b> (matching {@code IBS.HEADERS.FILTER.PREFIX}, default {@code ""} = all) — stored
+     *       in the classloader result cache and can be referenced by key in {@code args}. Secret and env-var
+     *       headers are excluded from this group even when the filter prefix would otherwise match.</li>
+     * </ol>
+     *
+     * An {@link com.adobe.campaign.tests.bridge.service.exceptions.IBSPayloadException} is thrown if any header
+     * key collides with a {@code callContent} entry name.
      *
      * @param in_mapOHeaders A map containing header values coming from the request
      */
     public void addHeaders(Map<String, String> in_mapOHeaders) {
         LogManagement.logStep(LogManagement.STD_STEPS.STORE_HEADERS);
+
+        String envPrefix = ConfigValueHandlerIBS.ENV_HEADER_PREFIX.fetchValue();
+        boolean envPrefixActive = envPrefix != null && !envPrefix.isBlank();
+        String lowerEnvPrefix = envPrefixActive ? envPrefix.toLowerCase(java.util.Locale.ROOT) : "";
+
+        // Regular headers → classloader cache for call-chain dependency resolution.
+        // Secrets and env-var headers are handled separately and excluded here.
         in_mapOHeaders.keySet().stream()
-                .filter(i -> (i.startsWith(ConfigValueHandlerIBS.HEADERS_FILTER_PREFIX.fetchValue()) && !i.startsWith(
-                        ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue()))).forEach(fk -> {
+                .filter(i -> i.startsWith(ConfigValueHandlerIBS.HEADERS_FILTER_PREFIX.fetchValue())
+                        && !i.startsWith(ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue())
+                        && !(envPrefixActive && i.toLowerCase(java.util.Locale.ROOT).startsWith(lowerEnvPrefix)))
+                .forEach(fk -> {
                     this.getLocalClassLoader().getCallResultCache().put(fk, in_mapOHeaders.get(fk));
                     this.getLocalClassLoader().getHeaderSet().add(fk);
                 });
 
+        // Secret headers → classloader secret cache (suppressed from output, resolvable in args).
         in_mapOHeaders.keySet().stream()
                 .filter(i -> i.startsWith(ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue())).forEach(fk -> {
                     this.getLocalClassLoader().getCallResultCache().put(fk, in_mapOHeaders.get(fk));
                     this.getLocalClassLoader().getSecretSet().add(fk);
                 });
+
+        // Env-var headers → environment variables only (not added to the call-chain cache).
+        if (envPrefixActive) {
+            in_mapOHeaders.entrySet().stream()
+                    .filter(e -> e.getKey().toLowerCase(java.util.Locale.ROOT).startsWith(lowerEnvPrefix))
+                    .forEach(e -> this.environmentVariables.setProperty(
+                            e.getKey().substring(envPrefix.length()).toUpperCase(java.util.Locale.ROOT),
+                            e.getValue()));
+        }
 
         //Check for duplicates between headers and call contents
         if (this.getLocalClassLoader().getHeaderSet().stream()

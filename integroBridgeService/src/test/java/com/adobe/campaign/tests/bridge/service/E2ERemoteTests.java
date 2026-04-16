@@ -56,7 +56,7 @@ public class E2ERemoteTests {
         JavaCallResults jcr = new JavaCallResults();
 
         given().body(jcr).post(EndPointURL + "call").then().statusCode(404).and().assertThat()
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JSON_TRANSFORMATION))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_JSON_TRANSFORMATION))
                 .body("detail", Matchers.startsWith(
                         "Unrecognized field \"callDurations\" (class com.adobe.campaign.tests.bridge.service.JavaCalls), not marked as ignorable"))
                 .body("code", Matchers.equalTo(404))
@@ -92,7 +92,7 @@ public class E2ERemoteTests {
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(500)
                 .contentType(IntegroAPI.ERROR_CONTENT_TYPE)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_CALLING_JAVA_METHOD))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_CALLING_JAVA_METHOD))
                 .body("detail", Matchers.containsString(
                         "We do not allow numbers that are equal."))
                 .body("code", Matchers.equalTo(500))
@@ -118,7 +118,7 @@ public class E2ERemoteTests {
         l_call.getCallContent().put("call1PL", myContent);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_AMBIGUOUS_METHOD))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_AMBIGUOUS_METHOD))
                 .body("detail", Matchers.containsString(
                         "We could not find a unique method for"))
                 .body("code", Matchers.equalTo(404))
@@ -139,7 +139,7 @@ public class E2ERemoteTests {
         l_call.getCallContent().put("call1PL", myContent);
 
         given().body(l_call).post(EndPointURL + "call").then().assertThat().statusCode(404)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JAVA_OBJECT_NOT_FOUND))
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_JAVA_OBJECT_NOT_FOUND))
                 .body("detail", Matchers.containsString(
                         "The given class com.adobe.campaign.tests.bridgeservice.testdata.SimpleStaticMethodsNonExisting could not be found."))
                 .body("code", Matchers.equalTo(404))
@@ -186,7 +186,7 @@ public class E2ERemoteTests {
                         + "}";
 
         given().body(l_jsonString).post(EndPointURL + "call").then().assertThat().statusCode(404)
-                .body("title", Matchers.equalTo(IntegroAPI.ERROR_JSON_TRANSFORMATION));
+                .body("title", Matchers.equalTo(BridgeServiceFactory.ERROR_JSON_TRANSFORMATION));
 
     }
 

@@ -14,6 +14,7 @@ using the built-in demo data, then from an external project that hosts its own J
   - [Call chaining best practice](#call-chaining-best-practice)
   - [Project-specific pre-call setup (IBS.MCP.PRECHAIN)](#project-specific-pre-call-setup-ibsmcpprechain)
   - [Built-in diagnostics tool (ibs_diagnostics)](#built-in-diagnostics-tool-ibs_diagnostics)
+  - [Passing secrets and environment variables in MCP client config](#passing-secrets-and-environment-variables-in-mcp-client-config)
   - [Passing environment variables via headers (ibs-env-*)](#passing-environment-variables-via-headers-ibs-env-)
   - [Tools that are intentionally excluded](#tools-that-are-intentionally-excluded)
 - [Exposing your own project as MCP tools](#exposing-your-own-project-as-mcp-tools)
@@ -573,6 +574,111 @@ Response:
 Use `ibs_diagnostics` as the first step when connecting a new HOSTSERVICE — it confirms
 connectivity, verifies that all `ibs-secret-*` and `ibs-env-*` headers are reaching the server,
 and shows whether PRECHAIN and Javadoc requirements are active, all without touching HOST code.
+
+---
+
+### Passing secrets and environment variables in MCP client config
+
+BridgeService reads two special header prefixes from every MCP request. Both are configured in
+the `headers` block of the MCP server registration in your client config file (`.claude.json`,
+`.cursor/mcp.json`, etc.).
+
+#### Secrets (`ibs-secret-*`)
+
+Headers prefixed with `ibs-secret-` are injected into BridgeService's arg-resolution cache.
+They can be referenced by name as plain strings in `java_call` `args` arrays — BridgeService
+substitutes the header name with its value at runtime. Secret values are **never** included in
+tool responses or logs.
+
+Use them for credentials that your Java methods need as arguments (URLs, usernames, passwords,
+tokens):
+
+```json
+{
+  "mcpServers": {
+    "CampaignTests": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp",
+      "headers": {
+        "ibs-secret-url":   "https://my-instance.example.com/nl/jsp/soaprouter.jsp",
+        "ibs-secret-login": "admin",
+        "ibs-secret-pass":  "mypassword"
+      }
+    }
+  }
+}
+```
+
+A `java_call` step then references them by header name:
+
+```json
+{
+  "callContent": {
+    "auth": {
+      "class": "utils.CampaignUtils",
+      "method": "setCurrentAuthenticationToLocal",
+      "args": ["ibs-secret-url", "ibs-secret-login", "ibs-secret-pass"]
+    }
+  }
+}
+```
+
+#### Environment variables (`ibs-env-*`)
+
+Headers prefixed with `ibs-env-` are injected as environment variables into the Java execution
+context — equivalent to supplying them in the `environmentVariables` JSON node of a `/call`
+payload. The prefix is stripped and the remainder uppercased to form the variable name.
+
+Use them for configuration values your Java methods read from the environment (hostnames, ports,
+locale, feature flags):
+
+```json
+{
+  "headers": {
+    "ibs-env-AC.UITEST.HOST":     "my-instance.example.com",
+    "ibs-env-AC.UITEST.LANGUAGE": "en_US",
+    "ibs-env-AC.UITEST.MAILING.PORT": "143"
+  }
+}
+```
+
+> **The `ibs-env-` prefix is stripped before injection.** The header
+> `ibs-env-AC.UITEST.HOST` becomes the environment variable `AC.UITEST.HOST` — not
+> `IBS-ENV-AC.UITEST.HOST`. Your Java code must read the name **without** the prefix.
+> This is a common source of confusion: the header name and the variable name are different.
+
+#### Key difference
+
+| Header prefix | Where the value lands | Referenceable in `args`? |
+|---|---|---|
+| `ibs-secret-*` | Arg-resolution cache | **Yes** — use the full header name as the arg string |
+| `ibs-env-*` | Java env / IntegroCache | **No** — passing the key as an arg sends it as a literal string |
+
+#### Full registration example
+
+```json
+{
+  "mcpServers": {
+    "CampaignTests": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp",
+      "headers": {
+        "ibs-secret-url":                  "https://my-instance.example.com/nl/jsp/soaprouter.jsp",
+        "ibs-secret-login":                "admin",
+        "ibs-secret-pass":                 "mypassword",
+        "ibs-env-AC.UITEST.HOST":          "my-instance.example.com",
+        "ibs-env-AC.UITEST.LANGUAGE":      "en_US",
+        "ibs-env-AC.UITEST.MAILING.PORT":  "143",
+        "ibs-prechain": "{\"ibs_auth\":{\"class\":\"utils.CampaignUtils\",\"method\":\"setCurrentAuthenticationToLocal\",\"args\":[\"ibs-secret-url\",\"ibs-secret-login\",\"ibs-secret-pass\"]}}"
+      }
+    }
+  }
+}
+```
+
+Use `ibs_diagnostics` to verify that all headers are reaching the server correctly — it reports
+secret key names, decoded env-var key/value pairs, and regular header count without exposing
+secret values.
 
 ---
 

@@ -88,7 +88,7 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .body("result.tools", hasSize(1))
+                .body("result.tools", hasSize(2))
                 .body("result.tools.name", hasItem("java_call"))
                 .body("result.tools.find { it.name == 'java_call' }.description",
                         containsString("SimpleStaticMethods_methodReturningString"));
@@ -150,11 +150,176 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .body("result.tools", hasSize(1))
+                .body("result.tools", hasSize(2))
                 .body("result.tools.find { it.name == 'java_call' }.description",
                         not(containsString("EnvironmentVariableHandler_getCacheProperty")))
                 .body("result.tools.find { it.name == 'java_call' }.description",
                         not(containsString("EnvironmentVariableHandler_setIntegroCache")));
+    }
+
+    // ---- ibs_diagnostics tool ----
+
+    @Test(groups = "MCP")
+    public void testToolsList_includesDiagnosticsTool() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":50,\"method\":\"tools/list\",\"params\":{}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.tools", hasSize(2))
+                .body("result.tools.name", hasItem("ibs_diagnostics"))
+                .body("result.tools.find { it.name == 'ibs_diagnostics' }.description", notNullValue())
+                .body("result.tools.find { it.name == 'ibs_diagnostics' }.inputSchema", notNullValue());
+    }
+
+    @Test(groups = "MCP")
+    public void testDiagnosticsTool_basicCall_returnsExpectedFields() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":51,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"ibs_diagnostics\",\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].type", equalTo("text"))
+                .body("result.content[0].text", containsString("ibsVersion"))
+                .body("result.content[0].text", containsString("deploymentMode"))
+                .body("result.content[0].text", containsString("mcpConfig"))
+                .body("result.content[0].text", containsString("headers"))
+                .body("result.content[0].text", containsString("discoveredToolCount"));
+    }
+
+    @Test(groups = "MCP")
+    public void testDiagnosticsTool_mcpConfigReflectsCurrentState() {
+        Response resp = given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":52,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"ibs_diagnostics\",\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .extract().response();
+
+        String text = resp.path("result.content[0].text");
+        assertThat(text, containsString("packagesConfigured"));
+        assertThat(text, containsString(TESTDATA_ONE_PACKAGE));
+        assertThat(text, containsString("\"prechainActive\":false"));
+        assertThat(text, containsString("\"javadocRequired\":true"));
+    }
+
+    @Test(groups = "MCP")
+    public void testDiagnosticsTool_secretHeaders_keysReportedValuesAbsent() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .header("ibs-secret-api-key", "MY_SECRET_VALUE")
+                .header("ibs-secret-token", "ANOTHER_SECRET")
+                .body("{\"jsonrpc\":\"2.0\",\"id\":53,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"ibs_diagnostics\",\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("ibs-secret-api-key"))
+                .body("result.content[0].text", containsString("ibs-secret-token"))
+                .body("result.content[0].text", not(containsString("MY_SECRET_VALUE")))
+                .body("result.content[0].text", not(containsString("ANOTHER_SECRET")));
+    }
+
+    @Test(groups = "MCP")
+    public void testDiagnosticsTool_envVarHeaders_decodedNamesAndValuesReported() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .header("ibs-env-AC.UITEST.HOST", "example.com")
+                .header("ibs-env-DEPLOY_ENV", "stage")
+                .body("{\"jsonrpc\":\"2.0\",\"id\":54,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"ibs_diagnostics\",\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("AC.UITEST.HOST"))
+                .body("result.content[0].text", containsString("DEPLOY_ENV"))
+                .body("result.content[0].text", containsString("example.com"))
+                .body("result.content[0].text", containsString("stage"));
+    }
+
+    @Test(groups = "MCP")
+    public void testDiagnosticsTool_noSpecialHeaders_emptyLists() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":55,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"ibs_diagnostics\",\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("\"secretHeaderKeys\":[]"))
+                .body("result.content[0].text", containsString("\"envVarHeaders\":{}"));
+    }
+
+    @Test(groups = "MCP")
+    public void testDiagnosticsTool_discoveredToolCount_isPositive() {
+        Response resp = given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":56,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"ibs_diagnostics\",\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .extract().response();
+
+        String text = resp.path("result.content[0].text");
+        assertThat(text, containsString("\"discoveredToolCount\""));
+        assertThat(text, not(containsString("\"discoveredToolCount\":0")));
+    }
+
+    @Test(groups = "MCP")
+    public void testDiagnosticsTool_prechainActive_reflectsConfig() {
+        ConfigValueHandlerIBS.MCP_PRECHAIN.activate(
+                "{\"ibs_pre\":{\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"methodReturningString\",\"args\":[]}}");
+        try {
+            given()
+                    .contentType(CONTENT_TYPE_JSON)
+                    .body("{\"jsonrpc\":\"2.0\",\"id\":57,\"method\":\"tools/call\","
+                            + "\"params\":{\"name\":\"ibs_diagnostics\",\"arguments\":{}}}")
+            .when()
+                    .post(MCP_ENDPOINT)
+            .then()
+                    .statusCode(200)
+                    .body("result.isError", equalTo(false))
+                    .body("result.content[0].text", containsString("\"prechainActive\":true"));
+        } finally {
+            ConfigValueHandlerIBS.MCP_PRECHAIN.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
+    public void testDiagnosticsTool_prechainActive_trueWhenProvidedViaHeader() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .header(MCPRequestHandler.PRECHAIN_HEADER,
+                        "{\"ibs_auth\":{\"class\":\"utils.CampaignUtils\","
+                        + "\"method\":\"setCurrentAuthenticationToLocal\","
+                        + "\"args\":[\"ibs-secret-url\",\"ibs-secret-login\",\"ibs-secret-pass\"]}}")
+                .body("{\"jsonrpc\":\"2.0\",\"id\":58,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"ibs_diagnostics\",\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("\"prechainActive\":true"));
     }
 
     // ---- type handling ----

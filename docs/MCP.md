@@ -13,6 +13,7 @@ using the built-in demo data, then from an external project that hosts its own J
   - [How the method catalog works](#how-the-method-catalog-works)
   - [Call chaining best practice](#call-chaining-best-practice)
   - [Project-specific pre-call setup (IBS.MCP.PRECHAIN)](#project-specific-pre-call-setup-ibsmcpprechain)
+  - [Built-in diagnostics tool (ibs_diagnostics)](#built-in-diagnostics-tool-ibs_diagnostics)
   - [Passing environment variables via headers (ibs-env-*)](#passing-environment-variables-via-headers-ibs-env-)
   - [Tools that are intentionally excluded](#tools-that-are-intentionally-excluded)
 - [Exposing your own project as MCP tools](#exposing-your-own-project-as-mcp-tools)
@@ -338,6 +339,25 @@ The value is a standard BridgeService `callContent` JSON object — the same for
 `java_call` payloads. Entries execute in insertion order, and call-chaining dependency resolution
 (referencing a prior entry's key in an `args` array) works as normal.
 
+Alternatively, the same JSON can be supplied as the `ibs-prechain` HTTP header on the MCP server
+registration. The header is used when `IBS.MCP.PRECHAIN` is not set. This is useful for
+client-side configuration in MCP clients that support custom headers (e.g. Claude Code's
+`.claude.json`):
+
+```json
+{
+  "mcpServers": {
+    "CampaignTests": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp",
+      "headers": {
+        "ibs-prechain": "{\"ibs_auth\":{\"class\":\"utils.CampaignUtils\",\"method\":\"setCurrentAuthenticationToLocal\",\"args\":[\"ibs-secret-url\",\"ibs-secret-login\",\"ibs-secret-pass\"]}}"
+      }
+    }
+  }
+}
+```
+
 #### Example: CampaignTests authentication
 
 CampaignTests requires two steps before any operation:
@@ -474,6 +494,68 @@ should:
 - For multi-step scenarios use `java_call` with call chaining (single `callContent` payload).
   State does not persist between separate tool calls.
 ```
+
+---
+
+### Built-in diagnostics tool (`ibs_diagnostics`)
+
+BridgeService exposes a built-in `ibs_diagnostics` tool alongside `java_call`. It requires no
+arguments and has no dependency on the HOST project — it is always available regardless of whether
+tool discovery succeeds.
+
+Call it via `tools/call`:
+
+```bash
+curl -s -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": { "name": "ibs_diagnostics", "arguments": {} }
+  }'
+```
+
+Response:
+
+```json
+{
+  "ibsVersion": "3.11.0",
+  "deploymentMode": "TEST",
+  "mcpConfig": {
+    "packagesConfigured": "com.example.services",
+    "prechainActive": true,
+    "javadocRequired": true
+  },
+  "headers": {
+    "secretHeaderKeys": ["ibs-secret-login", "ibs-secret-pass", "ibs-secret-url"],
+    "envVarHeaders": {
+      "AC.UITEST.HOST": "my-instance.example.com",
+      "AC.UITEST.LANGUAGE": "en_US"
+    },
+    "regularHeaderCount": 3
+  },
+  "discoveredToolCount": 142
+}
+```
+
+**Fields:**
+
+| Field | Description |
+|---|---|
+| `ibsVersion` | Running BridgeService version |
+| `deploymentMode` | `TEST` or `PRODUCTION` |
+| `mcpConfig.packagesConfigured` | Value of `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` |
+| `mcpConfig.prechainActive` | Whether a prechain is configured (env var or header) |
+| `mcpConfig.javadocRequired` | Whether `IBS.MCP.REQUIRE_JAVADOC` is enabled |
+| `headers.secretHeaderKeys` | Names of `ibs-secret-*` headers received (values suppressed) |
+| `headers.envVarHeaders` | Decoded env-var headers (`ibs-env-*` prefix stripped, uppercased) |
+| `headers.regularHeaderCount` | Count of headers that are neither secret nor env-var |
+| `discoveredToolCount` | Number of methods in the `java_call` catalog |
+
+Use `ibs_diagnostics` as the first step when connecting a new HOSTSERVICE — it confirms
+connectivity, verifies that all `ibs-secret-*` and `ibs-env-*` headers are reaching the server,
+and shows whether PRECHAIN and Javadoc requirements are active, all without touching HOST code.
 
 ---
 

@@ -40,6 +40,8 @@ public class MCPRequestHandler {
     private static final String JSONRPC_VERSION = "2.0";
     private static final String MCP_PROTOCOL_VERSION = "2024-11-05";
     private static final String JAVA_CALL_TOOL_NAME = "java_call";
+    private static final String DIAGNOSTICS_TOOL_NAME = "ibs_diagnostics";
+    static final String PRECHAIN_HEADER = "ibs-prechain";
 
     private static final String JAVA_CALL_TOOL_SCHEMA = "{"
             + "\"type\":\"object\","
@@ -61,8 +63,15 @@ public class MCPRequestHandler {
             + "\"timeout\":{\"type\":\"integer\",\"description\":\"Timeout in milliseconds (0=unlimited, default 10000)\"}"
             + "}}";
 
+    private static final String DIAGNOSTICS_TOOL_SCHEMA = "{"
+            + "\"type\":\"object\","
+            + "\"properties\":{},"
+            + "\"required\":[]"
+            + "}";
+
     private final ObjectMapper mapper = new ObjectMapper();
     private final List<Map<String, Object>> toolList;
+    private final int discoveredToolCount;
 
     /**
      * Constructs the handler, performs tool discovery from IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES,
@@ -73,6 +82,7 @@ public class MCPRequestHandler {
         MCPToolDiscovery.DiscoveryResult discovery = MCPToolDiscovery.discoverTools(
                 ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.fetchValue());
         String catalog = buildCatalog(discovery.tools, discovery.methodRegistry);
+        this.discoveredToolCount = discovery.methodRegistry.size();
 
         List<Map<String, Object>> tools = new ArrayList<>();
         try {
@@ -81,11 +91,22 @@ public class MCPRequestHandler {
             javaCallTool.put("description", buildJavaCallDescription(catalog));
             javaCallTool.put("inputSchema", mapper.readValue(JAVA_CALL_TOOL_SCHEMA, Map.class));
             tools.add(javaCallTool);
+
+            Map<String, Object> diagnosticsTool = new LinkedHashMap<>();
+            diagnosticsTool.put("name", DIAGNOSTICS_TOOL_NAME);
+            diagnosticsTool.put("description",
+                    "Built-in IBS diagnostic tool. Returns IBS version, MCP config state, "
+                    + "and header classification: secret key names (values suppressed), "
+                    + "env-var key+value pairs (decoded: prefix stripped, uppercased), "
+                    + "and regular header count. No arguments required. "
+                    + "Does not depend on HOST packages — always available.");
+            diagnosticsTool.put("inputSchema", mapper.readValue(DIAGNOSTICS_TOOL_SCHEMA, Map.class));
+            tools.add(diagnosticsTool);
         } catch (JsonProcessingException e) {
-            log.error("Failed to parse java_call tool schema — the tool will not be available.", e);
+            log.error("Failed to parse tool schema — one or more tools will not be available.", e);
         }
         this.toolList = Collections.unmodifiableList(tools);
-        log.info("MCPRequestHandler ready: {} method(s) in catalog via java_call.", discovery.methodRegistry.size());
+        log.info("MCPRequestHandler ready: {} method(s) in catalog via java_call.", discoveredToolCount);
     }
 
     /**
@@ -168,6 +189,10 @@ public class MCPRequestHandler {
 
         if (JAVA_CALL_TOOL_NAME.equals(toolName)) {
             return handleJavaCall(id, arguments, headers);
+        }
+
+        if (DIAGNOSTICS_TOOL_NAME.equals(toolName)) {
+            return handleDiagnostics(id, headers);
         }
 
         return buildCallToolResult(id, "Unknown tool: " + toolName
@@ -279,7 +304,11 @@ public class MCPRequestHandler {
             // Prepend PRECHAIN entries to callContent so java_call chains share the same
             // server-level setup (e.g. auth) as the rest of the catalog. PRECHAIN keys are
             // stripped from the result.
-            Map<String, CallContent> prechain = parsePrechainJson(ConfigValueHandlerIBS.MCP_PRECHAIN.fetchValue());
+            String prechainJson = ConfigValueHandlerIBS.MCP_PRECHAIN.fetchValue();
+            if (prechainJson == null || prechainJson.isBlank()) {
+                prechainJson = headers.get(PRECHAIN_HEADER);
+            }
+            Map<String, CallContent> prechain = parsePrechainJson(prechainJson);
             if (!prechain.isEmpty()) {
                 Map<String, Object> callContent = (Map<String, Object>) arguments
                         .computeIfAbsent("callContent", k -> new LinkedHashMap<>());
@@ -303,6 +332,74 @@ public class MCPRequestHandler {
             return buildCallToolResult(id, resultJson, false);
         } catch (Exception e) {
             log.debug("java_call tool failed: {}", e.getMessage());
+            return buildCallToolResult(id, exceptionToErrorPayload(e), true);
+        }
+    }
+
+    /**
+     * Handles the ibs_diagnostics tool call. Returns a diagnostic JSON payload using only
+     * IBS-owned config — no HOST class dependencies. Secret header values are never included;
+     * only their key names are reported. Env-var header keys and decoded values are included
+     * because they are not secrets.
+     *
+     * <p>This tool is designed to be called within the MCP boundary to verify connectivity,
+     * header reception, and MCP configuration without requiring HOST project knowledge.
+     */
+    private String handleDiagnostics(Object id, Map<String, String> headers) {
+        try {
+            Map<String, Object> diag = new LinkedHashMap<>();
+            diag.put("ibsVersion", ConfigValueHandlerIBS.PRODUCT_VERSION.fetchValue());
+            diag.put("deploymentMode", ConfigValueHandlerIBS.DEPLOYMENT_MODEL.fetchValue());
+
+            Map<String, Object> mcpConfig = new LinkedHashMap<>();
+            mcpConfig.put("packagesConfigured",
+                    ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.fetchValue());
+            String prechain = ConfigValueHandlerIBS.MCP_PRECHAIN.fetchValue();
+            mcpConfig.put("prechainActive", prechain != null && !prechain.isBlank());
+            mcpConfig.put("javadocRequired",
+                    Boolean.parseBoolean(ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.fetchValue()));
+            diag.put("mcpConfig", mcpConfig);
+
+            String secretPrefix = ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue();
+            String envPrefix = ConfigValueHandlerIBS.ENV_HEADER_PREFIX.fetchValue();
+            boolean envPrefixActive = envPrefix != null && !envPrefix.isBlank();
+            String lowerEnvPrefix = envPrefixActive ? envPrefix.toLowerCase(java.util.Locale.ROOT) : "";
+
+            List<String> secretKeys = headers.keySet().stream()
+                    .filter(k -> k.startsWith(secretPrefix))
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            Map<String, String> envVars = new LinkedHashMap<>();
+            if (envPrefixActive) {
+                headers.entrySet().stream()
+                        .filter(e -> e.getKey().toLowerCase(java.util.Locale.ROOT).startsWith(lowerEnvPrefix))
+                        .sorted(Map.Entry.comparingByKey())
+                        .forEach(e -> envVars.put(
+                                e.getKey().substring(envPrefix.length()).toUpperCase(java.util.Locale.ROOT),
+                                e.getValue()));
+            }
+            String headerPrechain = headers.get(PRECHAIN_HEADER);
+            if (headerPrechain != null && !headerPrechain.isBlank()) {
+                mcpConfig.put("prechainActive", true);
+            }
+
+            long regularHeaderCount = headers.keySet().stream()
+                    .filter(k -> !k.startsWith(secretPrefix)
+                            && !(envPrefixActive
+                                 && k.toLowerCase(java.util.Locale.ROOT).startsWith(lowerEnvPrefix)))
+                    .count();
+
+            Map<String, Object> headerSummary = new LinkedHashMap<>();
+            headerSummary.put("secretHeaderKeys", secretKeys);
+            headerSummary.put("envVarHeaders", envVars);
+            headerSummary.put("regularHeaderCount", regularHeaderCount);
+            diag.put("headers", headerSummary);
+
+            diag.put("discoveredToolCount", discoveredToolCount);
+            return buildCallToolResult(id, mapper.writeValueAsString(diag), false);
+        } catch (Exception e) {
+            log.error("ibs_diagnostics tool failed: {}", e.getMessage(), e);
             return buildCallToolResult(id, exceptionToErrorPayload(e), true);
         }
     }

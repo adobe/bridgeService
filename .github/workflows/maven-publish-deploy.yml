@@ -67,12 +67,3 @@ jobs:
           X_GITHUB_PASSWORD: ${{ secrets.ADOBE_BOT_GITHUB_PASSWORD }}
         run: mvn -B -DperformRelease=true clean deploy -Prelease,ossrh -s .github/workflows/settings.xml
 
-      - name: Promote to Central
-        env:
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-        run: |
-          curl -f -X POST \
-            -H "Authorization: Bearer $(echo -n "${SONATYPE_USERNAME}:${SONATYPE_PASSWORD}" | base64)" \
-            "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/com.adobe.campaign.tests.bridge"
-

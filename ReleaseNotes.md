@@ -1,5 +1,5 @@
 # Bridge Service - RELEASE NOTES
-## 3.11.0
+## 3.11.1
 * **MCP** [#12 Expose BridgeService as an MCP Server](https://github.com/adobe/bridgeService/issues/12) Extended MCP documentation. See [docs/MCP.md](docs/MCP.md) for the full reference.
 * **Dependency Updates** Routine dependency and plugin version bumps.
 * **CI** Fixed GPG signing configuration to address a deprecation warning introduced by `maven-gpg-plugin` 3.2.8.

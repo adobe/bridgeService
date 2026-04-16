@@ -113,6 +113,10 @@ public class MCPRequestHandler {
      * Spark route handler. Parses the incoming JSON-RPC 2.0 request and dispatches
      * to the appropriate handler. All exceptions are caught and returned as MCP errors
      * rather than propagating to Spark's HTTP exception handlers.
+     *
+     * @param req the incoming Spark HTTP request
+     * @param res the Spark HTTP response
+     * @return the JSON-RPC response as a String
      */
     public Object handle(Request req, Response res) {
         res.type("application/json");

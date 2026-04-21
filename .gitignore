@@ -18,3 +18,4 @@ ibs_output
 *.dtmp
 /integroBridgeService/profile.jfr
 /integroBridgeService/.profileconfig.json
+.vscode

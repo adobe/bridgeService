@@ -257,6 +257,28 @@ curl -s -X POST http://localhost:8080/mcp \
 
 ### How method discovery works
 
+```mermaid
+flowchart LR
+    subgraph startup["Startup"]
+        P["Configured packages\n(IBS.CLASSLOADER.STATIC\n.INTEGRITY.PACKAGES)"] --> D["MCPToolDiscovery\n(public static methods)"]
+        D --> TL["tools/list\n──────────────────\nClassName_method₁\nClassName_method₂  …\njava_call\nibs_diagnostics"]
+    end
+
+    subgraph call["Per call — tools/call"]
+        A["AI Agent"]
+        IT["handleIndividual\nToolCall()"]
+        JC["handleJavaCall()"]
+        PC["PRECHAIN\n(if configured)"]
+        CL["Isolated ClassLoader\n(fresh per call)"]
+        R["Result"]
+
+        A -->|"ClassName_methodN\n{ arg0, arg1, … }"| IT
+        A -->|"java_call\n{ callContent: {…} }"| JC
+        IT -->|"synthetic single-step\ncallContent"| JC
+        JC --> PC --> CL --> R
+    end
+```
+
 `tools/list` exposes each auto-discovered public static method as its own MCP tool, named
 `ClassName_methodName`. Each tool carries its own `inputSchema` (parameters named `arg0`,
 `arg1`, …) and a Javadoc-sourced description. The list is rebuilt every time the server starts,

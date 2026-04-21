@@ -42,31 +42,57 @@ public class MCPRequestHandler {
     private static final String DIAGNOSTICS_TOOL_NAME = "ibs_diagnostics";
     static final String PRECHAIN_HEADER = "ibs-prechain";
 
-    private static final String JAVA_CALL_TOOL_SCHEMA = "{"
-            + "\"type\":\"object\","
-            + "\"required\":[\"callContent\"],"
-            + "\"properties\":{"
-            + "\"callContent\":{"
-            + "\"type\":\"object\","
-            + "\"description\":\"Map of call IDs to call definitions. A string arg matching a prior call ID is substituted with that call's result.\","
-            + "\"additionalProperties\":{"
-            + "\"type\":\"object\","
-            + "\"required\":[\"class\",\"method\"],"
-            + "\"properties\":{"
-            + "\"class\":{\"type\":\"string\",\"description\":\"Fully qualified Java class name\"},"
-            + "\"method\":{\"type\":\"string\",\"description\":\"Method name\"},"
-            + "\"args\":{\"type\":\"array\",\"description\":\"Method arguments\"},"
-            + "\"returnType\":{\"type\":\"string\",\"description\":\"Optional expected return type\"}"
-            + "}}},"
-            + "\"environmentVariables\":{\"type\":\"object\",\"description\":\"Key-value pairs injected before execution\"},"
-            + "\"timeout\":{\"type\":\"integer\",\"description\":\"Timeout in milliseconds (0=unlimited, default 10000)\"}"
-            + "}}";
+    private static final Map<String, Object> JAVA_CALL_SCHEMA_MAP = buildJavaCallSchemaMap();
+    private static final Map<String, Object> DIAGNOSTICS_SCHEMA_MAP = buildDiagnosticsSchemaMap();
 
-    private static final String DIAGNOSTICS_TOOL_SCHEMA = "{"
-            + "\"type\":\"object\","
-            + "\"properties\":{},"
-            + "\"required\":[]"
-            + "}";
+    private static Map<String, Object> schemaProp(String in_type, String in_desc) {
+        Map<String, Object> l_p = new LinkedHashMap<>();
+        l_p.put("type", in_type);
+        l_p.put("description", in_desc);
+        return l_p;
+    }
+
+    private static Map<String, Object> buildJavaCallSchemaMap() {
+        Map<String, Object> l_callEntryProps = new LinkedHashMap<>();
+        l_callEntryProps.put("class", schemaProp("string", "Fully qualified Java class name"));
+        l_callEntryProps.put("method", schemaProp("string", "Method name"));
+        l_callEntryProps.put("args", schemaProp("array", "Method arguments"));
+        l_callEntryProps.put("returnType", schemaProp("string", "Optional expected return type"));
+
+        Map<String, Object> l_callEntrySchema = new LinkedHashMap<>();
+        l_callEntrySchema.put("type", "object");
+        l_callEntrySchema.put("required", Arrays.asList("class", "method"));
+        l_callEntrySchema.put("properties", l_callEntryProps);
+
+        Map<String, Object> l_callContentProp = new LinkedHashMap<>();
+        l_callContentProp.put("type", "object");
+        l_callContentProp.put("description",
+                "Map of call IDs to call definitions. A string arg matching a prior call ID is substituted with that call's result.");
+        l_callContentProp.put("additionalProperties", l_callEntrySchema);
+
+        Map<String, Object> l_props = new LinkedHashMap<>();
+        l_props.put("callContent", l_callContentProp);
+        l_props.put("environmentVariables", schemaProp("object", "Key-value pairs injected before execution"));
+
+        Map<String, Object> l_timeoutProp = new LinkedHashMap<>();
+        l_timeoutProp.put("type", "integer");
+        l_timeoutProp.put("description", "Timeout in milliseconds (0=unlimited, default 10000)");
+        l_props.put("timeout", l_timeoutProp);
+
+        Map<String, Object> l_schema = new LinkedHashMap<>();
+        l_schema.put("type", "object");
+        l_schema.put("required", Collections.singletonList("callContent"));
+        l_schema.put("properties", l_props);
+        return Collections.unmodifiableMap(l_schema);
+    }
+
+    private static Map<String, Object> buildDiagnosticsSchemaMap() {
+        Map<String, Object> l_schema = new LinkedHashMap<>();
+        l_schema.put("type", "object");
+        l_schema.put("properties", new LinkedHashMap<>());
+        l_schema.put("required", Collections.emptyList());
+        return Collections.unmodifiableMap(l_schema);
+    }
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final List<Map<String, Object>> toolList;
@@ -95,26 +121,22 @@ public class MCPRequestHandler {
         }
         this.toolDefinitions = Collections.unmodifiableMap(defs);
 
-        try {
-            Map<String, Object> l_javaCallTool = new LinkedHashMap<>();
-            l_javaCallTool.put("name", JAVA_CALL_TOOL_NAME);
-            l_javaCallTool.put("description", buildJavaCallDescription());
-            l_javaCallTool.put("inputSchema", mapper.readValue(JAVA_CALL_TOOL_SCHEMA, Map.class));
-            tools.add(l_javaCallTool);
+        Map<String, Object> l_javaCallTool = new LinkedHashMap<>();
+        l_javaCallTool.put("name", JAVA_CALL_TOOL_NAME);
+        l_javaCallTool.put("description", buildJavaCallDescription());
+        l_javaCallTool.put("inputSchema", JAVA_CALL_SCHEMA_MAP);
+        tools.add(l_javaCallTool);
 
-            Map<String, Object> l_diagnosticsTool = new LinkedHashMap<>();
-            l_diagnosticsTool.put("name", DIAGNOSTICS_TOOL_NAME);
-            l_diagnosticsTool.put("description",
-                    "Built-in IBS diagnostic tool. Returns IBS version, MCP config state, "
-                    + "and header classification: secret key names (values suppressed), "
-                    + "env-var key+value pairs (decoded: prefix stripped, uppercased), "
-                    + "and regular header count. No arguments required. "
-                    + "Does not depend on HOST packages — always available.");
-            l_diagnosticsTool.put("inputSchema", mapper.readValue(DIAGNOSTICS_TOOL_SCHEMA, Map.class));
-            tools.add(l_diagnosticsTool);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to parse tool schema — one or more tools will not be available.", e);
-        }
+        Map<String, Object> l_diagnosticsTool = new LinkedHashMap<>();
+        l_diagnosticsTool.put("name", DIAGNOSTICS_TOOL_NAME);
+        l_diagnosticsTool.put("description",
+                "Built-in IBS diagnostic tool. Returns IBS version, MCP config state, "
+                + "and header classification: secret key names (values suppressed), "
+                + "env-var key+value pairs (decoded: prefix stripped, uppercased), "
+                + "and regular header count. No arguments required. "
+                + "Does not depend on HOST packages — always available.");
+        l_diagnosticsTool.put("inputSchema", DIAGNOSTICS_SCHEMA_MAP);
+        tools.add(l_diagnosticsTool);
         this.toolList = Collections.unmodifiableList(tools);
         log.info("MCPRequestHandler ready: {} individual tool(s) + java_call + ibs_diagnostics.",
                 discoveredToolCount);
@@ -366,31 +388,26 @@ public class MCPRequestHandler {
     @SuppressWarnings("unchecked")
     private String handleIndividualToolCall(Object in_id, String in_toolName,
             Map<String, Object> in_arguments, Map<String, String> in_headers) {
-        try {
-            Method l_method = methodRegistry.get(in_toolName);
-            Map<String, Object> l_toolDef = toolDefinitions.get(in_toolName);
-            Map<String, Object> l_schema = (Map<String, Object>) l_toolDef.get("inputSchema");
-            List<String> l_required = (List<String>) l_schema.getOrDefault("required",
-                    Collections.emptyList());
+        Method l_method = methodRegistry.get(in_toolName);
+        Map<String, Object> l_toolDef = toolDefinitions.get(in_toolName);
+        Map<String, Object> l_schema = (Map<String, Object>) l_toolDef.get("inputSchema");
+        List<String> l_required = (List<String>) l_schema.getOrDefault("required",
+                Collections.emptyList());
 
-            List<Object> l_args = new ArrayList<>();
-            for (String lt_paramName : l_required) {
-                l_args.add(in_arguments.get(lt_paramName));
-            }
-
-            Map<String, Object> l_callEntry = new LinkedHashMap<>();
-            l_callEntry.put("class", l_method.getDeclaringClass().getName());
-            l_callEntry.put("method", l_method.getName());
-            l_callEntry.put("args", l_args);
-
-            Map<String, Object> l_syntheticArgs = new LinkedHashMap<>();
-            l_syntheticArgs.put("callContent", Collections.singletonMap("result", l_callEntry));
-
-            return handleJavaCall(in_id, l_syntheticArgs, in_headers);
-        } catch (Exception e) {
-            log.debug("Individual tool call failed for '{}': {}", in_toolName, e.getMessage());
-            return buildCallToolResult(in_id, exceptionToErrorPayload(e), true);
+        List<Object> l_args = new ArrayList<>();
+        for (String lt_paramName : l_required) {
+            l_args.add(in_arguments.get(lt_paramName));
         }
+
+        Map<String, Object> l_callEntry = new LinkedHashMap<>();
+        l_callEntry.put("class", l_method.getDeclaringClass().getName());
+        l_callEntry.put("method", l_method.getName());
+        l_callEntry.put("args", l_args);
+
+        Map<String, Object> l_syntheticArgs = new LinkedHashMap<>();
+        l_syntheticArgs.put("callContent", Collections.singletonMap("result", l_callEntry));
+
+        return handleJavaCall(in_id, l_syntheticArgs, in_headers);
     }
 
     private String buildResult(Object id, Object result) {

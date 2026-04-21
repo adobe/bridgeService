@@ -102,7 +102,7 @@ Expected response:
   "id": 1,
   "result": {
     "protocolVersion": "2024-11-05",
-    "serverInfo": { "name": "bridgeService", "version": "3.11.1" },
+    "serverInfo": { "name": "bridgeService", "version": "3.11.2" },
     "capabilities": { "tools": {} }
   }
 }
@@ -553,7 +553,7 @@ Response:
 
 ```json
 {
-  "ibsVersion": "3.11.1",
+  "ibsVersion": "3.11.2",
   "deploymentMode": "TEST",
   "mcpConfig": {
     "packagesConfigured": "com.example.services",
@@ -797,7 +797,7 @@ and start the server from within it.
 <dependency>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <version>3.11.1</version>
+    <version>3.11.2</version>
 </dependency>
 ```
 

@@ -1,4 +1,9 @@
 # Bridge Service - RELEASE NOTES
+## 3.11.2
+* **MCP** [#35 Hybrid method discovery](https://github.com/adobe/bridgeService/pull/35) Each auto-discovered public static method is now exposed as its own named MCP tool in `tools/list`, enabling direct invocation without a `java_call` wrapper. `java_call` is retained for multi-step chains where steps share state or pass complex Java objects between them.
+* **Dependency Updates** Routine dependency bumps: log4j2, mockito-core, testng.
+* **CI** Updated `actions/checkout` to v6; fixed SonarCloud and Codecov badge staleness.
+
 ## 3.11.1
 * **MCP** [#12 Expose BridgeService as an MCP Server](https://github.com/adobe/bridgeService/issues/12) Extended MCP documentation. See [docs/MCP.md](docs/MCP.md) for the full reference.
 * **Dependency Updates** Routine dependency and plugin version bumps.

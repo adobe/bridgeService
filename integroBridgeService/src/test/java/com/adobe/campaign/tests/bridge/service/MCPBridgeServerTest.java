@@ -79,8 +79,6 @@ public class MCPBridgeServerTest {
 
     @Test(groups = "MCP")
     public void testToolsList_returnsDiscoveredTools() {
-        // Only java_call is a callable tool; the catalog of discovered methods is embedded
-        // in its description so the LLM can construct the right callContent payload.
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{}}")
@@ -88,10 +86,8 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .body("result.tools", hasSize(2))
-                .body("result.tools.name", hasItem("java_call"))
-                .body("result.tools.find { it.name == 'java_call' }.description",
-                        containsString("SimpleStaticMethods_methodReturningString"));
+                .body("result.tools.name", hasItems("java_call", "ibs_diagnostics"))
+                .body("result.tools.name", hasItem("SimpleStaticMethods_methodReturningString"));
     }
 
     @Test(groups = "MCP")
@@ -110,7 +106,7 @@ public class MCPBridgeServerTest {
 
     @Test(groups = "MCP")
     public void testToolsList_descriptionComesFromJavadoc() {
-        // The catalog entry for methodReturningString uses its Javadoc text, not the
+        // The individual tool for methodReturningString uses its Javadoc text, not the
         // fallback "Calls com.example.MyClass.methodName()" string.
         given()
                 .contentType(CONTENT_TYPE_JSON)
@@ -119,30 +115,28 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .body("result.tools.find { it.name == 'java_call' }.description",
+                .body("result.tools.find { it.name == 'SimpleStaticMethods_methodReturningString' }.description",
                         containsString("success string"));
     }
 
     @Test(groups = "MCP")
     public void testToolsList_noArgToolHasEmptyProperties() {
-        Response resp = given()
+        given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/list\",\"params\":{}}")
         .when()
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .extract().response();
-
-        // methodReturningString is in the catalog — its entry must appear in java_call description
-        String desc = resp.path("result.tools.find { it.name == 'java_call' }.description");
-        assertThat(desc, containsString("SimpleStaticMethods_methodReturningString"));
+                .body("result.tools.name", hasItem("SimpleStaticMethods_methodReturningString"))
+                .body("result.tools.find { it.name == 'SimpleStaticMethods_methodReturningString' }.inputSchema.required",
+                        nullValue());
     }
 
     @Test(groups = "MCP")
     public void testToolsList_undocumentedMethodExcluded() {
         // EnvironmentVariableHandler methods have no Javadoc — must be absent from the
-        // catalog (IBS.MCP.REQUIRE_JAVADOC defaults to true).
+        // tools list (IBS.MCP.REQUIRE_JAVADOC defaults to true).
         given()
                 .contentType(CONTENT_TYPE_JSON)
                 .body("{\"jsonrpc\":\"2.0\",\"id\":13,\"method\":\"tools/list\",\"params\":{}}")
@@ -150,11 +144,9 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .body("result.tools", hasSize(2))
-                .body("result.tools.find { it.name == 'java_call' }.description",
-                        not(containsString("EnvironmentVariableHandler_getCacheProperty")))
-                .body("result.tools.find { it.name == 'java_call' }.description",
-                        not(containsString("EnvironmentVariableHandler_setIntegroCache")));
+                .body("result.tools.name", hasItems("java_call", "ibs_diagnostics"))
+                .body("result.tools.name", not(hasItem("EnvironmentVariableHandler_getCacheProperty")))
+                .body("result.tools.name", not(hasItem("EnvironmentVariableHandler_setIntegroCache")));
     }
 
     // ---- ibs_diagnostics tool ----
@@ -168,8 +160,7 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(200)
-                .body("result.tools", hasSize(2))
-                .body("result.tools.name", hasItem("ibs_diagnostics"))
+                .body("result.tools.name", hasItems("java_call", "ibs_diagnostics"))
                 .body("result.tools.find { it.name == 'ibs_diagnostics' }.description", notNullValue())
                 .body("result.tools.find { it.name == 'ibs_diagnostics' }.inputSchema", notNullValue());
     }
@@ -902,5 +893,180 @@ public class MCPBridgeServerTest {
                 .post(MCP_ENDPOINT)
         .then()
                 .statusCode(202);
+    }
+
+    // ---- individual tool routing ----
+
+    @Test(groups = "MCP")
+    public void testToolsList_exposesIndividualDiscoveredTools() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":100,\"method\":\"tools/list\",\"params\":{}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.tools.name", hasItem("SimpleStaticMethods_methodReturningString"))
+                .body("result.tools.name", hasItem("SimpleStaticMethods_methodAcceptingStringArgument"))
+                .body("result.tools.find { it.name == 'SimpleStaticMethods_methodReturningString' }.inputSchema",
+                        notNullValue())
+                .body("result.tools.find { it.name == 'SimpleStaticMethods_methodAcceptingStringArgument' }.inputSchema.required",
+                        hasItem("arg0"));
+    }
+
+    @Test(groups = "MCP")
+    public void testIndividualTool_noArgMethod_returnsResult() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":101,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
+                        + "\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("_Success"));
+    }
+
+    @Test(groups = "MCP")
+    public void testIndividualTool_stringArgMethod_returnsResult() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":102,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodAcceptingStringArgument\","
+                        + "\"arguments\":{\"arg0\":\"hello\"}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("hello_Success"));
+    }
+
+    @Test(groups = "MCP")
+    public void testIndividualTool_intArgMethod_returnsResult() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":103,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodAcceptingIntArgument\","
+                        + "\"arguments\":{\"arg0\":42}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("126"));
+    }
+
+    @Test(groups = "MCP")
+    public void testIndividualTool_twoArgMethod_argOrderPreserved() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":104,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodAcceptingTwoArguments\","
+                        + "\"arguments\":{\"arg0\":\"foo\",\"arg1\":\"bar\"}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("foo+bar_Success"));
+    }
+
+    @Test(groups = "MCP")
+    public void testIndividualTool_methodThrowsException_returnsIsError() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":105,\"method\":\"tools/call\","
+                        + "\"params\":{\"name\":\"SimpleStaticMethods_methodThrowsException\","
+                        + "\"arguments\":{}}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(true))
+                .body("result.content[0].text", containsString("\"title\""))
+                .body("result.content[0].text", containsString("\"originalException\""));
+    }
+
+    @Test(groups = "MCP")
+    public void testJavaCallDescription_doesNotContainCatalog() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":106,\"method\":\"tools/list\",\"params\":{}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.tools.find { it.name == 'java_call' }.description",
+                        not(containsString("Discovered methods")));
+    }
+
+    @Test(groups = "MCP")
+    public void testIndividualTool_prechainIsApplied() {
+        ConfigValueHandlerIBS.MCP_PRECHAIN.activate(
+                "{\"ibs_pre\":{\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\","
+                + "\"method\":\"methodReturningString\",\"args\":[]}}");
+        try {
+            given()
+                    .contentType(CONTENT_TYPE_JSON)
+                    .body("{\"jsonrpc\":\"2.0\",\"id\":107,\"method\":\"tools/call\","
+                            + "\"params\":{\"name\":\"SimpleStaticMethods_methodReturningString\","
+                            + "\"arguments\":{}}}")
+            .when()
+                    .post(MCP_ENDPOINT)
+            .then()
+                    .statusCode(200)
+                    .body("result.isError", equalTo(false))
+                    .body("result.content[0].text", not(containsString("\"ibs_pre\"")))
+                    .body("result.content[0].text", containsString("\"result\""));
+        } finally {
+            ConfigValueHandlerIBS.MCP_PRECHAIN.reset();
+        }
+    }
+
+    // ---- constructor and complex object chaining ----
+
+    @Test(groups = "MCP")
+    public void testToolsList_constructorsNotExposedAsIndividualTools() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":108,\"method\":\"tools/list\",\"params\":{}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.tools.name", not(hasItem("Instantiable_Instantiable")));
+    }
+
+    @Test(groups = "MCP")
+    public void testJavaCall_constructorChain_instantiableThenStaticMethod() {
+        // Constructors are not available as individual tools — use java_call to instantiate
+        // and then pass the result object by reference to a static method in the same chain.
+        String payload = "{\"jsonrpc\":\"2.0\",\"id\":109,\"method\":\"tools/call\","
+                + "\"params\":{\"name\":\"java_call\","
+                + "\"arguments\":{"
+                + "\"callContent\":{"
+                + "\"obj\":{"
+                + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.Instantiable\","
+                + "\"method\":\"Instantiable\","
+                + "\"args\":[\"hello\"]"
+                + "},"
+                + "\"fetch\":{"
+                + "\"class\":\"com.adobe.campaign.tests.bridge.testdata.one.StaticType\","
+                + "\"method\":\"fetchInstantiableStringValue\","
+                + "\"args\":[\"obj\"]"
+                + "}}}}}";
+
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body(payload)
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.isError", equalTo(false))
+                .body("result.content[0].text", containsString("hello"));
     }
 }

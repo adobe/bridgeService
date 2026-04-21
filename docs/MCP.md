@@ -116,9 +116,10 @@ curl -s -X POST http://localhost:8080/mcp \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
 ```
 
-`tools/list` always returns exactly **one tool — `java_call`**. Its `description` contains a
-catalog of all methods discovered from the configured packages. AI agents read that catalog to
-learn which class and method names to place in their `callContent` payloads.
+`tools/list` returns **one tool per auto-discovered method** plus `java_call` (for multi-step
+chains) and `ibs_diagnostics`. AI agents can call individual methods directly by name, or bundle
+multiple steps into a single `java_call` chain when they need to pass live Java objects between
+steps.
 
 ```json
 {
@@ -127,29 +128,28 @@ learn which class and method names to place in their `callContent` payloads.
   "result": {
     "tools": [
       {
-        "name": "java_call",
-        "description": "Generic BridgeService call. Accepts the full /call payload including call chaining, instance methods, environment variables, and timeout. Bundle all operations into one callContent chain so they share a single isolated execution context. State (including authentication) does not persist between separate tool calls.\n\nDiscovered methods (use class/method values in callContent for java_call):\n\nSimpleStaticMethods_methodReturningString\n  class:  com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\n  method: methodReturningString\n  Returns the success string constant used for testing.\n  args: (none)\n\nSimpleStaticMethods_methodAcceptingStringArgument\n  class:  com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods\n  method: methodAcceptingStringArgument\n  Appends the success suffix to the given string.\n  arg0 (string): the input string\n\n... (further entries for ClassWithLogger methods etc.)",
+        "name": "SimpleStaticMethods_methodReturningString",
+        "description": "Returns the success string constant used for testing.",
+        "inputSchema": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "SimpleStaticMethods_methodAcceptingStringArgument",
+        "description": "Appends the success suffix to the given string.",
         "inputSchema": {
           "type": "object",
-          "required": ["callContent"],
-          "properties": {
-            "callContent": {
-              "type": "object",
-              "description": "Map of call IDs to call definitions.",
-              "additionalProperties": {
-                "type": "object",
-                "required": ["class", "method"],
-                "properties": {
-                  "class":  { "type": "string" },
-                  "method": { "type": "string" },
-                  "args":   { "type": "array"  }
-                }
-              }
-            },
-            "environmentVariables": { "type": "object" },
-            "timeout": { "type": "integer" }
-          }
+          "properties": { "arg0": { "type": "string", "description": "the input string" } },
+          "required": ["arg0"]
         }
+      },
+      {
+        "name": "java_call",
+        "description": "Generic BridgeService call for multi-step chains. ...",
+        "inputSchema": { "type": "object", "required": ["callContent"], "properties": { "callContent": { "..." } } }
+      },
+      {
+        "name": "ibs_diagnostics",
+        "description": "Built-in IBS diagnostic tool. ...",
+        "inputSchema": { "type": "object", "properties": {} }
       }
     ]
   }
@@ -158,8 +158,7 @@ learn which class and method names to place in their `callContent` payloads.
 
 ### Calling tools
 
-All calls go through `java_call`. Use the class and method names from the catalog in
-`callContent`.
+Single-method calls can be made directly by tool name. Multi-step chains go through `java_call`.
 
 **No-argument method:**
 
@@ -256,37 +255,31 @@ curl -s -X POST http://localhost:8080/mcp \
   }'
 ```
 
-### How the method catalog works
+### How method discovery works
 
-`tools/list` returns a single tool — `java_call`. Auto-discovery does not produce separately
-callable tools; instead it builds a **catalog** that is embedded in the `java_call` description.
+`tools/list` exposes each auto-discovered public static method as its own MCP tool, named
+`ClassName_methodName`. Each tool carries its own `inputSchema` (parameters named `arg0`,
+`arg1`, …) and a Javadoc-sourced description. The list is rebuilt every time the server starts,
+so it stays in sync with the Java library automatically.
 
-When an AI agent calls `tools/list` it reads the catalog to learn which class and method names
-exist, then constructs the appropriate `callContent` payload and calls `java_call`. The catalog is
-rebuilt every time the server starts, so it stays in sync with the Java library automatically.
+AI agents can call individual methods directly for single stateless reads, or bundle multiple
+steps into a `java_call` chain when they need to pass live Java objects between steps.
 
-**Why not separate tools per method?**
+**When to use individual tools vs `java_call`:**
 
-Separate tools per method force the AI to make one HTTP round-trip per method call and lose
-execution context between calls. With `java_call`, any number of steps can be bundled into one
-request inside a single isolated class loader — enabling call chaining, where the return value
-of step N is passed directly to step N+1 as a live Java object (not serialized JSON). This is
-essential for scenarios involving authentication, object creation, or anything with mutable state.
+| Scenario | Use |
+|---|---|
+| Single stateless read | Individual tool (`ClassName_methodName`) |
+| Step B needs the Java object returned by step A | `java_call` with call chain |
+| Overloaded method (same parameter count) | `java_call` |
+| Instance method or constructor | `java_call` |
 
-The catalog format in the description for each entry is:
+**Individual tools are for discovery and stateless calls.** Each tool call runs in a fresh
+isolated class loader. Complex Java objects (e.g. `List<MimeMessage>`) do not survive the JSON
+serialization round-trip between separate calls — they must be chained inside a single `java_call`.
 
-```
-ClassName_methodName
-  class:  com.example.package.ClassName
-  method: methodName
-  <Javadoc description>
-  arg0 (type): <param description>
-  arg1 (type): <param description>
-```
-
-**Project skills and `CLAUDE.md`** can reference catalog entries by class/method name to give the
-AI more context about when and how to use each one. For per-user auth or multi-step flows, the
-skill prepends an auth step to the `java_call` callContent chain.
+**Project skills and `CLAUDE.md`** can annotate methods with additional context (auth patterns,
+known FQ class names, multi-step flow recipes) to help the AI select the right tool and chain.
 
 ---
 

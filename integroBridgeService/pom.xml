@@ -185,6 +185,6 @@
     <parent>
         <groupId>com.adobe.campaign.tests.bridge</groupId>
         <artifactId>parent</artifactId>
-        <version>3.11.2</version>
+        <version>3.11.3-SNAPSHOT</version>
     </parent>
 </project>

@@ -177,7 +177,7 @@ If all is good you should get:
 
 ```
 All systems up - in production
-Version : 2.11.16
+Version : 3.11.2
 Product user version : 7.0
 ```
 

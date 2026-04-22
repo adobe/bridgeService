@@ -894,7 +894,7 @@ Set the environment variable `IBS.MCP.ENABLED` to `true` before starting BridgeS
 mvn exec:java -Dexec.args="test" -DIBS.MCP.ENABLED=true -DIBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES=com.example.mypackage
 ```
 
-At startup, BridgeService scans the packages listed in `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` and builds a **method catalog** from every **public static method** found. The catalog is embedded in the `java_call` tool description so that AI agents can read it via `tools/list`.
+At startup, BridgeService scans the packages listed in `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` and builds a **method catalog** from every **public static method** found. Each discovered method is exposed as its own named MCP tool in `tools/list`. A generic `java_call` tool is always present for multi-step chains and instance method calls.
 
 The MCP endpoint is available at:
 ```
@@ -932,7 +932,7 @@ Response:
 
 ### Discovering Tools (tools/list)
 
-`tools/list` always returns exactly **one tool — `java_call`**. Its `description` contains the full catalog of all discovered methods. AI agents read the catalog to learn which class and method names to place in their `callContent` payloads.
+`tools/list` returns **one tool per auto-discovered method** plus `java_call` (for multi-step chains) and `ibs_diagnostics`. Tools are named `{SimpleClassName}_{methodName}` and carry their own `inputSchema` and Javadoc-sourced description.
 
 ```json
 {
@@ -952,20 +952,34 @@ Response (abbreviated):
   "result": {
     "tools": [
       {
+        "name": "SimpleStaticMethods_methodAcceptingStringArgument",
+        "description": "Appends the success suffix to the given string.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "arg0": { "type": "string", "description": "the input string" } },
+          "required": ["arg0"]
+        }
+      },
+      {
         "name": "java_call",
-        "description": "Generic BridgeService call. ...\n\nDiscovered methods:\n\nSimpleStaticMethods_methodAcceptingStringArgument\n  class:  com.example.SimpleStaticMethods\n  method: methodAcceptingStringArgument\n  Appends the success suffix to the given string.\n  arg0 (string): the input string\n...",
+        "description": "Generic BridgeService call for multi-step chains. ...",
         "inputSchema": { "..." : "..." }
+      },
+      {
+        "name": "ibs_diagnostics",
+        "description": "Built-in IBS diagnostic tool. ...",
+        "inputSchema": { "type": "object", "properties": {} }
       }
     ]
   }
 }
 ```
 
-Each catalog entry follows the format `{SimpleClassName}_{methodName}` and includes the fully qualified class name, method name, Javadoc description, and parameter descriptions. See [docs/MCP.md](docs/MCP.md) for the full catalog format.
+See [docs/MCP.md](docs/MCP.md) for the full tool format and method discovery details.
 
 ### Calling a Discovered Tool (tools/call)
 
-All calls go through `java_call`. Use the class and method names from the catalog in `callContent`:
+Single-method calls can be made directly by tool name. Pass arguments as flat key-value pairs matching the `inputSchema`:
 
 ```json
 {
@@ -973,16 +987,8 @@ All calls go through `java_call`. Use the class and method names from the catalo
   "id": 3,
   "method": "tools/call",
   "params": {
-    "name": "java_call",
-    "arguments": {
-      "callContent": {
-        "result": {
-          "class": "com.example.SimpleStaticMethods",
-          "method": "methodAcceptingStringArgument",
-          "args": ["hello"]
-        }
-      }
-    }
+    "name": "SimpleStaticMethods_methodAcceptingStringArgument",
+    "arguments": { "arg0": "hello" }
   }
 }
 ```
@@ -1001,6 +1007,15 @@ On success the result contains the standard BridgeService return payload seriali
 ```
 
 If the method throws an exception, `isError` is `true` and `content[0].text` contains the error description. The HTTP status code is always `200` for `tools/call` — errors are reported inside the MCP result, not as HTTP errors.
+
+**When to use individual tools vs `java_call`:**
+
+| Scenario | Use |
+|---|---|
+| Single stateless read | Individual tool (`ClassName_methodName`) |
+| Step B needs the Java object returned by step A | `java_call` with call chain |
+| Overloaded method (same parameter count) | `java_call` |
+| Instance method or constructor | `java_call` |
 
 ### The `java_call` Tool
 

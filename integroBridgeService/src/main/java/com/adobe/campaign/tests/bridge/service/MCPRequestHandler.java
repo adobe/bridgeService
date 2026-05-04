@@ -13,8 +13,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import spark.Request;
-import spark.Response;
+import io.javalin.http.Context;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -143,23 +142,22 @@ public class MCPRequestHandler {
     }
 
     /**
-     * Spark route handler. Parses the incoming JSON-RPC 2.0 request and dispatches
+     * Javalin route handler. Parses the incoming JSON-RPC 2.0 request and dispatches
      * to the appropriate handler. All exceptions are caught and returned as MCP errors
-     * rather than propagating to Spark's HTTP exception handlers.
+     * rather than propagating to Javalin's HTTP exception handlers.
      *
-     * @param req the incoming Spark HTTP request
-     * @param res the Spark HTTP response
-     * @return the JSON-RPC response as a String
+     * @param ctx the Javalin HTTP context
      */
-    public Object handle(Request req, Response res) {
-        res.type("application/json");
+    public void handle(Context ctx) {
+        ctx.contentType("application/json");
 
         Map<String, Object> body;
         try {
-            body = mapper.readValue(req.body(), Map.class);
+            body = mapper.readValue(ctx.body(), Map.class);
         } catch (Exception e) {
-            res.status(400);
-            return buildError(null, -32700, "Parse error: " + e.getMessage());
+            ctx.status(400);
+            ctx.result(buildError(null, -32700, "Parse error: " + e.getMessage()));
+            return;
         }
 
         Object id = body.get("id");
@@ -167,35 +165,38 @@ public class MCPRequestHandler {
 
         // Notifications have no id — acknowledge with 202 and no body
         if (id == null && method != null && !method.equals("initialize")) {
-            res.status(202);
-            return "";
+            ctx.status(202);
+            ctx.result("");
+            return;
         }
 
         if (method == null) {
-            return buildError(id, -32600, "Invalid Request: missing method field");
+            ctx.result(buildError(id, -32600, "Invalid Request: missing method field"));
+            return;
         }
 
         try {
             switch (method) {
                 case "initialize":
-                    return buildResult(id, buildInitializeResult());
+                    ctx.result(buildResult(id, buildInitializeResult()));
+                    break;
 
                 case "tools/list":
-                    return buildResult(id, Collections.singletonMap("tools", toolList));
+                    ctx.result(buildResult(id, Collections.singletonMap("tools", toolList)));
+                    break;
 
                 case "tools/call":
                     @SuppressWarnings("unchecked")
                     Map<String, Object> params = (Map<String, Object>) body.getOrDefault("params", Collections.emptyMap());
-                    Map<String, String> headers = req.headers().stream()
-                            .collect(Collectors.toMap(k -> k, req::headers));
-                    return handleToolCall(id, params, headers);
+                    ctx.result(handleToolCall(id, params, ctx.headerMap()));
+                    break;
 
                 default:
-                    return buildError(id, -32601, "Method not found: " + method);
+                    ctx.result(buildError(id, -32601, "Method not found: " + method));
             }
         } catch (Exception e) {
             log.error("Unexpected error handling MCP method '{}': {}", method, e.getMessage(), e);
-            return buildError(id, -32603, "Internal error: " + e.getMessage());
+            ctx.result(buildError(id, -32603, "Internal error: " + e.getMessage()));
         }
     }
 

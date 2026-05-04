@@ -13,8 +13,6 @@ import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import spark.Spark;
-
 import java.io.IOException;
 
 public class LogManagementTest {

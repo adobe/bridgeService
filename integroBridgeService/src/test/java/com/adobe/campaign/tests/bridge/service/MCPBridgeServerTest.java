@@ -536,6 +536,57 @@ public class MCPBridgeServerTest {
                 .body("result.content[0].text", containsString("_Success"));
     }
 
+    // ---- malformed JSON / missing method field ----
+
+    @Test(groups = "MCP")
+    public void testMalformedJson_returns400ParseError() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("not valid json {{{")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(400)
+                .body("error.code", equalTo(-32700))
+                .body("error.message", containsString("Parse error"));
+    }
+
+    @Test(groups = "MCP")
+    public void testMissingMethodField_returnsInvalidRequestError() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":12}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("error.code", equalTo(-32600))
+                .body("error.message", containsString("missing method"));
+    }
+
+    @Test(groups = "MCP")
+    public void testToolsCall_missingToolName_returnsInvalidParamsError() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":13,\"method\":\"tools/call\",\"params\":{}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("error.code", equalTo(-32602))
+                .body("error.message", containsString("missing tool name"));
+    }
+
+    @Test(groups = "MCP")
+    public void testOauthEndpoint_returns404() {
+        given()
+        .when()
+                .get("http://localhost:8080/.well-known/oauth-authorization-server")
+        .then()
+                .statusCode(404)
+                .body(containsString("not_found"));
+    }
+
     // ---- unknown JSON-RPC method ----
 
     @Test(groups = "MCP")

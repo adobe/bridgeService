@@ -975,6 +975,22 @@ public class E2ETests {
     }
 
 
+    @Test(groups = "E2E")
+    public void testIBSRunTimeException_invalidDurationKey_returns500() {
+        String payload = "{\"callContent\":{\"c1\":{"
+                + "\"class\":\"java.lang.String\",\"method\":\"valueOf\",\"args\":[\"hello\"]}},"
+                + "\"assertions\":{\"a1\":{"
+                + "\"actualValue\":\"nonexistent_invalid_key_xyz\","
+                + "\"matcher\":\"equalTo\","
+                + "\"expectedValue\":100,"
+                + "\"type\":\"DURATION\"}}}";
+
+        given().contentType("application/json").body(payload)
+                .post(EndPointURL + "call")
+                .then().statusCode(500)
+                .contentType("application/problem+json");
+    }
+
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {
 

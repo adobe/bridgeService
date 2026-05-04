@@ -107,7 +107,7 @@ These are managed by `ConfigValueHandlerIBS.java`.
 ## Java & Dependency Notes
 
 - Java 11 (source/target) is required. Do not use APIs introduced after Java 11.
-- Web framework: Spark Java 2.9.4
+- Web framework: Javalin 6.x (Jetty 11, `jakarta.*`). Javalin 7 is not planned — Javalin 6 already supports Java 11–21, so there is no reason to upgrade.
 - JSON: Jackson 2.18.x
 - Logging: Log4j 2 (50MB rotation, 3GB cleanup, 10-day retention per `docs/Technical.md`)
 

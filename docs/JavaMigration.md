@@ -258,13 +258,17 @@ Priority 2 (#39)  Java 21 + Javalin 6  (major version bump e.g. 4.0.0)
 
 ---
 
-## Files to Change in Step 1
+## Files to Change — Priority 1 (Javalin migration, issue #38)
 
 | File | Change |
 |------|--------|
-| `integroBridgeService/src/main/java/.../CallContent.java:171-172` | Add `setAccessible(true)` before `newInstance()` and `invoke()` |
-| `pom.xml:40-42` | Switch to `<release>` tag; pin `maven-compiler-plugin` ≥ 3.11.0 |
-| `pom.xml` | Add Maven profile for Java 17 classifier JAR |
-| `.github/workflows/onPushSimpleTest.yml:37` | Add CI matrix for Java 11 and Java 17 |
-| `docs/Technical.md` | Add Java version compatibility section and `--add-opens` notes |
-| `ReleaseNotes.md` | Remove outdated Java 8 availability claim |
+| `integroBridgeService/pom.xml` | Remove `spark-core:2.9.4` and `javax.servlet-api:3.1.0`; add `io.javalin:javalin:6.x` |
+| `integroBridgeService/src/main/java/.../IntegroAPI.java` | Rewrite HTTP layer: replace Spark static DSL with Javalin instance API; migrate multipart from `javax.servlet` to `ctx.uploadedFiles()`; replace `secure(...)` with Javalin `SslPlugin`; return `Javalin` instance from `startServices()` |
+| `integroBridgeService/src/main/java/.../MCPRequestHandler.java` | Change `handle(spark.Request, spark.Response)` to `handle(io.javalin.http.Context)` |
+| `integroBridgeService/src/main/java/.../CallContent.java:171-172` | Add `setAccessible(true)` before `newInstance()` and `invoke()` (Java 17+ strong encapsulation) |
+| `integroBridgeService/src/test/java/.../E2ETests.java` | Remove `Spark.awaitInitialization()` (Javalin `start()` blocks); replace `Spark.stop()` with `app.stop()` |
+| `integroBridgeService/src/test/java/.../E2EPortCheck.java` | Remove `spark.Spark` import |
+| `integroBridgeService/src/test/java/.../LogManagementTest.java` | Remove `spark.Spark` import |
+| `integroBridgeService/src/test/java/.../MCPBridgeServerTest.java` | Replace `Spark.awaitInitialization()` and `Spark.stop()` with Javalin instance calls |
+| `.github/workflows/onPushSimpleTest.yml` | Add CI matrix: test on Java 11, 17, and 21 host JVMs |
+| `docs/Technical.md` | Add Javalin migration notes and `jakarta.*` namespace change |

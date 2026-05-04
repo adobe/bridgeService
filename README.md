@@ -116,11 +116,9 @@ The following dependency needs to be added to your pom file:
 
 #### Considerations
 
-Since the BridgeService uses Jetty and java Spark, it is quite possible that there maybe conflicts in the project when
-you add this library. Most importantly you will need to ensure that `javax.servlet` is set to "**compile**" in your
-maven scope.
-
-We have found it simplest to simply add that library directly in the pom file with the scope "**compile**".
+Since the BridgeService uses Jetty (via Javalin 6) it is quite possible that there may be conflicts in the project when
+you add this library. BridgeService 3.12+ uses the `jakarta.servlet` namespace (Jetty 11). If your project still uses
+`javax.servlet`, you will need to migrate to `jakarta.servlet` or ensure the two are isolated on the classpath.
 
 ### Including your project in the BridgeService
 

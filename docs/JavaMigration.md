@@ -29,8 +29,8 @@ The exposed project's JVM runs IBS. Both the bytecode and the HTTP framework mus
 
 | IBS version + framework | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
 |---|:---:|:---:|:---:|:---:|
-| **Java 11 + Spark** (current) | ❌ ¹ | ✅ | ⚠️ ² | ❌ ³ |
-| **Java 11 + Javalin 6** | ❌ ¹ | ✅ | ✅ ⁴ | ✅ ⁴ |
+| **Java 11 + Spark** (pre-3.12) | ❌ ¹ | ✅ | ⚠️ ² | ❌ ³ |
+| **Java 11 + Javalin 6** *(current)* | ❌ ¹ | ✅ | ✅ ⁴ | ✅ ⁴ |
 | **Java 17 + Spring Boot 3.x** | ❌ ¹ | ❌ ¹ | ✅ ⁴ | ✅ ⁴ |
 | **Java 17 + Javalin 6** | ❌ ¹ | ❌ ¹ | ✅ ⁴ | ✅ ⁴ |
 | **Java 17 + Javalin 7** | ❌ ¹ | ❌ ¹ | ✅ ⁴ | ✅ ⁴ |
@@ -49,8 +49,8 @@ IBS runs its own JVM and loads the exposed project's classes via reflection. The
 
 | IBS version + framework | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
 |---|:---:|:---:|:---:|:---:|
-| **Java 11 + Spark** (current) | ✅ | ✅ | ❌ ⁵ | ❌ ⁵ |
-| **Java 11 + Javalin 6** | ✅ | ✅ | ❌ ⁵ | ❌ ⁵ |
+| **Java 11 + Spark** (pre-3.12) | ✅ | ✅ | ❌ ⁵ | ❌ ⁵ |
+| **Java 11 + Javalin 6** *(current)* | ✅ | ✅ | ❌ ⁵ | ❌ ⁵ |
 | **Java 17 + Spring Boot 3.x** | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ | ❌ ⁵ |
 | **Java 17 + Javalin 6** | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ | ❌ ⁵ |
 | **Java 17 + Javalin 7** | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ | ❌ ⁵ |
@@ -233,12 +233,12 @@ Java 17 is therefore the perfect stepping stone: it is the Spring Boot 3.x minim
 ## Recommended Migration Path
 
 ```
-Current state     Java 11 + Spark Java 2.9.4 + Jetty 9.4
+                  Java 11 + Spark Java 2.9.4 + Jetty 9.4  [COMPLETE — pre-3.12]
                   Injection:  Java 11 exposed projects ✔
                   Aggregator: Java 8, 11 exposed projects ✔
        │
        ▼
-Priority 1 (#38)  Java 11 + Javalin 6
+Priority 1 (#38)  Java 11 + Javalin 6  ✅ DONE (released 3.12)
                   Replace Spark + Jetty with Javalin 6
                   Fix setAccessible(true) in CallContent.java:171-172
                   Migrate javax.* → jakarta.*

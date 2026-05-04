@@ -17,8 +17,6 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.hamcrest.Matchers;
 import org.testng.Assert;
 import org.testng.annotations.*;
-import spark.Spark;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;

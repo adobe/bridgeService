@@ -35,6 +35,29 @@ This page describes the state of how Calls access static variables. The structur
 3. (optional) Environment Variable Setting
 4. Calling Java
 
+## HTTP Framework
+
+BridgeService uses [Javalin 6](https://javalin.io/) as its HTTP framework (since release 3.12). Javalin 6 runs on
+Java 11–21 and ships Jetty 11 with the `jakarta.*` namespace.
+
+### Migrating from earlier versions (Spark Java)
+
+Before 3.12, BridgeService used Spark Java 2.9.4 (Jetty 9, `javax.*` namespace). The key differences:
+
+| Area | Before 3.12 (Spark) | 3.12+ (Javalin 6) |
+|---|---|---|
+| HTTP framework | `spark-core:2.9.4` | `io.javalin:javalin:6.x` |
+| Jetty version | Jetty 9.4 | Jetty 11 |
+| Servlet namespace | `javax.servlet` | `jakarta.servlet` |
+| `startServices()` return type | `void` | `Javalin` (store for `app.stop()`) |
+| SSL configuration | `secure(keystore, ...)` | `SslPlugin` via `config.registerPlugin(...)` |
+| Multipart | `req.raw().getParts()` + `javax.servlet` multipart config | `ctx.req().getParts()` + `jakarta.servlet.MultipartConfigElement` |
+| Route handlers | `get("/path", (req, res) -> ...)` | `app.get("/path", ctx -> ...)` |
+| Exception handlers | `exception(Ex.class, (e, req, res) -> ...)` | `app.exception(Ex.class, (e, ctx) -> ...)` |
+
+If your project depends on BridgeService in Injection Model and uses `javax.servlet-api`, update it to use
+`jakarta.servlet-api` (or the version bundled by Jetty 11) when upgrading to 3.12+.
+
 ## Log Handling
 The logs are by default deleted after a certain time. In production, we have opted for the following rules:
 * They are stored in the directory 'ibs_output'

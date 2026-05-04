@@ -14,7 +14,7 @@ import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import spark.Spark;
+import io.javalin.Javalin;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -23,9 +23,9 @@ import static org.hamcrest.Matchers.*;
 /**
  * Integration tests for the MCP endpoint (POST /mcp).
  *
- * Follows the same in-process server lifecycle as E2ETests: @BeforeGroups starts Spark
+ * Follows the same in-process server lifecycle as E2ETests: @BeforeGroups starts Javalin
  * with MCP enabled, REST-assured sends raw JSON-RPC 2.0 requests to /mcp, @AfterGroups
- * stops Spark. Tests run within the "MCP" group.
+ * stops Javalin. Tests run within the "MCP" group.
  */
 public class MCPBridgeServerTest {
 
@@ -33,12 +33,13 @@ public class MCPBridgeServerTest {
     private static final String TESTDATA_ONE_PACKAGE = "com.adobe.campaign.tests.bridge.testdata.one";
     private static final String CONTENT_TYPE_JSON = "application/json";
 
+    private Javalin app;
+
     @BeforeGroups(groups = "MCP")
     public void startMCPService() {
         ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.activate(TESTDATA_ONE_PACKAGE);
         ConfigValueHandlerIBS.MCP_ENABLED.activate("true");
-        IntegroAPI.startServices(8080);
-        Spark.awaitInitialization();
+        app = IntegroAPI.startServices(8080);
     }
 
     @BeforeMethod
@@ -52,7 +53,7 @@ public class MCPBridgeServerTest {
     @AfterGroups(groups = "MCP", alwaysRun = true)
     public void stopMCPService() {
         ConfigValueHandlerIBS.resetAllValues();
-        Spark.stop();
+        app.stop();
     }
 
     // ---- initialize handshake ----
@@ -533,6 +534,57 @@ public class MCPBridgeServerTest {
                 .statusCode(200)
                 .body("result.isError", equalTo(false))
                 .body("result.content[0].text", containsString("_Success"));
+    }
+
+    // ---- malformed JSON / missing method field ----
+
+    @Test(groups = "MCP")
+    public void testMalformedJson_returns400ParseError() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("not valid json {{{")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(400)
+                .body("error.code", equalTo(-32700))
+                .body("error.message", containsString("Parse error"));
+    }
+
+    @Test(groups = "MCP")
+    public void testMissingMethodField_returnsInvalidRequestError() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":12}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("error.code", equalTo(-32600))
+                .body("error.message", containsString("missing method"));
+    }
+
+    @Test(groups = "MCP")
+    public void testToolsCall_missingToolName_returnsInvalidParamsError() {
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":13,\"method\":\"tools/call\",\"params\":{}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("error.code", equalTo(-32602))
+                .body("error.message", containsString("missing tool name"));
+    }
+
+    @Test(groups = "MCP")
+    public void testOauthEndpoint_returns404() {
+        given()
+        .when()
+                .get("http://localhost:8080/.well-known/oauth-authorization-server")
+        .then()
+                .statusCode(404)
+                .body(containsString("not_found"));
     }
 
     // ---- unknown JSON-RPC method ----

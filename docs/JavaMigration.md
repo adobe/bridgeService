@@ -15,6 +15,54 @@ This distinction is critical for Java version compatibility — which JVM loads 
 
 ---
 
+## Compatibility Matrix
+
+The two axes are:
+- **IBS version + framework** — what IBS is compiled for and what HTTP framework it uses
+- **Exposed project version** — the Java version of the project whose classes IBS exposes via reflection
+
+Legend: ✅ Works &nbsp;|&nbsp; ⚠️ Works with workarounds &nbsp;|&nbsp; ❌ Fails
+
+### Injection Model
+
+The exposed project's JVM runs IBS. Both the bytecode and the HTTP framework must be compatible with that JVM.
+
+| IBS version + framework | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
+|---|:---:|:---:|:---:|:---:|
+| **Java 11 + Spark** (current) | ❌ ¹ | ✅ | ⚠️ ² | ❌ ³ |
+| **Java 11 + Javalin 6** | ❌ ¹ | ✅ | ✅ ⁴ | ✅ ⁴ |
+| **Java 17 + Spring Boot 3.x** | ❌ ¹ | ❌ ¹ | ✅ ⁴ | ✅ ⁴ |
+| **Java 17 + Javalin 6** | ❌ ¹ | ❌ ¹ | ✅ ⁴ | ✅ ⁴ |
+| **Java 17 + Javalin 7** | ❌ ¹ | ❌ ¹ | ✅ ⁴ | ✅ ⁴ |
+| **Java 21 + Spring Boot 3.x** | ❌ ¹ | ❌ ¹ | ❌ ¹ | ✅ ⁴ |
+| **Java 21 + Javalin 6** | ❌ ¹ | ❌ ¹ | ❌ ¹ | ✅ ⁴ |
+| **Java 21 + Javalin 7** | ❌ ¹ | ❌ ¹ | ❌ ¹ | ✅ ⁴ |
+
+¹ Exposed project JVM cannot load IBS bytecode — `UnsupportedClassVersionError`.  
+² Bytecode loads fine on Java 17 JVM, but Spark is unofficial on Java 17 and needs `--add-opens` flags.  
+³ Bytecode loads fine on Java 21 JVM, but Spark is not compatible with Java 21.  
+⁴ Requires `setAccessible(true)` fix in `CallContent.java:171-172` (Java 17+ strong encapsulation).
+
+### Aggregator Model
+
+IBS runs its own JVM and loads the exposed project's classes via reflection. The HTTP framework runs on IBS's JVM; the exposed project's bytecode must be loadable by that JVM.
+
+| IBS version + framework | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
+|---|:---:|:---:|:---:|:---:|
+| **Java 11 + Spark** (current) | ✅ | ✅ | ❌ ⁵ | ❌ ⁵ |
+| **Java 11 + Javalin 6** | ✅ | ✅ | ❌ ⁵ | ❌ ⁵ |
+| **Java 17 + Spring Boot 3.x** | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ | ❌ ⁵ |
+| **Java 17 + Javalin 6** | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ | ❌ ⁵ |
+| **Java 17 + Javalin 7** | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ | ❌ ⁵ |
+| **Java 21 + Spring Boot 3.x** | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ |
+| **Java 21 + Javalin 6** | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ |
+| **Java 21 + Javalin 7** | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ | ✅ ⁴ |
+
+⁴ Requires `setAccessible(true)` fix in `CallContent.java:171-172` (Java 17+ strong encapsulation).  
+⁵ IBS JVM cannot load the exposed project's class files — `UnsupportedClassVersionError` in `IntegroBridgeClassLoader.defineClass()`.
+
+---
+
 ## Scenario A — IBS runs inside a host project with a Higher Java version
 
 *Injection Model: host is Java 17+, IBS is Java 11.*
@@ -86,18 +134,89 @@ IBS (Java 17 JVM) loading a host project's Java 11 classes — no issue. Java 17
 
 ---
 
-## Scenario D — Why Java 17, not Java 21
+## Java LTS Status (as of 2026-04-24)
 
-### Spark Java 2.9.4 is a blocker for Java 21
+| Java version | Eclipse Temurin | Amazon Corretto | Azul Zulu |
+|---|---|---|---|
+| **Java 11** | Oct 2027 | Jan 2032 | Jan 2032 |
+| **Java 17** | Sep 2027 | Aug 2029 | Jan 2030 |
+| **Java 21** | **Oct 2029** | **Aug 2031** | **Jan 2032** |
 
-| Area | Java 21 | Java 17 |
-|------|---------|---------|
-| Official Spark Java support | No | No (but works with `--add-opens`) |
-| Jetty 9.4.x | Not supported | End-of-community-support; functionally works |
-| Spark replacement required immediately? | **Yes** | No — can stay on Spark until Spring Boot migration |
-| `setAccessible(true)` fix needed? | Yes | Yes |
+Key observations:
+- Java 11 and Java 17 have nearly the **same Temurin expiry** (~Sep/Oct 2027, ~18 months away). Migrating to Java 17 as an intermediate step buys almost no additional runway on Temurin.
+- Java 21 is the only version that meaningfully extends the LTS window (Oct 2029 on Temurin — 3.5 more years).
+- Oracle JDK Java 11 premier support already ended Sep 2023; Red Hat free support ended Oct 2024.
 
-Spark Java 2.9.4 (last release ~2021, minimally maintained) bundles Jetty 9.4.48 which does not officially support Java 21. Running IBS on Java 21 requires replacing Spark first. On Java 17, Spark is usable with a small number of `--add-opens` JVM flags as a transitional measure.
+**Consequence**: the Java 11 LTS problem motivates combining the Java upgrade with the Javalin migration rather than treating it as a later, lower-priority step.
+
+---
+
+## Decision
+
+Two separate migrations in priority order. Isolating the framework change from the Java version change limits blast radius — if something breaks, the cause is unambiguous.
+
+### Priority 1 — Migrate from Spark Java to Javalin 6 (issue #38, keep Java 11)
+
+- Spark Java is unmaintained; Jetty 9.4 is end-of-community-support.
+- Javalin 6 runs on Java 11–21, ships Jetty 11 (`jakarta.*` namespace), near-identical API to Spark.
+- **IBS stays on Java 11** — zero bytecode compatibility impact on existing exposed projects.
+- Immediately unblocks injection into Java 17 and Java 21 exposed projects.
+- Lower risk: single change variable, existing hosts require no changes.
+
+### Priority 2 — Upgrade IBS to Java 21 (issue #39, after Javalin is stable)
+
+- Java 11 and Java 17 expire at nearly the same time on Temurin (~Oct/Sep 2027) — no value in stopping at Java 17.
+- Java 21 LTS runs to Oct 2029 on Temurin — the only version that materially extends the support window.
+- Enables complete Aggregator Model coverage (Java 8 through Java 21 exposed projects) and Virtual Threads.
+- **Breaking change for Injection Model**: Java 11 and Java 17 exposed projects can no longer use Injection — they must switch to Aggregator Model.
+- Major version bump required (e.g. 4.0.0).
+
+### Integration model guidance after Priority 2
+
+| Exposed project version | Recommended model | Reason |
+|---|---|---|
+| Java 8 | Aggregator | JVM cannot load Java 21 bytecode |
+| Java 11 | Aggregator | JVM cannot load Java 21 bytecode |
+| Java 17 | Aggregator | JVM cannot load Java 21 bytecode |
+| Java 21 | Injection *(recommended)* or Aggregator | JVM can load Java 21 bytecode; Injection is simpler |
+
+### Java 17 vs Java 21 — why Java 21
+
+| | Java 17 | Java 21 |
+|---|---|---|
+| Injection Model reach | Java 17 + Java 21 projects | Java 21 projects only |
+| Aggregator Model reach | Java 8, 11, 17 | **Java 8, 11, 17, 21** |
+| Spring Boot 3.x | ✅ | ✅ |
+| LTS until | 2029 | **2031** |
+| Virtual Threads | ❌ | ✅ |
+
+---
+
+## Web Framework Alternatives
+
+Jetty/Spark is dropped. The replacement framework must support Java 21 and fat JAR packaging. BridgeService has ~4 HTTP endpoints — a lightweight framework fits better than a full application server.
+
+| Framework | Java minimum | Migration effort from Spark | Virtual Threads | Weight | Verdict |
+|---|---|---|:---:|---|---|
+| **Javalin 6** | Java 11 | Minimal — API mirrors Spark 1:1 | ✅ opt-in | ~0.5 MB + Jetty 11 | **Recommended** |
+| **Javalin 7** | Java 17 | Minimal — API mirrors Spark 1:1 | ✅ | ~0.5 MB + Jetty 12 | Recommended if Java 17+ only |
+| **Spring Boot 3.x** | Java 17 | Medium — annotation-based, full DI/autoconfigure | ✅ | ~15–20 MB | Viable; more than needed |
+| **Helidon SE** | Java 11 | Low-medium — imperative, Spark-like SE API | ✅ | ~6 MB | Fallback if Javalin proves limiting |
+| **Quarkus** | Java 17 | Medium-high — JAX-RS annotations, DI | ✅ | ~10 MB | Overkill for 4 endpoints |
+| **Micronaut** | Java 17 | Medium-high — annotation-heavy, AOT | ✅ | ~8 MB | Same as Quarkus |
+| **Vert.x** | Java 11 | High — async/reactive, rethink all handlers | ✅ | ~2 MB | Wrong paradigm |
+| **Undertow standalone** | Java 11 | Very high — no routing DSL | ✅ | ~3 MB | Too low-level |
+
+**Javalin version summary:**
+
+| Javalin version | Java minimum | Jetty | Namespace | Notes |
+|---|---|---|---|---|
+| **4.x** | Java 8 | Jetty 9 | `javax.*` | Legacy |
+| **5.x** | Java 11 | Jetty 11 | `jakarta.*` | Superseded by 6 |
+| **6.x** | Java 11 | Jetty 11 | `jakarta.*` | **Current — covers Java 11, 17, 21** |
+| **7.x** | Java 17 | Jetty 12 | `jakarta.*` | Latest — Java 17+ only |
+
+**Javalin 6** is the right choice for the IBS migration: a single version that runs on Java 11 through Java 21, ships Jetty 11 with `jakarta.*`, and has an API nearly identical to Spark Java. Spring Boot remains a valid alternative if broader ecosystem integration is needed later.
 
 ### Spring Boot 3.x requires Java 17
 
@@ -114,20 +233,27 @@ Java 17 is therefore the perfect stepping stone: it is the Spring Boot 3.x minim
 ## Recommended Migration Path
 
 ```
-Current state          Java 11, Spark Java 2.9.4
+Current state     Java 11 + Spark Java 2.9.4 + Jetty 9.4
+                  Injection:  Java 11 exposed projects ✔
+                  Aggregator: Java 8, 11 exposed projects ✔
        │
        ▼
-Step 1 (issue #25)     Publish Java 17 classifier JAR alongside default Java 11 JAR
-                       Fix setAccessible(true) in CallContent.java:171-172
-                       Add CI matrix: test on Java 11 and Java 17
-                       Add --add-opens flags to docs/Technical.md for Spark + Java 17
-                       Drop Java 8 claim from ReleaseNotes.md
+Priority 1 (#38)  Java 11 + Javalin 6
+                  Replace Spark + Jetty with Javalin 6
+                  Fix setAccessible(true) in CallContent.java:171-172
+                  Migrate javax.* → jakarta.*
+                  CI matrix: test on Java 11, 17, 21 host JVMs
+                  Injection:  Java 11, 17, 21 exposed projects ✔
+                  Aggregator: Java 8, 11 exposed projects ✔
        │
        ▼
-Step 2 (Spring Boot)   Replace Spark with Spring Boot 3.x (new major version, e.g. 4.0.0)
-                       Java 17 becomes the new single minimum — drop Java 11 JAR
-                       Migrate javax.* → jakarta.* throughout IBS and v6SOAPAPI
-                       Major version bump signals breaking change to host projects
+Priority 2 (#39)  Java 21 + Javalin 6  (major version bump e.g. 4.0.0)
+                  Upgrade IBS to Java 21 (<release>21</release>)
+                  Pin maven-compiler-plugin ≥ 3.11.0
+                  Drop Java 8 claim from ReleaseNotes.md
+                  Injection:  Java 21 exposed projects ✔
+                  Aggregator: Java 8, 11, 17, 21 exposed projects ✔
+                  ⚠ Java 11/17 exposed projects must move to Aggregator Model
 ```
 
 ---

@@ -124,7 +124,7 @@ Apply these prefixes consistently in all new and modified Java code:
 
 ## Release Process
 
-The release branch is `release`. Releases are cut from that branch using the Maven Release Plugin.
+The release branch is `release`. Releases are cut from that branch by triggering the **Release-BridgeService** GitHub Actions workflow (`workflow_dispatch`), which runs the Maven Release Plugin.
 
 ### Steps to prepare a release
 
@@ -152,10 +152,7 @@ The release branch is `release`. Releases are cut from that branch using the Mav
    git push --set-upstream origin release
    ```
 
-5. **Trigger the release** via the Maven Release Plugin (run by CI or manually):
-   ```bash
-   mvn release:prepare release:perform
-   ```
+5. **Trigger the release** via GitHub Actions — go to **Actions → Release-BridgeService → Run workflow** (the workflow uses `workflow_dispatch`). It runs `mvn release:prepare release:perform` on the `release` branch automatically. Do not run the Maven release commands locally.
 
 ### Notes
 - The next development version in the POMs on `main` is already set to `X.Y.Z-SNAPSHOT` by the Maven Release Plugin after the previous release; do not change it manually.

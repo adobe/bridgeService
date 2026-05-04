@@ -122,6 +122,45 @@ Apply these prefixes consistently in all new and modified Java code:
 | `lt_` | Variables scoped to a loop or condition block (do not escape the block) | `lt_entry`, `lt_key` |
 | *(none)* | `for` loop counters | `i`, `j` |
 
+## Release Process
+
+The release branch is `release`. Releases are cut from that branch using the Maven Release Plugin.
+
+### Steps to prepare a release
+
+1. **Switch to `release` and merge `main`**
+   ```bash
+   git checkout release
+   git merge main --no-edit
+   ```
+   Conflicts are expected in the POM files (version number) and occasionally in CI workflow files. Always take the `main` side:
+   - POMs: keep `X.Y.Z-SNAPSHOT` from `main`
+   - Workflows: keep whatever version `main` has (e.g. `actions/checkout@v6`)
+
+2. **Add a release notes entry** at the top of `ReleaseNotes.md` (below the `# Bridge Service - RELEASE NOTES` heading). The title is the release version **without** `-SNAPSHOT`. Keep entries concise — one bullet per logical change group.
+
+3. **Update version references in the docs** — search for the previous release version string and replace with the new one:
+   ```bash
+   sed -i '' 's/X\.Y\.old/X.Y.new/g' README.md docs/MCP.md
+   ```
+   Typical locations: Maven dependency snippet, `serverInfo` JSON examples, `ibsVersion` diagnostic example.
+
+4. **Commit and push**
+   ```bash
+   git add ReleaseNotes.md README.md docs/MCP.md
+   git commit -m "Prepare release X.Y.Z"
+   git push --set-upstream origin release
+   ```
+
+5. **Trigger the release** via the Maven Release Plugin (run by CI or manually):
+   ```bash
+   mvn release:prepare release:perform
+   ```
+
+### Notes
+- The next development version in the POMs on `main` is already set to `X.Y.Z-SNAPSHOT` by the Maven Release Plugin after the previous release; do not change it manually.
+- If `git push` is rejected as non-fast-forward, use `git pull --rebase origin release` then re-apply the release notes and doc version changes (rebase drops merge commits).
+
 ## Contribution Rules
 
 - All new source files must have the Adobe license header (`mvn license:format` adds it).

@@ -19,7 +19,7 @@ import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import spark.Spark;
+import io.javalin.Javalin;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,11 +37,11 @@ public class E2ETests {
     protected static final boolean AUTOMATIC_FLAG = false;
     private static final int port1 = 1111;
     ServerSocket serverSocket1 = null;
+    private Javalin app;
 
     @BeforeGroups(groups = "E2E")
     public void startUpService() throws IOException {
-        IntegroAPI.startServices(8080);
-        Spark.awaitInitialization();
+        app = IntegroAPI.startServices(8080);
 
         serverSocket1 = new ServerSocket(port1);
 
@@ -975,11 +975,27 @@ public class E2ETests {
     }
 
 
+    @Test(groups = "E2E")
+    public void testIBSRunTimeException_invalidDurationKey_returns500() {
+        String payload = "{\"callContent\":{\"c1\":{"
+                + "\"class\":\"java.lang.String\",\"method\":\"valueOf\",\"args\":[\"hello\"]}},"
+                + "\"assertions\":{\"a1\":{"
+                + "\"actualValue\":\"nonexistent_invalid_key_xyz\","
+                + "\"matcher\":\"equalTo\","
+                + "\"expectedValue\":100,"
+                + "\"type\":\"DURATION\"}}}";
+
+        given().contentType("application/json").body(payload)
+                .post(EndPointURL + "call")
+                .then().statusCode(500)
+                .contentType("application/problem+json");
+    }
+
     @AfterGroups(groups = "E2E", alwaysRun = true)
     public void tearDown() throws IOException {
 
         ConfigValueHandlerIBS.resetAllValues();
-        Spark.stop();
+        app.stop();
         serverSocket1.close();
     }
 }

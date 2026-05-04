@@ -21,6 +21,7 @@ from any language or framework you are in.
         * [Installation](#installation)
       * [Considerations](#considerations)
     * [Including your project in the BridgeService](#including-your-project-in-the-bridgeservice)
+    * [Java Version Compatibility](#java-version-compatibility)
   * [Starting the Bridge Service](#starting-the-bridge-service)
     * [Running the Bridge Locally](#running-the-bridge-locally)
     * [Running a DEMO](#running-a-demo)
@@ -110,23 +111,46 @@ The following dependency needs to be added to your pom file:
 <dependency>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <version>3.11.1</version>
+    <version>3.11.2</version>
 </dependency>
 ```
 
 #### Considerations
 
-Since the BridgeService uses Jetty and java Spark, it is quite possible that there maybe conflicts in the project when
-you add this library. Most importantly you will need to ensure that `javax.servlet` is set to "**compile**" in your
-maven scope.
-
-We have found it simplest to simply add that library directly in the pom file with the scope "**compile**".
+Since the BridgeService uses Jetty (via Javalin 6) it is quite possible that there may be conflicts in the project when
+you add this library. BridgeService 3.12+ uses the `jakarta.servlet` namespace (Jetty 11). If your project still uses
+`javax.servlet`, you will need to migrate to `jakarta.servlet` or ensure the two are isolated on the classpath.
 
 ### Including your project in the BridgeService
 
 In this model you can simply add your project as a dependency to the BridgeProject.
 
 ![BridgeService Aggregator Model](diagrams/Processes-aggregatorModel.drawio.png)
+
+### Java Version Compatibility
+
+Legend: ✅ Works &nbsp;|&nbsp; ⚠️ Works with workarounds &nbsp;|&nbsp; ❌ Fails
+
+**Injection Model** — the exposed project's JVM loads IBS. Both IBS bytecode and the HTTP framework must be compatible with that JVM.
+
+| IBS release | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
+|---|:---:|:---:|:---:|:---:|
+| **pre-3.12** (Spark, Java 11) | ❌ ¹ | ✅ | ⚠️ ² | ❌ ³ |
+| **3.12+** (Javalin 6, Java 11) | ❌ ¹ | ✅ | ✅ | ✅ |
+
+**Aggregator Model** — IBS runs its own JVM and loads the exposed project's classes via reflection.
+
+| IBS release | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
+|---|:---:|:---:|:---:|:---:|
+| **pre-3.12** (Spark, Java 11) | ✅ | ✅ | ❌ ⁴ | ❌ ⁴ |
+| **3.12+** (Javalin 6, Java 11) | ✅ | ✅ | ❌ ⁴ | ❌ ⁴ |
+
+¹ Exposed project JVM cannot load IBS bytecode — `UnsupportedClassVersionError`.  
+² Spark is unofficial on Java 17 and requires `--add-opens` flags.  
+³ Spark is not compatible with Java 21.  
+⁴ IBS JVM (Java 11) cannot load class files compiled to Java 17+ — `UnsupportedClassVersionError` in the class loader.
+
+For the full analysis and the planned Java 21 upgrade (issue #39), see [docs/JavaMigration.md](docs/JavaMigration.md).
 
 ## Starting the Bridge Service
 
@@ -177,7 +201,7 @@ If all is good you should get:
 
 ```
 All systems up - in production
-Version : 2.11.16
+Version : 3.11.2
 Product user version : 7.0
 ```
 
@@ -894,7 +918,7 @@ Set the environment variable `IBS.MCP.ENABLED` to `true` before starting BridgeS
 mvn exec:java -Dexec.args="test" -DIBS.MCP.ENABLED=true -DIBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES=com.example.mypackage
 ```
 
-At startup, BridgeService scans the packages listed in `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` and builds a **method catalog** from every **public static method** found. The catalog is embedded in the `java_call` tool description so that AI agents can read it via `tools/list`.
+At startup, BridgeService scans the packages listed in `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` and builds a **method catalog** from every **public static method** found. Each discovered method is exposed as its own named MCP tool in `tools/list`. A generic `java_call` tool is always present for multi-step chains and instance method calls.
 
 The MCP endpoint is available at:
 ```
@@ -924,7 +948,7 @@ Response:
   "id": 1,
   "result": {
     "protocolVersion": "2024-11-05",
-    "serverInfo": { "name": "bridgeService", "version": "3.11.1" },
+    "serverInfo": { "name": "bridgeService", "version": "3.11.2" },
     "capabilities": { "tools": {} }
   }
 }
@@ -932,7 +956,7 @@ Response:
 
 ### Discovering Tools (tools/list)
 
-`tools/list` always returns exactly **one tool — `java_call`**. Its `description` contains the full catalog of all discovered methods. AI agents read the catalog to learn which class and method names to place in their `callContent` payloads.
+`tools/list` returns **one tool per auto-discovered method** plus `java_call` (for multi-step chains) and `ibs_diagnostics`. Tools are named `{SimpleClassName}_{methodName}` and carry their own `inputSchema` and Javadoc-sourced description.
 
 ```json
 {
@@ -952,20 +976,34 @@ Response (abbreviated):
   "result": {
     "tools": [
       {
+        "name": "SimpleStaticMethods_methodAcceptingStringArgument",
+        "description": "Appends the success suffix to the given string.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "arg0": { "type": "string", "description": "the input string" } },
+          "required": ["arg0"]
+        }
+      },
+      {
         "name": "java_call",
-        "description": "Generic BridgeService call. ...\n\nDiscovered methods:\n\nSimpleStaticMethods_methodAcceptingStringArgument\n  class:  com.example.SimpleStaticMethods\n  method: methodAcceptingStringArgument\n  Appends the success suffix to the given string.\n  arg0 (string): the input string\n...",
+        "description": "Generic BridgeService call for multi-step chains. ...",
         "inputSchema": { "..." : "..." }
+      },
+      {
+        "name": "ibs_diagnostics",
+        "description": "Built-in IBS diagnostic tool. ...",
+        "inputSchema": { "type": "object", "properties": {} }
       }
     ]
   }
 }
 ```
 
-Each catalog entry follows the format `{SimpleClassName}_{methodName}` and includes the fully qualified class name, method name, Javadoc description, and parameter descriptions. See [docs/MCP.md](docs/MCP.md) for the full catalog format.
+See [docs/MCP.md](docs/MCP.md) for the full tool format and method discovery details.
 
 ### Calling a Discovered Tool (tools/call)
 
-All calls go through `java_call`. Use the class and method names from the catalog in `callContent`:
+Single-method calls can be made directly by tool name. Pass arguments as flat key-value pairs matching the `inputSchema`:
 
 ```json
 {
@@ -973,16 +1011,8 @@ All calls go through `java_call`. Use the class and method names from the catalo
   "id": 3,
   "method": "tools/call",
   "params": {
-    "name": "java_call",
-    "arguments": {
-      "callContent": {
-        "result": {
-          "class": "com.example.SimpleStaticMethods",
-          "method": "methodAcceptingStringArgument",
-          "args": ["hello"]
-        }
-      }
-    }
+    "name": "SimpleStaticMethods_methodAcceptingStringArgument",
+    "arguments": { "arg0": "hello" }
   }
 }
 ```
@@ -1001,6 +1031,15 @@ On success the result contains the standard BridgeService return payload seriali
 ```
 
 If the method throws an exception, `isError` is `true` and `content[0].text` contains the error description. The HTTP status code is always `200` for `tools/call` — errors are reported inside the MCP result, not as HTTP errors.
+
+**When to use individual tools vs `java_call`:**
+
+| Scenario | Use |
+|---|---|
+| Single stateless read | Individual tool (`ClassName_methodName`) |
+| Step B needs the Java object returned by step A | `java_call` with call chain |
+| Overloaded method (same parameter count) | `java_call` |
+| Instance method or constructor | `java_call` |
 
 ### The `java_call` Tool
 

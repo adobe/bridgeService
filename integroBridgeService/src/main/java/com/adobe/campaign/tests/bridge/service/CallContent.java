@@ -164,10 +164,11 @@ public class CallContent {
 
             if (isConstructorCall()) {
                 Constructor l_constructor = fetchConstructor(ourClass);
+                l_constructor.setAccessible(true);
                 lr_object = l_constructor.newInstance(expandArgs(iClassLoader));
             } else {
                 Method l_method = fetchMethod(ourClass);
-
+                l_method.setAccessible(true);
                 Object ourInstance = (l_instanceObject == null) ? ourClass.getDeclaredConstructor().newInstance() : l_instanceObject;
                 lr_object = l_method.invoke(ourInstance, castArgs(expandArgs(iClassLoader), l_method));
             }

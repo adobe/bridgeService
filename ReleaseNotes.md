@@ -1,4 +1,7 @@
 # Bridge Service - RELEASE NOTES
+## 3.11.3
+* **HTTP Framework** [#38 Migrate from Spark Java to Javalin 6](https://github.com/adobe/bridgeService/pull/43) Replaced Spark Java 2.9.4 (Jetty 9, `javax.*`) with Javalin 6.3.0 (Jetty 11, `jakarta.*`). IBS stays on Java 11; injection into Java 17 and Java 21 host JVMs now works without `--add-opens` flags.
+
 ## 3.11.2
 * **MCP** [#35 Hybrid method discovery](https://github.com/adobe/bridgeService/pull/35) Each auto-discovered public static method is now exposed as its own named MCP tool in `tools/list`, enabling direct invocation without a `java_call` wrapper. `java_call` is retained for multi-step chains where steps share state or pass complex Java objects between them.
 * **Dependency Updates** Routine dependency bumps: log4j2, mockito-core, testng.

@@ -11,26 +11,28 @@ package com.adobe.campaign.tests.bridge.service;
 import com.adobe.campaign.tests.bridge.service.exceptions.*;
 import com.adobe.campaign.tests.bridge.service.utils.ServiceTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.javalin.Javalin;
+import io.javalin.community.ssl.SslPlugin;
+import io.javalin.config.MultipartConfig;
+import jakarta.servlet.MultipartConfigElement;
+import jakarta.servlet.http.Part;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.http.Part;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.adobe.campaign.tests.bridge.service.BridgeServiceFactory.*;
-import static spark.Spark.*;
 
 public class IntegroAPI {
     public static final String ERROR_CONTENT_TYPE = "application/problem+json";
@@ -41,208 +43,194 @@ public class IntegroAPI {
     public static final String STD_UPLOAD_DIR = "upload";
     private static final Logger log = LogManager.getLogger();
 
-    public static void startServices(int port) {
+    public static Javalin startServices(int in_port) {
 
-        if (!ServiceTools.isPortFree(port)) {
-            throw new IBSConfigurationException("The port " + port + " is not currently free.");
+        if (!ServiceTools.isPortFree(in_port)) {
+            throw new IBSConfigurationException("The port " + in_port + " is not currently free.");
         }
 
         IBSPluginManager.loadPlugins();
 
-        if (Boolean.parseBoolean(ConfigValueHandlerIBS.SSL_ACTIVE.fetchValue())) {
-            File l_file = new File(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue());
-            if (!l_file.exists()) {
-                log.error("Could not find the Keystore file path {}", l_file.getAbsolutePath());
-            }
-            secure(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue(),
-                    ConfigValueHandlerIBS.SSL_KEYSTORE_PASSWORD.fetchValue(),
-                    ConfigValueHandlerIBS.SSL_TRUSTSTORE_PATH.fetchValue(),
-                    ConfigValueHandlerIBS.SSL_TRUSTSTORE_PASSWORD.fetchValue());
-        } else {
-            port(port);
-        }
+        File uploadDir = new File(STD_UPLOAD_DIR);
+        uploadDir.mkdir();
 
-        get("/test", (req, res) -> {
-            res.type("application/json");
-            Map<String, String> status = new HashMap<>();
-            status.put("overALLSystemState", SYSTEM_UP_MESSAGE);
-            status.put("deploymentMode", ConfigValueHandlerIBS.DEPLOYMENT_MODEL.fetchValue());
-            status.put("bridgeServiceVersion", ConfigValueHandlerIBS.PRODUCT_VERSION.fetchValue());
+        Javalin l_app = Javalin.create(config -> {
+            config.jetty.multipartConfig = new MultipartConfig();
+            if (Boolean.parseBoolean(ConfigValueHandlerIBS.SSL_ACTIVE.fetchValue())) {
+                File l_keystoreFile = new File(ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue());
+                if (!l_keystoreFile.exists()) {
+                    log.error("Could not find the Keystore file path {}", l_keystoreFile.getAbsolutePath());
+                }
+                SslPlugin l_ssl = new SslPlugin(sslConfig -> {
+                    sslConfig.keystoreFromPath(
+                            ConfigValueHandlerIBS.SSL_KEYSTORE_PATH.fetchValue(),
+                            ConfigValueHandlerIBS.SSL_KEYSTORE_PASSWORD.fetchValue());
+                    sslConfig.redirect = true;
+                });
+                config.registerPlugin(l_ssl);
+            }
+        });
+
+        l_app.get("/test", ctx -> {
+            Map<String, String> l_status = new HashMap<>();
+            l_status.put("overALLSystemState", SYSTEM_UP_MESSAGE);
+            l_status.put("deploymentMode", ConfigValueHandlerIBS.DEPLOYMENT_MODEL.fetchValue());
+            l_status.put("bridgeServiceVersion", ConfigValueHandlerIBS.PRODUCT_VERSION.fetchValue());
 
             if (ConfigValueHandlerIBS.PRODUCT_USER_VERSION.isSet()) {
-                status.put("hostVersion", ConfigValueHandlerIBS.PRODUCT_USER_VERSION.fetchValue());
+                l_status.put("hostVersion", ConfigValueHandlerIBS.PRODUCT_USER_VERSION.fetchValue());
             }
 
-            return BridgeServiceFactory.transformMapTosResult(status);
+            ctx.contentType("application/json");
+            ctx.result(BridgeServiceFactory.transformMapTosResult(l_status));
         });
 
-        post("/service-check", (req, res) -> {
-            ServiceAccess l_serviceAccess = BridgeServiceFactory.createServiceAccess(req.body());
-
-            return BridgeServiceFactory.transformServiceAccessResult(
-                    l_serviceAccess.checkAccessibilityOfExternalResources());
+        l_app.post("/service-check", ctx -> {
+            ServiceAccess l_serviceAccess = BridgeServiceFactory.createServiceAccess(ctx.body());
+            ctx.contentType("application/json");
+            ctx.result(BridgeServiceFactory.transformServiceAccessResult(
+                    l_serviceAccess.checkAccessibilityOfExternalResources()));
         });
 
-        File uploadDir = new File(STD_UPLOAD_DIR);
-        uploadDir.mkdir(); // create the upload directory if it doesn't exist
-        //staticFiles.externalLocation("upload");
+        l_app.post("/call", ctx -> {
+            boolean l_isMultiPart = ctx.isMultipartFormData();
+            JavaCalls l_fetchedFromJSON;
 
-        post("/call", (req, res) -> {
+            if (l_isMultiPart) {
+                ctx.req().setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("./temp"));
+                Map<String, Path> l_fileRefs = new HashMap<>();
+                Collection<Part> l_parts = ctx.req().getParts();
 
-            boolean isMultiPart = false;
-            JavaCalls fetchedFromJSON;
-
-            //Extract multipart information
-            if (req.contentType() != null && req.contentType().toLowerCase().startsWith("multipart/form-data")) {
-                req.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("./temp"));
-                Map<String, Path> fileRefs = new HashMap<>();
-                isMultiPart = true;
-                //Extract file information
-                for (Part p : req.raw().getParts().stream().filter(p -> p.getSubmittedFileName() != null)
+                for (Part lt_part : l_parts.stream().filter(p -> p.getSubmittedFileName() != null)
                         .collect(Collectors.toList())) {
-
-                    Path tempFile = Files.createTempFile(uploadDir.toPath(), "", "");
-                    ThreadContext.put(p.getName(), tempFile.getFileName().toString());
-                    fileRefs.put(p.getName(), tempFile);
-
-                    try (InputStream is = p.getInputStream()) {
-                        // https://github.com/tipsy/spark-file-upload/blob/master/src/main/java/UploadExample.java
-                        Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                    Path lt_tempFile = Files.createTempFile(uploadDir.toPath(), "", "");
+                    ThreadContext.put(lt_part.getName(), lt_tempFile.getFileName().toString());
+                    l_fileRefs.put(lt_part.getName(), lt_tempFile);
+                    try (InputStream lt_is = lt_part.getInputStream()) {
+                        Files.copy(lt_is, lt_tempFile, StandardCopyOption.REPLACE_EXISTING);
                     }
                 }
 
                 ThreadContext.put(UPLOADED_FILE_REF, String.join(",",
-                        fileRefs.values().stream().map(p -> p.getFileName().toString()).collect(Collectors.toList())));
+                        l_fileRefs.values().stream().map(p -> p.getFileName().toString()).collect(Collectors.toList())));
 
-                List<Part> l_parts = req.raw().getParts().stream().filter(t -> t.getSubmittedFileName() == null)
+                List<Part> l_callParts = l_parts.stream()
+                        .filter(p -> p.getSubmittedFileName() == null)
                         .collect(Collectors.toList());
-
-                if (l_parts.size() != 1) {
-                    throw new IBSPayloadException(
-                            ERROR_BAD_MULTI_PART_REQUEST);
+                if (l_callParts.size() != 1) {
+                    throw new IBSPayloadException(ERROR_BAD_MULTI_PART_REQUEST);
+                }
+                String l_callPayload;
+                try (InputStream lt_is = l_callParts.get(0).getInputStream()) {
+                    l_callPayload = new String(lt_is.readAllBytes(), StandardCharsets.UTF_8);
                 }
 
-                fetchedFromJSON = BridgeServiceFactory.createJavaCalls(
-                        new String(l_parts.get(0).getInputStream().readAllBytes(), StandardCharsets.UTF_8));
-
-                //Store file in context
-                fileRefs.forEach((k, v) -> fetchedFromJSON.getLocalClassLoader().getCallResultCache().put(k, v.toFile()));
+                l_fetchedFromJSON = BridgeServiceFactory.createJavaCalls(l_callPayload);
+                l_fileRefs.forEach((k, v) -> l_fetchedFromJSON.getLocalClassLoader().getCallResultCache().put(k, v.toFile()));
 
             } else {
-                fetchedFromJSON = BridgeServiceFactory.createJavaCalls(req.body());
+                l_fetchedFromJSON = BridgeServiceFactory.createJavaCalls(ctx.body());
             }
 
+            l_fetchedFromJSON.addHeaders(ctx.headerMap());
 
-            fetchedFromJSON.addHeaders(req.headers().stream().collect(Collectors.toMap(k -> k, req::headers)));
-
-            return BridgeServiceFactory.transformJavaCallResultsToJSON(fetchedFromJSON.submitCalls(),
-                    fetchedFromJSON.fetchSecrets());
+            ctx.contentType("application/json");
+            ctx.result(BridgeServiceFactory.transformJavaCallResultsToJSON(l_fetchedFromJSON.submitCalls(),
+                    l_fetchedFromJSON.fetchSecrets()));
         });
 
         if (ConfigValueHandlerIBS.MCP_ENABLED.is("true")) {
-            MCPRequestHandler mcpHandler = new MCPRequestHandler();
-            post("/mcp", mcpHandler::handle);
+            MCPRequestHandler l_mcpHandler = new MCPRequestHandler();
+            l_app.post("/mcp", l_mcpHandler::handle);
             log.info("MCP endpoint enabled at POST /mcp");
-            get("/.well-known/oauth-authorization-server", (req, res) -> {
-                res.status(404);
-                return "{\"error\":\"not_found\",\"error_description\":\"This server does not support OAuth\"}";
+            l_app.get("/.well-known/oauth-authorization-server", ctx -> {
+                ctx.status(404);
+                ctx.result("{\"error\":\"not_found\",\"error_description\":\"This server does not support OAuth\"}");
             });
         }
 
-        after((req, res) -> {
-            res.type("application/json");
+        l_app.exception(JsonProcessingException.class, (e, ctx) -> {
+            ctx.status(404);
+            ctx.contentType(ERROR_CONTENT_TYPE);
+            ctx.result(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_JSON_TRANSFORMATION, 404)));
         });
 
-        exception(JsonProcessingException.class, (e, req, res) -> {
-            int statusCode = 404;
-            res.status(statusCode);
-            res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(
-                    new ErrorObject(e, ERROR_JSON_TRANSFORMATION, statusCode)));
+        l_app.exception(IBSPayloadException.class, (e, ctx) -> {
+            ctx.status(404);
+            ctx.contentType(ERROR_CONTENT_TYPE);
+            ctx.result(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_PAYLOAD_INCONSISTENCY, 404)));
         });
 
-        exception(IBSPayloadException.class, (e, req, res) -> {
-            int statusCode = 404;
-            res.status(statusCode);
-            res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(
-                    new ErrorObject(e, ERROR_PAYLOAD_INCONSISTENCY, statusCode)));
+        l_app.exception(AmbiguousMethodException.class, (e, ctx) -> {
+            ctx.status(404);
+            ctx.contentType(ERROR_CONTENT_TYPE);
+            ctx.result(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_AMBIGUOUS_METHOD, 404, false)));
         });
 
-        exception(AmbiguousMethodException.class, (e, req, res) -> {
-            int statusCode = 404;
-            res.status(statusCode);
-            res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(
-                    new ErrorObject(e, ERROR_AMBIGUOUS_METHOD, statusCode, false)));
+        l_app.exception(IBSConfigurationException.class, (e, ctx) -> {
+            ctx.status(500);
+            ctx.contentType(ERROR_CONTENT_TYPE);
+            ctx.result(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_CONFIG, 500)));
         });
 
-        exception(IBSConfigurationException.class, (e, req, res) -> {
-            int statusCode = 500;
-            res.status(statusCode);
-            res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_CONFIG, statusCode)));
+        l_app.exception(IBSRunTimeException.class, (e, ctx) -> {
+            ctx.status(500);
+            ctx.contentType(ERROR_CONTENT_TYPE);
+            ctx.result(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_RUNTIME, 500)));
         });
 
-        exception(IBSRunTimeException.class, (e, req, res) -> {
-            int statusCode = 500;
-            res.status(statusCode);
-            res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_RUNTIME, statusCode)));
+        l_app.exception(TargetJavaMethodCallException.class, (e, ctx) -> {
+            ctx.status(500);
+            ctx.contentType(ERROR_CONTENT_TYPE);
+            ctx.result(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_CALLING_JAVA_METHOD, 500)));
         });
 
-        exception(TargetJavaMethodCallException.class, (e, req, res) -> {
-            int statusCode = 500;
-            res.status(statusCode);
-            res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(
-                    new ErrorObject(e, ERROR_CALLING_JAVA_METHOD, statusCode)));
+        l_app.exception(NonExistentJavaObjectException.class, (e, ctx) -> {
+            ctx.status(404);
+            ctx.contentType(ERROR_CONTENT_TYPE);
+            ctx.result(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_JAVA_OBJECT_NOT_FOUND, 404, false)));
         });
 
-        exception(NonExistentJavaObjectException.class, (e, req, res) -> {
-            int statusCode = 404;
-            res.status(statusCode);
-            res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(
-                    new ErrorObject(e, ERROR_JAVA_OBJECT_NOT_FOUND, statusCode, false)));
+        l_app.exception(JavaObjectInaccessibleException.class, (e, ctx) -> {
+            ctx.status(404);
+            ctx.contentType(ERROR_CONTENT_TYPE);
+            ctx.result(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_JAVA_OBJECT_NOT_ACCESSIBLE, 404, false)));
         });
 
-        exception(JavaObjectInaccessibleException.class, (e, req, res) -> {
-            int statusCode = 404;
-            res.status(statusCode);
-            res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(
-                    new ErrorObject(e, ERROR_JAVA_OBJECT_NOT_ACCESSIBLE, statusCode, false)));
+        l_app.exception(IBSTimeOutException.class, (e, ctx) -> {
+            ctx.status(408);
+            ctx.contentType(ERROR_CONTENT_TYPE);
+            ctx.result(BridgeServiceFactory.createExceptionPayLoad(
+                    new ErrorObject(e, ERROR_CALL_TIMEOUT, 408, false)));
         });
 
-        exception(IBSTimeOutException.class, (e, req, res) -> {
-            int statusCode = 408;
-            res.status(statusCode);
-            res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(
-                    new ErrorObject(e, ERROR_CALL_TIMEOUT, statusCode, false)));
+        l_app.exception(Exception.class, (e, ctx) -> {
+            ctx.status(500);
+            ctx.contentType(ERROR_CONTENT_TYPE);
+            ctx.result(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_INTERNAL, 500)));
         });
 
-        //Internal exception
-        exception(Exception.class, (e, req, res) -> {
-            int statusCode = 500;
-            res.status(statusCode);
-            res.type(ERROR_CONTENT_TYPE);
-            res.body(BridgeServiceFactory.createExceptionPayLoad(new ErrorObject(e, ERROR_IBS_INTERNAL, statusCode)));
-        });
-
-        afterAfter((req, res) -> {
+        l_app.after(ctx -> {
             if (ThreadContext.containsKey(UPLOADED_FILE_REF)) {
-                Arrays.stream(ThreadContext.get(UPLOADED_FILE_REF).split(",")).forEach(f -> {
-                    log.debug("Cleaning up file {}. succeeded {}.", f, (new File(uploadDir.getName(), f)).delete());
-                });
-
+                for (String lt_fileName : ThreadContext.get(UPLOADED_FILE_REF).split(",")) {
+                    log.debug("Cleaning up file {}. succeeded {}.", lt_fileName,
+                            (new File(uploadDir.getName(), lt_fileName)).delete());
+                }
+                ThreadContext.remove(UPLOADED_FILE_REF);
             }
         });
+
+        l_app.start(in_port);
+        return l_app;
     }
 
     protected enum DeploymentMode {
         TEST, PRODUCTION
     }
-
 }

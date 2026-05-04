@@ -21,6 +21,7 @@ from any language or framework you are in.
         * [Installation](#installation)
       * [Considerations](#considerations)
     * [Including your project in the BridgeService](#including-your-project-in-the-bridgeservice)
+    * [Java Version Compatibility](#java-version-compatibility)
   * [Starting the Bridge Service](#starting-the-bridge-service)
     * [Running the Bridge Locally](#running-the-bridge-locally)
     * [Running a DEMO](#running-a-demo)
@@ -116,17 +117,40 @@ The following dependency needs to be added to your pom file:
 
 #### Considerations
 
-Since the BridgeService uses Jetty and java Spark, it is quite possible that there maybe conflicts in the project when
-you add this library. Most importantly you will need to ensure that `javax.servlet` is set to "**compile**" in your
-maven scope.
-
-We have found it simplest to simply add that library directly in the pom file with the scope "**compile**".
+Since the BridgeService uses Jetty (via Javalin 6) it is quite possible that there may be conflicts in the project when
+you add this library. BridgeService 3.12+ uses the `jakarta.servlet` namespace (Jetty 11). If your project still uses
+`javax.servlet`, you will need to migrate to `jakarta.servlet` or ensure the two are isolated on the classpath.
 
 ### Including your project in the BridgeService
 
 In this model you can simply add your project as a dependency to the BridgeProject.
 
 ![BridgeService Aggregator Model](diagrams/Processes-aggregatorModel.drawio.png)
+
+### Java Version Compatibility
+
+Legend: ✅ Works &nbsp;|&nbsp; ⚠️ Works with workarounds &nbsp;|&nbsp; ❌ Fails
+
+**Injection Model** — the exposed project's JVM loads IBS. Both IBS bytecode and the HTTP framework must be compatible with that JVM.
+
+| IBS release | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
+|---|:---:|:---:|:---:|:---:|
+| **pre-3.12** (Spark, Java 11) | ❌ ¹ | ✅ | ⚠️ ² | ❌ ³ |
+| **3.12+** (Javalin 6, Java 11) | ❌ ¹ | ✅ | ✅ | ✅ |
+
+**Aggregator Model** — IBS runs its own JVM and loads the exposed project's classes via reflection.
+
+| IBS release | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
+|---|:---:|:---:|:---:|:---:|
+| **pre-3.12** (Spark, Java 11) | ✅ | ✅ | ❌ ⁴ | ❌ ⁴ |
+| **3.12+** (Javalin 6, Java 11) | ✅ | ✅ | ❌ ⁴ | ❌ ⁴ |
+
+¹ Exposed project JVM cannot load IBS bytecode — `UnsupportedClassVersionError`.  
+² Spark is unofficial on Java 17 and requires `--add-opens` flags.  
+³ Spark is not compatible with Java 21.  
+⁴ IBS JVM (Java 11) cannot load class files compiled to Java 17+ — `UnsupportedClassVersionError` in the class loader.
+
+For the full analysis and the planned Java 21 upgrade (issue #39), see [docs/JavaMigration.md](docs/JavaMigration.md).
 
 ## Starting the Bridge Service
 

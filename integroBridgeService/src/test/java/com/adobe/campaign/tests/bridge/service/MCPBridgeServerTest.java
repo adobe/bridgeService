@@ -1120,6 +1120,19 @@ public class MCPBridgeServerTest {
     // ---- Javadoc quality gate integration tests ----
 
     @Test(groups = "MCP")
+    public void testDiscoverTools_strictMode_skippedCountIsPositive() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("strict");
+        try {
+            MCPToolDiscovery.DiscoveryResult l_result =
+                    MCPToolDiscovery.discoverTools(TESTDATA_ONE_PACKAGE);
+            assertThat("skippedCount must be positive — test data contains undocumented methods",
+                    l_result.skippedCount, greaterThan(0));
+        } finally {
+            ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
     public void testDiscoverTools_strictMode_documentedMethodsIncluded() {
         ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("strict");
         try {
@@ -1132,6 +1145,27 @@ public class MCPBridgeServerTest {
             assertThat("Undocumented method must be absent under strict",
                     l_tools.stream().noneMatch(t -> ("SimpleStaticMethods_overLoadedMethod1Arg").equals(t.get("name"))),
                     is(true));
+        } finally {
+            ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
+    public void testDiscoverTools_trueMode_excludesUndocumentedIncludesDocumented() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("true");
+        try {
+            MCPToolDiscovery.DiscoveryResult l_result =
+                    MCPToolDiscovery.discoverTools(TESTDATA_ONE_PACKAGE);
+            assertThat("Undocumented method must be absent under true mode",
+                    l_result.tools.stream().noneMatch(t ->
+                            "SimpleStaticMethods_methodThrowingLinkageError".equals(t.get("name"))),
+                    is(true));
+            assertThat("Documented method must appear under true mode",
+                    l_result.tools.stream().anyMatch(t ->
+                            "SimpleStaticMethods_methodAcceptingStringArgument".equals(t.get("name"))),
+                    is(true));
+            assertThat("Skip count must reflect filtered methods",
+                    l_result.skippedCount, greaterThan(0));
         } finally {
             ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
         }

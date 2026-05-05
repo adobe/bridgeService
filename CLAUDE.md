@@ -33,6 +33,11 @@ mvn package
 
 **Quality gates that must pass before merging:** unit tests pass, no coverage decrease, SonarCloud gate green, license headers present.
 
+**Coverage rules (enforced by SonarCloud and codecov/patch in CI):**
+- Overall line coverage must not decrease from the baseline on `main`.
+- New/changed code (the PR patch) must reach **80% line coverage** — this is the `codecov/patch` check. If it fails, add targeted tests for the uncovered branches in your new code.
+- JaCoCo reports are generated at `target/site/jacoco/` after `mvn test`. Check method-level branch coverage there before pushing.
+
 ## Module Structure
 
 ```

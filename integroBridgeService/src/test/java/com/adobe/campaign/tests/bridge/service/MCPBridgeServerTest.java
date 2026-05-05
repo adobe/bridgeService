@@ -8,13 +8,21 @@
  */
 package com.adobe.campaign.tests.bridge.service;
 
+import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
+import com.github.therapi.runtimejavadoc.RuntimeJavadoc;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import io.javalin.Javalin;
+
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -201,7 +209,7 @@ public class MCPBridgeServerTest {
         assertThat(text, containsString("packagesConfigured"));
         assertThat(text, containsString(TESTDATA_ONE_PACKAGE));
         assertThat(text, containsString("\"prechainActive\":false"));
-        assertThat(text, containsString("\"javadocRequired\":true"));
+        assertThat(text, containsString("\"javadocQualityGate\""));
     }
 
     @Test(groups = "MCP")
@@ -1090,6 +1098,145 @@ public class MCPBridgeServerTest {
         .then()
                 .statusCode(200)
                 .body("result.tools.name", not(hasItem("Instantiable_Instantiable")));
+    }
+
+    // ---- hasAdequateJavadoc unit tests ----
+
+    @Test(groups = "MCP")
+    public void testHasAdequateJavadoc_methodWithCommentAndAllParams_returnsTrue() throws Exception {
+        Method l_method = SimpleStaticMethods.class.getMethod("methodAcceptingStringArgument", String.class);
+        assertThat(MCPToolDiscovery.hasAdequateJavadoc(l_method), is(true));
+    }
+
+    @Test(groups = "MCP")
+    public void testHasAdequateJavadoc_noArgMethodWithComment_returnsTrue() throws Exception {
+        Method l_method = SimpleStaticMethods.class.getMethod("methodReturningString");
+        assertThat(MCPToolDiscovery.hasAdequateJavadoc(l_method), is(true));
+    }
+
+    @Test(groups = "MCP")
+    public void testHasAdequateJavadoc_methodWithNoJavadoc_returnsFalse() throws Exception {
+        Method l_method = SimpleStaticMethods.class.getMethod("overLoadedMethod1Arg", String.class);
+        assertThat(MCPToolDiscovery.hasAdequateJavadoc(l_method), is(false));
+    }
+
+    @Test(groups = "MCP")
+    public void testHasAdequateJavadoc_runtimeJavadocThrows_returnsFalse() throws Exception {
+        Method l_method = SimpleStaticMethods.class.getMethod("methodAcceptingStringArgument", String.class);
+        try (MockedStatic<RuntimeJavadoc> l_mock = Mockito.mockStatic(RuntimeJavadoc.class)) {
+            l_mock.when(() -> RuntimeJavadoc.getJavadoc(l_method))
+                    .thenThrow(new RuntimeException("simulated Javadoc read failure"));
+            assertThat(MCPToolDiscovery.hasAdequateJavadoc(l_method), is(false));
+        }
+    }
+
+    // ---- Javadoc quality gate integration tests ----
+
+    @Test(groups = "MCP")
+    public void testDiscoverTools_strictMode_skippedCountIsPositive() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("strict");
+        try {
+            MCPToolDiscovery.DiscoveryResult l_result =
+                    MCPToolDiscovery.discoverTools(TESTDATA_ONE_PACKAGE);
+            assertThat("skippedCount must be positive — test data contains undocumented methods",
+                    l_result.skippedCount, greaterThan(0));
+        } finally {
+            ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
+    public void testDiscoverTools_strictMode_documentedMethodsIncluded() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("strict");
+        try {
+            MCPToolDiscovery.DiscoveryResult l_result =
+                    MCPToolDiscovery.discoverTools(TESTDATA_ONE_PACKAGE);
+            List<Map<String, Object>> l_tools = l_result.tools;
+            assertThat("Documented method with @param must appear under strict",
+                    l_tools.stream().anyMatch(t -> "SimpleStaticMethods_methodAcceptingStringArgument".equals(t.get("name"))),
+                    is(true));
+            assertThat("Undocumented method must be absent under strict",
+                    l_tools.stream().noneMatch(t -> ("SimpleStaticMethods_overLoadedMethod1Arg").equals(t.get("name"))),
+                    is(true));
+        } finally {
+            ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
+    public void testDiscoverTools_trueMode_excludesUndocumentedIncludesDocumented() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("true");
+        try {
+            MCPToolDiscovery.DiscoveryResult l_result =
+                    MCPToolDiscovery.discoverTools(TESTDATA_ONE_PACKAGE);
+            assertThat("Undocumented method must be absent under true mode",
+                    l_result.tools.stream().noneMatch(t ->
+                            "SimpleStaticMethods_methodThrowingLinkageError".equals(t.get("name"))),
+                    is(true));
+            assertThat("Documented method must appear under true mode",
+                    l_result.tools.stream().anyMatch(t ->
+                            "SimpleStaticMethods_methodAcceptingStringArgument".equals(t.get("name"))),
+                    is(true));
+            assertThat("Skip count must reflect filtered methods",
+                    l_result.skippedCount, greaterThan(0));
+        } finally {
+            ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
+    public void testDiscoverTools_falseMode_undocumentedMethodsIncluded() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("false");
+        try {
+            MCPToolDiscovery.DiscoveryResult l_result =
+                    MCPToolDiscovery.discoverTools(TESTDATA_ONE_PACKAGE);
+            // methodThrowingLinkageError has no Javadoc — excluded under strict/true, included under false
+            assertThat("Undocumented method must appear when gate is disabled",
+                    l_result.tools.stream().anyMatch(t ->
+                            "SimpleStaticMethods_methodThrowingLinkageError".equals(t.get("name"))),
+                    is(true));
+        } finally {
+            ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
+    public void testMCPRequestHandler_falseMode_startupLogBranchCovered() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("false");
+        try {
+            // Constructing MCPRequestHandler exercises the 'false' branch of the startup log ternary.
+            MCPRequestHandler l_handler = new MCPRequestHandler();
+            assertThat(l_handler, notNullValue());
+        } finally {
+            ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
+    public void testMCPRequestHandler_trueModeStartupLogBranchCovered() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("true");
+        try {
+            // Constructing MCPRequestHandler exercises the 'true' branch of the startup log ternary.
+            MCPRequestHandler l_handler = new MCPRequestHandler();
+            assertThat(l_handler, notNullValue());
+        } finally {
+            ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
+    public void testToolsList_strictDefault_exposesFullyDocumentedMethods() {
+        // With the default (strict), all documented SimpleStaticMethods with @param should be present.
+        given()
+                .contentType(CONTENT_TYPE_JSON)
+                .body("{\"jsonrpc\":\"2.0\",\"id\":200,\"method\":\"tools/list\",\"params\":{}}")
+        .when()
+                .post(MCP_ENDPOINT)
+        .then()
+                .statusCode(200)
+                .body("result.tools.name", hasItem("SimpleStaticMethods_methodAcceptingStringArgument"))
+                .body("result.tools.name", hasItem("SimpleStaticMethods_methodAcceptingTwoArguments"))
+                .body("result.tools.name", hasItem("SimpleStaticMethods_methodAcceptingIntArgument"));
     }
 
     @Test(groups = "MCP")

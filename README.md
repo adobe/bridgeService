@@ -189,6 +189,7 @@ For MCP usage, configure your AI client to point at `http://localhost:8080/mcp` 
 
 #### Use case 1 — Call a method with a string argument
 
+**REST** (`POST /call`):
 ```json
 {
   "callContent": {
@@ -201,13 +202,15 @@ For MCP usage, configure your AI client to point at `http://localhost:8080/mcp` 
 }
 ```
 
-| | REST (`POST /call`) | MCP (AI prompt) |
-|---|---|---|
-| **Call** | Payload above | *"Call the method that accepts a string argument and pass 'world' to it"* |
-| **Response** | `{"returnValues":{"result":"world_Success"}}` | `world_Success` |
+**MCP**: *"Call the method that accepts a string argument and pass 'world' to it"*
+
+**Response**: `{"returnValues":{"result":"world_Success"}}`
+
+---
 
 #### Use case 2 — Call a method returning a list
 
+**REST** (`POST /call`):
 ```json
 {
   "callContent": {
@@ -219,13 +222,15 @@ For MCP usage, configure your AI client to point at `http://localhost:8080/mcp` 
 }
 ```
 
-| | REST (`POST /call`) | MCP (AI prompt) |
-|---|---|---|
-| **Call** | Payload above | *"Get the list of available countries"* |
-| **Response** | `{"returnValues":{"countries":["AT","AU","CA","CH","DE"]}}` | `["AT","AU","CA","CH","DE"]` |
+**MCP**: *"Get the list of available countries"*
+
+**Response**: `{"returnValues":{"countries":["AT","AU","CA","CH","DE"]}}`
+
+---
 
 #### Use case 3 — Call chaining
 
+**REST** (`POST /call`):
 ```json
 {
   "callContent": {
@@ -242,10 +247,9 @@ For MCP usage, configure your AI client to point at `http://localhost:8080/mcp` 
 }
 ```
 
-| | REST (`POST /call`) | MCP (AI prompt) |
-|---|---|---|
-| **Call** | Payload above | *"Get a random country and pass it as an argument to methodAcceptingStringArgument"* |
-| **Response** | `{"returnValues":{"country":"AU","result":"AU_Success"}}` *(country is random)* | `AU_Success` *(country is random)* |
+**MCP**: *"Get a random country and pass it as an argument to methodAcceptingStringArgument"*
+
+**Response**: `{"returnValues":{"country":"AU","result":"AU_Success"}}` *(country is random)*
 
 ## Setting Information About your Environment
 

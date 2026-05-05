@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+
+    Copyright 2022 Adobe
+    All Rights Reserved.
+
+    NOTICE: Adobe permits you to use, modify, and distribute this file in
+    accordance with the terms of the Adobe license agreement accompanying
+    it.
+
+-->
+
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Injection Model E2E Test Suite">
+    <test verbose="2" name="Injection Model Tests" time-out="900000">
+        <groups>
+            <run>
+                <include name="E2E"/>
+            </run>
+        </groups>
+        <packages>
+            <package name="com.adobe.campaign.tests.bridge.dependency" />
+        </packages>
+    </test>
+    <test verbose="2" name="Injection Model MCP Tests" time-out="900000">
+        <groups>
+            <run>
+                <include name="INJECTION_MCP"/>
+            </run>
+        </groups>
+        <packages>
+            <package name="com.adobe.campaign.tests.bridge.dependency" />
+        </packages>
+    </test>
+</suite>

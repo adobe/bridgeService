@@ -111,7 +111,7 @@ The following dependency needs to be added to your pom file:
 <dependency>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <version>3.11.2</version>
+    <version>3.11.3</version>
 </dependency>
 ```
 
@@ -201,7 +201,7 @@ If all is good you should get:
 
 ```
 All systems up - in production
-Version : 3.11.2
+Version : 3.11.3
 Product user version : 7.0
 ```
 
@@ -948,7 +948,7 @@ Response:
   "id": 1,
   "result": {
     "protocolVersion": "2024-11-05",
-    "serverInfo": { "name": "bridgeService", "version": "3.11.2" },
+    "serverInfo": { "name": "bridgeService", "version": "3.11.3" },
     "capabilities": { "tools": {} }
   }
 }

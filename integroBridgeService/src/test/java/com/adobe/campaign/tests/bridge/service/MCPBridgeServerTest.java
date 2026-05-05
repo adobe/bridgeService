@@ -9,8 +9,11 @@
 package com.adobe.campaign.tests.bridge.service;
 
 import com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods;
+import com.github.therapi.runtimejavadoc.RuntimeJavadoc;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
@@ -1117,6 +1120,18 @@ public class MCPBridgeServerTest {
         assertThat(MCPToolDiscovery.hasAdequateJavadoc(l_method), is(false));
     }
 
+    @Test(groups = "MCP")
+    public void testHasAdequateJavadoc_runtimeJavadocThrows_returnsFalse() throws Exception {
+        Method l_method = SimpleStaticMethods.class.getMethod("methodAcceptingStringArgument", String.class);
+        try (MockedStatic<RuntimeJavadoc> l_mock = Mockito.mockStatic(RuntimeJavadoc.class)) {
+            // First call (from hasJavadoc) delegates to real impl; second call (inside hasAdequateJavadoc) throws.
+            l_mock.when(() -> RuntimeJavadoc.getJavadoc(l_method))
+                    .thenAnswer(invocation -> invocation.callRealMethod())
+                    .thenThrow(new RuntimeException("simulated Javadoc read failure"));
+            assertThat(MCPToolDiscovery.hasAdequateJavadoc(l_method), is(false));
+        }
+    }
+
     // ---- Javadoc quality gate integration tests ----
 
     @Test(groups = "MCP")
@@ -1182,6 +1197,30 @@ public class MCPBridgeServerTest {
                     l_result.tools.stream().anyMatch(t ->
                             "SimpleStaticMethods_methodThrowingLinkageError".equals(t.get("name"))),
                     is(true));
+        } finally {
+            ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
+    public void testMCPRequestHandler_falseMode_startupLogBranchCovered() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("false");
+        try {
+            // Constructing MCPRequestHandler exercises the 'false' branch of the startup log ternary.
+            MCPRequestHandler l_handler = new MCPRequestHandler();
+            assertThat(l_handler, notNullValue());
+        } finally {
+            ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
+        }
+    }
+
+    @Test(groups = "MCP")
+    public void testMCPRequestHandler_trueModeStartupLogBranchCovered() {
+        ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.activate("true");
+        try {
+            // Constructing MCPRequestHandler exercises the 'true' branch of the startup log ternary.
+            MCPRequestHandler l_handler = new MCPRequestHandler();
+            assertThat(l_handler, notNullValue());
         } finally {
             ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.reset();
         }

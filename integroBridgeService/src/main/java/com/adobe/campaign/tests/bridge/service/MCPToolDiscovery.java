@@ -95,10 +95,7 @@ public class MCPToolDiscovery {
                 if (overloads.size() == 1) {
                     // Unique method name on this class — use simple tool name
                     Method method = overloads.get(0);
-                    if (ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("true") && !hasJavadoc(method)) {
-                        log.debug("Skipping {}.{} — no Javadoc (IBS.MCP.REQUIRE_JAVADOC=true)",
-                                clazz.getSimpleName(), methodName);
-                    } else {
+                    if (!shouldSkipForJavadoc(method, clazz.getSimpleName(), methodName)) {
                         String toolName = clazz.getSimpleName() + "_" + methodName;
                         registerTool(tools, registry, toolName, method);
                     }
@@ -113,13 +110,10 @@ public class MCPToolDiscovery {
                                     + "use the java_call tool to invoke them directly.",
                                     clazz.getName(), methodName, countEntry.getKey());
                         } else {
-                            Method method = countEntry.getValue().get(0);
-                            if (ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("true") && !hasJavadoc(method)) {
-                                log.debug("Skipping {}.{} — no Javadoc (IBS.MCP.REQUIRE_JAVADOC=true)",
-                                        clazz.getSimpleName(), methodName);
-                            } else {
-                                String toolName = clazz.getSimpleName() + "_" + methodName + "_" + countEntry.getKey();
-                                registerTool(tools, registry, toolName, method);
+                            Method lt_method = countEntry.getValue().get(0);
+                            if (!shouldSkipForJavadoc(lt_method, clazz.getSimpleName(), methodName)) {
+                                String lt_toolName = clazz.getSimpleName() + "_" + methodName + "_" + countEntry.getKey();
+                                registerTool(tools, registry, lt_toolName, lt_method);
                             }
                         }
                     }
@@ -180,6 +174,43 @@ public class MCPToolDiscovery {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * Returns true if the method has a non-empty Javadoc comment AND a non-empty
+     * {@code @param} tag for every parameter. Methods with no parameters pass if
+     * they have a non-empty comment.
+     */
+    static boolean hasAdequateJavadoc(Method method) {
+        if (!hasJavadoc(method)) return false;
+        int l_paramCount = method.getParameterCount();
+        if (l_paramCount == 0) return true;
+        try {
+            MethodJavadoc l_javadoc = RuntimeJavadoc.getJavadoc(method);
+            if (l_javadoc == null) return false;
+            List<ParamJavadoc> l_params = l_javadoc.getParams();
+            if (l_params.size() < l_paramCount) return false;
+            return l_params.stream().allMatch(p -> !COMMENT_FORMATTER.format(p.getComment()).isEmpty());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean shouldSkipForJavadoc(Method in_method, String in_clazz, String in_method_name) {
+        if (ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("strict")) {
+            if (!hasAdequateJavadoc(in_method)) {
+                log.debug("Skipping {}.{} — Javadoc quality gate (strict) not met: missing comment or @param",
+                        in_clazz, in_method_name);
+                return true;
+            }
+        } else if (ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("true")) {
+            if (!hasJavadoc(in_method)) {
+                log.debug("Skipping {}.{} — Javadoc quality gate (true) not met: no Javadoc comment",
+                        in_clazz, in_method_name);
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

@@ -73,9 +73,11 @@ public enum ConfigValueHandlerIBS {
             "IBS.DESERIALIZATION.DATE.FORMAT", "NONE", false, "The date format to be used for deserialization."),
     MCP_ENABLED("IBS.MCP.ENABLED", "false", false,
             "When set to true, enables the MCP server endpoint at POST /mcp, exposing configured packages as tools."),
-    MCP_REQUIRE_JAVADOC("IBS.MCP.REQUIRE_JAVADOC", "true", false,
-            "When true (default), only methods with a non-empty Javadoc comment are exposed as MCP tools. "
-            + "Methods without Javadoc are silently skipped. Set to false to expose all public static methods."),
+    MCP_REQUIRE_JAVADOC("IBS.MCP.REQUIRE_JAVADOC", "strict", false,
+            "Controls which methods are exposed as MCP tools based on Javadoc quality. "
+            + "Accepted values: 'false' (expose all public static methods), "
+            + "'true' (requires non-empty Javadoc comment), "
+            + "'strict' (requires comment + non-empty @param for every parameter, default)."),
     MCP_PRECHAIN("IBS.MCP.PRECHAIN", null, false,
             "JSON callContent fragment prepended to every auto-discovered MCP tool invocation. "
             + "Entries execute in the same isolated context as the actual call, so call-chaining "

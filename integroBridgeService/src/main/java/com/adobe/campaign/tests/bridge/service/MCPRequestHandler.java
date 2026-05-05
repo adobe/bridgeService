@@ -137,8 +137,13 @@ public class MCPRequestHandler {
         l_diagnosticsTool.put("inputSchema", DIAGNOSTICS_SCHEMA_MAP);
         tools.add(l_diagnosticsTool);
         this.toolList = Collections.unmodifiableList(tools);
-        log.info("MCPRequestHandler ready: {} individual tool(s) + java_call + ibs_diagnostics.",
-                discoveredToolCount);
+        String l_javadocExplained = ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("strict")
+                ? "strict — only methods with Javadoc comment + @param for every parameter are exposed"
+                : ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("false")
+                        ? "false — all public static methods are exposed regardless of documentation"
+                        : "true — only methods with a non-empty Javadoc comment are exposed";
+        log.info("MCPRequestHandler ready: {} individual tool(s) + java_call + ibs_diagnostics. "
+                + "Javadoc quality gate: {}", discoveredToolCount, l_javadocExplained);
     }
 
     /**
@@ -338,8 +343,8 @@ public class MCPRequestHandler {
                     ConfigValueHandlerIBS.STATIC_INTEGRITY_PACKAGES.fetchValue());
             String prechain = ConfigValueHandlerIBS.MCP_PRECHAIN.fetchValue();
             mcpConfig.put("prechainActive", prechain != null && !prechain.isBlank());
-            mcpConfig.put("javadocRequired",
-                    Boolean.parseBoolean(ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.fetchValue()));
+            mcpConfig.put("javadocQualityGate",
+                    ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.fetchValue());
             diag.put("mcpConfig", mcpConfig);
 
             String secretPrefix = ConfigValueHandlerIBS.SECRETS_FILTER_PREFIX.fetchValue();

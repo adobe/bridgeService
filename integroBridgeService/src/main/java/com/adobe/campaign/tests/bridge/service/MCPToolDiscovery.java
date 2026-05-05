@@ -40,10 +40,13 @@ public class MCPToolDiscovery {
         public final List<Map<String, Object>> tools;
         /** Maps each tool name to the Java Method it represents, used to build the catalog in the java_call description. */
         public final Map<String, Method> methodRegistry;
+        /** Number of methods skipped by the active Javadoc quality gate. */
+        public final int skippedCount;
 
-        public DiscoveryResult(List<Map<String, Object>> tools, Map<String, Method> methodRegistry) {
+        public DiscoveryResult(List<Map<String, Object>> tools, Map<String, Method> methodRegistry, int skippedCount) {
             this.tools = Collections.unmodifiableList(tools);
             this.methodRegistry = Collections.unmodifiableMap(methodRegistry);
+            this.skippedCount = skippedCount;
         }
     }
 
@@ -57,11 +60,12 @@ public class MCPToolDiscovery {
     public static DiscoveryResult discoverTools(String packagesCsv) {
         List<Map<String, Object>> tools = new ArrayList<>();
         Map<String, Method> registry = new LinkedHashMap<>();
+        int[] l_skipped = {0};
 
         if (packagesCsv == null || packagesCsv.trim().isEmpty()) {
             log.warn("IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES is not set — no tools will be discovered for MCP. "
                     + "Set this property to enable tool discovery.");
-            return new DiscoveryResult(tools, registry);
+            return new DiscoveryResult(tools, registry, 0);
         }
 
         // Strip trailing dots that IBS uses as package separators (e.g. "com.example.")
@@ -95,7 +99,9 @@ public class MCPToolDiscovery {
                 if (overloads.size() == 1) {
                     // Unique method name on this class — use simple tool name
                     Method method = overloads.get(0);
-                    if (!shouldSkipForJavadoc(method, clazz.getSimpleName(), methodName)) {
+                    if (shouldSkipForJavadoc(method, clazz.getSimpleName(), methodName)) {
+                        l_skipped[0]++;
+                    } else {
                         String toolName = clazz.getSimpleName() + "_" + methodName;
                         registerTool(tools, registry, toolName, method);
                     }
@@ -111,7 +117,9 @@ public class MCPToolDiscovery {
                                     clazz.getName(), methodName, countEntry.getKey());
                         } else {
                             Method lt_method = countEntry.getValue().get(0);
-                            if (!shouldSkipForJavadoc(lt_method, clazz.getSimpleName(), methodName)) {
+                            if (shouldSkipForJavadoc(lt_method, clazz.getSimpleName(), methodName)) {
+                                l_skipped[0]++;
+                            } else {
                                 String lt_toolName = clazz.getSimpleName() + "_" + methodName + "_" + countEntry.getKey();
                                 registerTool(tools, registry, lt_toolName, lt_method);
                             }
@@ -121,9 +129,9 @@ public class MCPToolDiscovery {
             }
         }
 
-        log.info("MCP tool discovery complete: {} tool(s) registered from {} class(es).",
-                tools.size(), allClasses.size());
-        return new DiscoveryResult(tools, registry);
+        log.info("MCP tool discovery complete: {} tool(s) registered, {} skipped by quality gate ({}), from {} class(es).",
+                tools.size(), l_skipped[0], ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.fetchValue(), allClasses.size());
+        return new DiscoveryResult(tools, registry, l_skipped[0]);
     }
 
     private static void registerTool(List<Map<String, Object>> tools, Map<String, Method> registry,

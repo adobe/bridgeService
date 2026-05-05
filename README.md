@@ -11,72 +11,75 @@ from any language or framework you are in.
 ## Table of Contents
 
 <!-- TOC -->
-* [BridgeService](#bridgeservice)
-  * [Table of Contents](#table-of-contents)
-  * [Background](#background)
-    * [Demo Project](#demo-project)
-  * [Release Notes](#release-notes)
-  * [Implementing The Bridge Service in Your Project](#implementing-the-bridge-service-in-your-project)
-    * [Adding the Bridge Service to Your Project](#adding-the-bridge-service-to-your-project)
-        * [Installation](#installation)
-      * [Considerations](#considerations)
-    * [Including your project in the BridgeService](#including-your-project-in-the-bridgeservice)
-    * [Java Version Compatibility](#java-version-compatibility)
-  * [Starting the Bridge Service](#starting-the-bridge-service)
-    * [Running the Bridge Locally](#running-the-bridge-locally)
-    * [Running a DEMO](#running-a-demo)
-  * [Setting Information About your Environment](#setting-information-about-your-environment)
-  * [Testing That all is Working](#testing-that-all-is-working)
-  * [Testing That all External Devices can be Accessed](#testing-that-all-external-devices-can-be-accessed)
-  * [Making Java Calls](#making-java-calls)
-    * [A basic Java Call](#a-basic-java-call)
-    * [Instantiating Objects](#instantiating-objects)
-    * [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
-    * [Call Chaining and Call Dependencies](#call-chaining-and-call-dependencies)
-      * [Call Chaining and Instance Methods](#call-chaining-and-instance-methods)
-    * [Argument Types](#argument-types)
-      * [Simple Java Objects](#simple-java-objects)
-      * [Lists and Arrays](#lists-and-arrays)
-      * [Complex Types](#complex-types)
-      * [Files](#files)
-  * [Results](#results)
-    * [Formatting Dates](#formatting-dates)
-    * [Deserialization Plugins](#deserialization-plugins)
-  * [Managing Timeouts](#managing-timeouts)
-    * [Setting Timeout Globally](#setting-timeout-globally)
-    * [Setting a Timeout for the Call Session](#setting-a-timeout-for-the-call-session)
-  * [Creating a Call Context](#creating-a-call-context)
-    * [Static Variable Scopes](#static-variable-scopes)
-      * [Session Scopes](#session-scopes)
-      * [Product Scope](#product-scope)
-  * [Headers and Secrets](#headers-and-secrets)
-    * [Secrets](#secrets)
-    * [Steamlining Headers](#steamlining-headers)
-  * [Making Assertions](#making-assertions)
-    * [Duration-Based Assertions](#duration-based-assertions)
-  * [Using BridgeService as an MCP Server](#using-bridgeservice-as-an-mcp-server)
-    * [Enabling MCP](#enabling-mcp)
-    * [Discovering Tools](#discovering-tools-toolslist)
-    * [Calling a Discovered Tool](#calling-a-discovered-tool-toolscall)
-    * [The java_call Tool](#the-java_call-tool)
-    * [Diagnostics](#diagnostics-ibs_diagnostics)
-    * [MCP Configuration](#mcp-configuration)
-    * [MCP Limitations](#mcp-limitations)
-  * [Error Management](#error-management)
-  * [Contributing to the Project](#contributing-to-the-project)
-  * [Known Errors](#known-errors)
-    * [Linked Error](#linked-error)
-  * [Known Issues and Limitations](#known-issues-and-limitations)
-    * [Cannot call overloaded methods with the same number of arguments.](#cannot-call-overloaded-methods-with-the-same-number-of-arguments)
-    * [Only simple arguments](#only-simple-arguments)
-    * [Complex Non-Serializable Return Objects](#complex-non-serializable-return-objects)
-    * [Calling Enum Methods](#calling-enum-methods)
-<!-- TOC -->
+
+- [BridgeService](#bridgeservice)
+  - [Table of Contents](#table-of-contents)
+  - [Background](#background)
+    - [Demo Project](#demo-project)
+  - [Release Notes](#release-notes)
+  - [Implementing The Bridge Service in Your Project](#implementing-the-bridge-service-in-your-project)
+    - [Adding the Bridge Service to Your Project](#adding-the-bridge-service-to-your-project)
+      - [Installation](#installation)
+      - [Considerations](#considerations)
+    - [Including your project in the BridgeService](#including-your-project-in-the-bridgeservice)
+    - [Java Version Compatibility](#java-version-compatibility)
+  - [Starting the Bridge Service](#starting-the-bridge-service)
+    - [Running the Bridge Locally](#running-the-bridge-locally)
+    - [Running a DEMO](#running-a-demo)
+  - [Setting Information About your Environment](#setting-information-about-your-environment)
+  - [Testing That all is Working](#testing-that-all-is-working)
+  - [Testing That all External Devices can be Accessed](#testing-that-all-external-devices-can-be-accessed)
+  - [Making Java Calls](#making-java-calls)
+    - [A basic Java Call](#a-basic-java-call)
+    - [Instantiating Objects](#instantiating-objects)
+    - [Call Chaining a basic Java Call](#call-chaining-a-basic-java-call)
+    - [Call Chaining and Call Dependencies](#call-chaining-and-call-dependencies)
+      - [Call Chaining and Instance Methods](#call-chaining-and-instance-methods)
+    - [Argument Types](#argument-types)
+      - [Simple Java Objects](#simple-java-objects)
+      - [Lists and Arrays](#lists-and-arrays)
+      - [Complex Types](#complex-types)
+      - [Files](#files)
+  - [Results](#results)
+    - [Formatting Dates](#formatting-dates)
+    - [Deserialization Plugins](#deserialization-plugins)
+  - [Managing Timeouts](#managing-timeouts)
+    - [Setting Timeout Globally](#setting-timeout-globally)
+    - [Setting a Timeout for the Call Session](#setting-a-timeout-for-the-call-session)
+  - [Creating a Call Context](#creating-a-call-context)
+    - [Static Variable Scopes](#static-variable-scopes)
+      - [Session Scopes](#session-scopes)
+      - [Product Scope](#product-scope)
+  - [Headers and Secrets](#headers-and-secrets)
+    - [Secrets](#secrets)
+    - [Steamlining Headers](#steamlining-headers)
+  - [Making Assertions](#making-assertions)
+    - [Duration-Based Assertions](#duration-based-assertions)
+  - [Using BridgeService as an MCP Server](#using-bridgeservice-as-an-mcp-server)
+    - [Enabling MCP](#enabling-mcp)
+    - [Discovering Tools](#discovering-tools-toolslist)
+    - [Calling a Discovered Tool](#calling-a-discovered-tool-toolscall)
+    - [The java_call Tool](#the-java_call-tool)
+    - [Diagnostics](#diagnostics-ibs_diagnostics)
+    - [MCP Configuration](#mcp-configuration)
+    - [MCP Limitations](#mcp-limitations)
+  - [Error Management](#error-management)
+  - [Contributing to the Project](#contributing-to-the-project)
+  - [Known Errors](#known-errors)
+    - [Linked Error](#linked-error)
+  - [Known Issues and Limitations](#known-issues-and-limitations)
+  _ [Cannot call overloaded methods with the same number of arguments.](#cannot-call-overloaded-methods-with-the-same-number-of-arguments)
+  _ [Only simple arguments](#only-simple-arguments)
+  _ [Complex Non-Serializable Return Objects](#complex-non-serializable-return-objects)
+  _ [Calling Enum Methods](#calling-enum-methods)
+  <!-- TOC -->
 
 ## Background
-We originally created this project to address the need for Cypress tests to reuse code created for the back-end tests. We had a lot of product knowledge and tooling stored in the back-end tests, that rewriting them in node would not have been practical. Today the project is up and running and is used regularly in our test projects. 
+
+We originally created this project to address the need for Cypress tests to reuse code created for the back-end tests. We had a lot of product knowledge and tooling stored in the back-end tests, that rewriting them in node would not have been practical. Today the project is up and running and is used regularly in our test projects.
 
 ### Demo Project
+
 We have created a demo project that shpws how the bridge service can be implemented. It is available under [Test As A Product Demo](https://github.com/adobe/test-as-a-product-demo).
 
 ## Release Notes
@@ -87,8 +90,8 @@ The release notes can be found [here](ReleaseNotes.md).
 
 The bridge service can be used in two ways:
 
-* By adding it to the project you want to expose (recommended),
-* By including your project as a dependency to the Bridge cervice deployed.
+- By adding it to the project you want to expose (recommended),
+- By including your project as a dependency to the Bridge cervice deployed.
 
 ### Adding the Bridge Service to Your Project
 
@@ -133,17 +136,17 @@ Legend: ✅ Works &nbsp;|&nbsp; ⚠️ Works with workarounds &nbsp;|&nbsp; ❌ 
 
 **Injection Model** — the exposed project's JVM loads IBS. Both IBS bytecode and the HTTP framework must be compatible with that JVM.
 
-| IBS release | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
-|---|:---:|:---:|:---:|:---:|
-| **pre-3.12** (Spark, Java 11) | ❌ ¹ | ✅ | ⚠️ ² | ❌ ³ |
-| **3.12+** (Javalin 6, Java 11) | ❌ ¹ | ✅ | ✅ | ✅ |
+| IBS release                    | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
+| ------------------------------ | :------------: | :-------------: | :-------------: | :-------------: |
+| **pre-3.12** (Spark, Java 11)  |      ❌ ¹      |       ✅        |      ⚠️ ²       |      ❌ ³       |
+| **3.12+** (Javalin 6, Java 11) |      ❌ ¹      |       ✅        |       ✅        |       ✅        |
 
 **Aggregator Model** — IBS runs its own JVM and loads the exposed project's classes via reflection.
 
-| IBS release | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
-|---|:---:|:---:|:---:|:---:|
-| **pre-3.12** (Spark, Java 11) | ✅ | ✅ | ❌ ⁴ | ❌ ⁴ |
-| **3.12+** (Javalin 6, Java 11) | ✅ | ✅ | ❌ ⁴ | ❌ ⁴ |
+| IBS release                    | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
+| ------------------------------ | :------------: | :-------------: | :-------------: | :-------------: |
+| **pre-3.12** (Spark, Java 11)  |       ✅       |       ✅        |      ❌ ⁴       |      ❌ ⁴       |
+| **3.12+** (Javalin 6, Java 11) |       ✅       |       ✅        |      ❌ ⁴       |      ❌ ⁴       |
 
 ¹ Exposed project JVM cannot load IBS bytecode — `UnsupportedClassVersionError`.  
 ² Spark is unofficial on Java 17 and requires `--add-opens` flags.  
@@ -161,13 +164,13 @@ When deploying this as a project we run this as an executable jar. This is usual
 You can also run the project locally to debug your project. To do this, you need to run the following command line:
 
 from the root project:
-```mvn -pl integroBridgeService exec:java -Dexec.args="test"```
+`mvn -pl integroBridgeService exec:java -Dexec.args="test"`
 
 or directly from the module "integroBridgeService":
-```mvn exec:java -Dexec.args="test"```
+`mvn exec:java -Dexec.args="test"`
 
 This will make the service available under :
-```http://localhost:8080```
+`http://localhost:8080`
 
 ### Running a DEMO
 
@@ -186,31 +189,70 @@ For MCP usage, configure your AI client to point at `http://localhost:8080/mcp` 
 
 #### Use case 1 — Call a method with a string argument
 
+```json
+{
+  "callContent": {
+    "result": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodAcceptingStringArgument",
+      "args": ["world"]
+    }
+  }
+}
+```
+
 | | REST (`POST /call`) | MCP (AI prompt) |
 |---|---|---|
-| **Call** | `{"callContent":{"result":{"class":"...testdata.one.SimpleStaticMethods","method":"methodAcceptingStringArgument","args":["world"]}}}` | *"Call the method that accepts a string argument and pass 'world' to it"* |
-| **Response** | `{"returnValues":{"result":"world_Success"},"callDurations":{"result":3}}` | `world_Success` |
+| **Call** | Payload above | *"Call the method that accepts a string argument and pass 'world' to it"* |
+| **Response** | `{"returnValues":{"result":"world_Success"}}` | `world_Success` |
 
 #### Use case 2 — Call a method returning a list
 
+```json
+{
+  "callContent": {
+    "countries": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.ClassWithLogger",
+      "method": "getCountries"
+    }
+  }
+}
+```
+
 | | REST (`POST /call`) | MCP (AI prompt) |
 |---|---|---|
-| **Call** | `{"callContent":{"countries":{"class":"...testdata.one.ClassWithLogger","method":"getCountries"}}}` | *"Get the list of available countries"* |
-| **Response** | `{"returnValues":{"countries":["AT","AU","CA","CH","DE"]},"callDurations":{"countries":1}}` | `["AT","AU","CA","CH","DE"]` |
+| **Call** | Payload above | *"Get the list of available countries"* |
+| **Response** | `{"returnValues":{"countries":["AT","AU","CA","CH","DE"]}}` | `["AT","AU","CA","CH","DE"]` |
 
 #### Use case 3 — Call chaining
 
+```json
+{
+  "callContent": {
+    "country": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.ClassWithLogger",
+      "method": "fetchRandomCountry"
+    },
+    "result": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodAcceptingStringArgument",
+      "args": ["country"]
+    }
+  }
+}
+```
+
 | | REST (`POST /call`) | MCP (AI prompt) |
 |---|---|---|
-| **Call** | `{"callContent":{"country":{"class":"...ClassWithLogger","method":"fetchRandomCountry"},"result":{"class":"...SimpleStaticMethods","method":"methodAcceptingStringArgument","args":["country"]}}}` | *"Get a random country and pass it as an argument to methodAcceptingStringArgument"* |
-| **Response** | `{"returnValues":{"country":"AU","result":"AU_Success"},...}` *(country is random)* | `AU_Success` *(country is random)* |
+| **Call** | Payload above | *"Get a random country and pass it as an argument to methodAcceptingStringArgument"* |
+| **Response** | `{"returnValues":{"country":"AU","result":"AU_Success"}}` *(country is random)* | `AU_Success` *(country is random)* |
 
 ## Setting Information About your Environment
 
 The users accessing bridge service will encounter two different technologies:
 
-* The Bridge Service
-* The Host Project
+- The Bridge Service
+- The Host Project
 
 In order to make provide context information the Bridge Service will always let you know which version it is. However,
 we need to let the users know about the version of the host project. Ths version number can be set by setting the
@@ -219,7 +261,7 @@ environment property `IBS.PRODUCT.USER.VERSION`.
 ## Testing That all is Working
 
 All you need to do is to call :
-```/test```
+`/test`
 
 If all is good you should get:
 
@@ -266,7 +308,7 @@ In the example above "<URL ID 2>" is marked as false because it can not be acces
 ### A basic Java Call
 
 The simplest java call is done in the following way:
-```/call```
+`/call`
 
 ```JSON
 {
@@ -557,19 +599,23 @@ The result is then:
 ```
 
 ## Results
+
 Results are returned as a JSON Object. Serializable return objects are deserialized. For objects that are not Serializable, we perform an operatio called scraping, which involves sequentially calling the simple getters of the object, and include the results in the result object.
 
 In the case of complex classes where the scraping is not sufficient, you can define a deserialization plugin for that class. This allow you to be specific regarding how the object can be returned. For mor information on this you can refer to the chapter [Deserialization Plugins](#deserialization-plugins).
 
 ### Formatting Dates
+
 We now allow the extraction and the formatting of Dates. This is done by setting the environment variable `IBS.DESERIALIZATION.DATE.FORMAT`. If not set the date is not changed and remains a long. The format we cover is [SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html). A wrong Date format will result in using the default format (long).
 
 ### Deserialization Plugins
+
 As of version 2.11.17, we introduced the notion of plugins. For now you can customize how an object is deserialized. This can be usefull when the default object serialization is incomplete or not to your liking.
 
 To create your own plugin you need to:
-* Implement the interface methods of the interface `com.adobe.campaign.tests.bridge.service.plugins.IBSDeserializerPlugin`.
-* Flag the package of the plugin in the environment variable `IBS.PLUGINS.PACKAGE`.
+
+- Implement the interface methods of the interface `com.adobe.campaign.tests.bridge.service.plugins.IBSDeserializerPlugin`.
+- Flag the package of the plugin in the environment variable `IBS.PLUGINS.PACKAGE`.
 
 There is an example of the plugin in the tests under `integroBridgeService/src/test/java/com/adobe/campaign/tests/bridge/plugins/deserializer/MimeExtractionPluginDeserializer.java`.
 
@@ -578,8 +624,8 @@ There is an example of the plugin in the tests under `integroBridgeService/src/t
 As of version 2.11.6 we now introduce the notion of timeouts. This means that after a declared time a call will be
 interrupted. Setting this value can be done at two levels:
 
-* The deployment level
-* The Call session
+- The deployment level
+- The Call session
 
 **Note :** If set to 0, there is no timeout.
 
@@ -641,16 +687,16 @@ When making the call we first update the environment variables for the system.
 This call will use your internal method for setting environment variables. This method can be set by setting the
 following environment values, when activating the Bridge on your project:
 
-* IBS.ENVVARS.SETTER.CLASS
-* IBS.ENVVARS.SETTER.METHOD
+- IBS.ENVVARS.SETTER.CLASS
+- IBS.ENVVARS.SETTER.METHOD
 
 ### Static Variable Scopes
 
 One of our main concerns has been the management of static variables. For the sake of conversation we need to identify
 scopes:
 
-* **Session Scope** : Access to the variables in the same call to the Bridge Service
-* **Product Scope** : Access to the variables between two different calls
+- **Session Scope** : Access to the variables in the same call to the Bridge Service
+- **Product Scope** : Access to the variables between two different calls
 
 #### Session Scopes
 
@@ -666,15 +712,15 @@ document [Managing Contexts and Static Variables](./docs/Technical.md#managing-c
 Although we do not, yet, provide tools for managing variables that are valid for all calls to the IBS, we can define a
 series or local environment variables are deployment of the service. This can be done in two ways:
 
-* Managing a properties for in your deployment
-* Injecting Runtime properties at the commandline
+- Managing a properties for in your deployment
+- Injecting Runtime properties at the commandline
 
 ## Headers and Secrets
 
 As of version 2.11.16, we can now use header variables in the payload. This feature was developed for two reasons:
 
-* Avoiding the passing o secrets directly in the JSON payload.
-* Allowing for users to re-use the same JSON payload for different values.
+- Avoiding the passing o secrets directly in the JSON payload.
+- Allowing for users to re-use the same JSON payload for different values.
 
 All you need to do is to reference your header name in the `args` section.
 
@@ -740,7 +786,8 @@ curl --request POST \
 	}
 }'
 ```
-Below is the exception we will get: 
+
+Below is the exception we will get:
 
 ```JSON
 {
@@ -870,8 +917,8 @@ example:
 By default, assertions in the Bridge Service will look at the resulut of a call, however, you can chose a different
 behavior or this. Currently, assertions are of two types:
 
-* Result Based,
-* Duration Based
+- Result Based,
+- Duration Based
 
 ### Duration-Based Assertions
 
@@ -945,6 +992,7 @@ mvn exec:java -Dexec.args="test" -DIBS.MCP.ENABLED=true -DIBS.CLASSLOADER.STATIC
 At startup, BridgeService scans the packages listed in `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` and builds a **method catalog** from every **public static method** found. Each discovered method is exposed as its own named MCP tool in `tools/list`. A generic `java_call` tool is always present for multi-step chains and instance method calls.
 
 The MCP endpoint is available at:
+
 ```
 POST /mcp
 ```
@@ -1004,14 +1052,16 @@ Response (abbreviated):
         "description": "Appends the success suffix to the given string.",
         "inputSchema": {
           "type": "object",
-          "properties": { "arg0": { "type": "string", "description": "the input string" } },
+          "properties": {
+            "arg0": { "type": "string", "description": "the input string" }
+          },
           "required": ["arg0"]
         }
       },
       {
         "name": "java_call",
         "description": "Generic BridgeService call for multi-step chains. ...",
-        "inputSchema": { "..." : "..." }
+        "inputSchema": { "...": "..." }
       },
       {
         "name": "ibs_diagnostics",
@@ -1048,7 +1098,12 @@ On success the result contains the standard BridgeService return payload seriali
   "jsonrpc": "2.0",
   "id": 3,
   "result": {
-    "content": [{ "type": "text", "text": "{\"returnValues\":{\"result\":\"hello_Success\"},\"callDurations\":{\"result\":3}}" }],
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"returnValues\":{\"result\":\"hello_Success\"},\"callDurations\":{\"result\":3}}"
+      }
+    ],
     "isError": false
   }
 }
@@ -1058,12 +1113,12 @@ If the method throws an exception, `isError` is `true` and `content[0].text` con
 
 **When to use individual tools vs `java_call`:**
 
-| Scenario | Use |
-|---|---|
-| Single stateless read | Individual tool (`ClassName_methodName`) |
-| Step B needs the Java object returned by step A | `java_call` with call chain |
-| Overloaded method (same parameter count) | `java_call` |
-| Instance method or constructor | `java_call` |
+| Scenario                                        | Use                                      |
+| ----------------------------------------------- | ---------------------------------------- |
+| Single stateless read                           | Individual tool (`ClassName_methodName`) |
+| Step B needs the Java object returned by step A | `java_call` with call chain              |
+| Overloaded method (same parameter count)        | `java_call`                              |
+| Instance method or constructor                  | `java_call`                              |
 
 ### The `java_call` Tool
 
@@ -1075,17 +1130,17 @@ A built-in `ibs_diagnostics` tool is always available alongside `java_call`. It 
 
 ### MCP Configuration
 
-| Variable | Default | Description |
-|---|---|---|
-| `IBS.MCP.ENABLED` | `false` | Enables the MCP endpoint at `/mcp` |
-| `IBS.MCP.PRECHAIN` | — | `callContent` fragment prepended to every `java_call` invocation (e.g. shared auth) |
-| `IBS.MCP.REQUIRE_JAVADOC` | `true` | When `true`, only methods with a Javadoc comment are included in the catalog |
+| Variable                  | Default | Description                                                                         |
+| ------------------------- | ------- | ----------------------------------------------------------------------------------- |
+| `IBS.MCP.ENABLED`         | `false` | Enables the MCP endpoint at `/mcp`                                                  |
+| `IBS.MCP.PRECHAIN`        | —       | `callContent` fragment prepended to every `java_call` invocation (e.g. shared auth) |
+| `IBS.MCP.REQUIRE_JAVADOC` | `true`  | When `true`, only methods with a Javadoc comment are included in the catalog        |
 
 ### MCP Limitations
 
-* Only **public static methods** are auto-discovered. Instance methods are accessible via `java_call`.
-* Overloaded methods with the **same number of parameters** are skipped during discovery. Use `java_call` to call them explicitly.
-* Parameter names are exposed as `arg0`, `arg1`, … — Java reflection does not retain source-level parameter names at runtime.
+- Only **public static methods** are auto-discovered. Instance methods are accessible via `java_call`.
+- Overloaded methods with the **same number of parameters** are skipped during discovery. Use `java_call` to call them explicitly.
+- Parameter names are exposed as `arg0`, `arg1`, … — Java reflection does not retain source-level parameter names at runtime.
 
 ## Error Management
 
@@ -1099,10 +1154,7 @@ response. For example, for the call:
       "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
       "method": "methodThrowingException",
       "returnType": "java.lang.String",
-      "args": [
-        3,
-        3
-      ]
+      "args": [3, 3]
     }
   }
 }
@@ -1134,20 +1186,20 @@ When using the bridge service, we also include additional info:
 
 The BridgeService exception is how the bridgeService manages underlying errors. However, we also share the:
 
-* The title of the failure
-* The error code
-* The bridgeService error category
-* The Originating exception
-* The Originating exception message
-* The step at which the error occured
-* The stack trace of the originating exception
+- The title of the failure
+- The error code
+- The bridgeService error category
+- The Originating exception
+- The Originating exception message
+- The step at which the error occured
+- The stack trace of the originating exception
 
 ## Contributing to the Project
 
 There are two main docs for contributing:
 
-* [The Contributing Doc](CONTRIBUTING.md) For general contribution rules.
-* [The Technical Doc](docs/Technical.md) For general technical aspects.
+- [The Contributing Doc](CONTRIBUTING.md) For general contribution rules.
+- [The Technical Doc](docs/Technical.md) For general technical aspects.
 
 ## Known Errors
 
@@ -1173,7 +1225,7 @@ As this is a new project there are a few limitations to our solution:
 Today, in order to simply the call model, we have chosen not to specify the argument types in the call. The consequence
 of this is that in the case of overloaded methods, we only pick the method with the same number of arguments. If two
 such overloaded methods exist, we choose to throw an exception:
-``We could not find a unique method for <method>.``
+`We could not find a unique method for <method>.`
 
 ### Only simple arguments
 
@@ -1191,6 +1243,3 @@ The mining or "scraping" is done by calling all the visible getters of the objec
 ### Calling Enum Methods
 
 We are currently unable to call enums with the Bridge Service.
-
-
-

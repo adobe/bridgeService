@@ -159,6 +159,23 @@ public class SimpleStaticMethods {
         return in_intArgument + SUCCESS_VAL;
     }
 
+    // For testing MCP tool discovery of overloads with different arity.
+    // The 1-arg variant has no Javadoc (exercises the skip path for overloads).
+    public static String overLoadedMethodDifferentArity(String in_arg) {
+        return in_arg + SUCCESS_VAL;
+    }
+
+    /**
+     * Two-argument overload for testing MCP tool name disambiguation by arity.
+     *
+     * @param in_arg1 first string argument
+     * @param in_arg2 second string argument
+     * @return concatenation of both arguments with the success suffix
+     */
+    public static String overLoadedMethodDifferentArity(String in_arg1, String in_arg2) {
+        return in_arg1 + in_arg2 + SUCCESS_VAL;
+    }
+
     //For impossible Objects exception
     public static String complexMethodAcceptor(Instantiable in_arg) {
         return SUCCESS_VAL;

@@ -40,10 +40,13 @@ public class MCPToolDiscovery {
         public final List<Map<String, Object>> tools;
         /** Maps each tool name to the Java Method it represents, used to build the catalog in the java_call description. */
         public final Map<String, Method> methodRegistry;
+        /** Number of methods skipped by the active Javadoc quality gate. */
+        public final int skippedCount;
 
-        public DiscoveryResult(List<Map<String, Object>> tools, Map<String, Method> methodRegistry) {
+        public DiscoveryResult(List<Map<String, Object>> tools, Map<String, Method> methodRegistry, int skippedCount) {
             this.tools = Collections.unmodifiableList(tools);
             this.methodRegistry = Collections.unmodifiableMap(methodRegistry);
+            this.skippedCount = skippedCount;
         }
     }
 
@@ -57,11 +60,12 @@ public class MCPToolDiscovery {
     public static DiscoveryResult discoverTools(String packagesCsv) {
         List<Map<String, Object>> tools = new ArrayList<>();
         Map<String, Method> registry = new LinkedHashMap<>();
+        int[] l_skipped = {0};
 
         if (packagesCsv == null || packagesCsv.trim().isEmpty()) {
             log.warn("IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES is not set — no tools will be discovered for MCP. "
                     + "Set this property to enable tool discovery.");
-            return new DiscoveryResult(tools, registry);
+            return new DiscoveryResult(tools, registry, 0);
         }
 
         // Strip trailing dots that IBS uses as package separators (e.g. "com.example.")
@@ -95,9 +99,8 @@ public class MCPToolDiscovery {
                 if (overloads.size() == 1) {
                     // Unique method name on this class — use simple tool name
                     Method method = overloads.get(0);
-                    if (ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("true") && !hasJavadoc(method)) {
-                        log.debug("Skipping {}.{} — no Javadoc (IBS.MCP.REQUIRE_JAVADOC=true)",
-                                clazz.getSimpleName(), methodName);
+                    if (shouldSkipForJavadoc(method, clazz.getSimpleName(), methodName)) {
+                        l_skipped[0]++;
                     } else {
                         String toolName = clazz.getSimpleName() + "_" + methodName;
                         registerTool(tools, registry, toolName, method);
@@ -113,13 +116,12 @@ public class MCPToolDiscovery {
                                     + "use the java_call tool to invoke them directly.",
                                     clazz.getName(), methodName, countEntry.getKey());
                         } else {
-                            Method method = countEntry.getValue().get(0);
-                            if (ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("true") && !hasJavadoc(method)) {
-                                log.debug("Skipping {}.{} — no Javadoc (IBS.MCP.REQUIRE_JAVADOC=true)",
-                                        clazz.getSimpleName(), methodName);
+                            Method lt_method = countEntry.getValue().get(0);
+                            if (shouldSkipForJavadoc(lt_method, clazz.getSimpleName(), methodName)) {
+                                l_skipped[0]++;
                             } else {
-                                String toolName = clazz.getSimpleName() + "_" + methodName + "_" + countEntry.getKey();
-                                registerTool(tools, registry, toolName, method);
+                                String lt_toolName = clazz.getSimpleName() + "_" + methodName + "_" + countEntry.getKey();
+                                registerTool(tools, registry, lt_toolName, lt_method);
                             }
                         }
                     }
@@ -127,9 +129,9 @@ public class MCPToolDiscovery {
             }
         }
 
-        log.info("MCP tool discovery complete: {} tool(s) registered from {} class(es).",
-                tools.size(), allClasses.size());
-        return new DiscoveryResult(tools, registry);
+        log.info("MCP tool discovery complete: {} tool(s) registered, {} skipped by quality gate ({}), from {} class(es).",
+                tools.size(), l_skipped[0], ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.fetchValue(), allClasses.size());
+        return new DiscoveryResult(tools, registry, l_skipped[0]);
     }
 
     private static void registerTool(List<Map<String, Object>> tools, Map<String, Method> registry,
@@ -180,6 +182,42 @@ public class MCPToolDiscovery {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * Returns true if the method has a non-empty Javadoc comment AND a non-empty
+     * {@code @param} tag for every parameter. Methods with no parameters pass if
+     * they have a non-empty comment.
+     */
+    static boolean hasAdequateJavadoc(Method method) {
+        try {
+            MethodJavadoc l_javadoc = RuntimeJavadoc.getJavadoc(method);
+            if (l_javadoc == null || COMMENT_FORMATTER.format(l_javadoc.getComment()).isEmpty()) return false;
+            int l_paramCount = method.getParameterCount();
+            if (l_paramCount == 0) return true;
+            List<ParamJavadoc> l_params = l_javadoc.getParams();
+            if (l_params.size() < l_paramCount) return false;
+            return l_params.stream().allMatch(p -> !COMMENT_FORMATTER.format(p.getComment()).isEmpty());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean shouldSkipForJavadoc(Method in_method, String in_clazz, String in_method_name) {
+        if (ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("strict")) {
+            if (!hasAdequateJavadoc(in_method)) {
+                log.debug("Skipping {}.{} — Javadoc quality gate (strict) not met: missing comment or @param",
+                        in_clazz, in_method_name);
+                return true;
+            }
+        } else if (ConfigValueHandlerIBS.MCP_REQUIRE_JAVADOC.is("true")) {
+            if (!hasJavadoc(in_method)) {
+                log.debug("Skipping {}.{} — Javadoc quality gate (true) not met: no Javadoc comment",
+                        in_clazz, in_method_name);
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

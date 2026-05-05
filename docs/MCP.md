@@ -43,7 +43,7 @@ using the built-in demo data, then from an external project that hosts its own J
 |---|---|---|
 | `IBS.MCP.ENABLED` | `false` | Enables the MCP endpoint at `/mcp`. Must be `true` for any MCP usage. |
 | `IBS.MCP.PRECHAIN` | — | JSON `callContent` fragment prepended to every `java_call` invocation. Used for server-wide setup such as shared authentication. Can also be supplied per-client via the `ibs-prechain` HTTP header (env var takes precedence). |
-| `IBS.MCP.REQUIRE_JAVADOC` | `true` | When `true`, only methods with a non-empty Javadoc comment are included in the tool catalog. Methods without Javadoc are silently excluded from `tools/list`. |
+| `IBS.MCP.REQUIRE_JAVADOC` | `strict` | Controls which methods are exposed based on Javadoc quality. `false` = expose all public static methods. `true` = requires a non-empty Javadoc comment. `strict` (default) = requires a comment **and** a non-empty `@param` tag for every parameter. |
 
 See the relevant sections below for full configuration details and examples.
 
@@ -558,7 +558,7 @@ Response:
   "mcpConfig": {
     "packagesConfigured": "com.example.services",
     "prechainActive": true,
-    "javadocRequired": true
+    "javadocQualityGate": "strict"
   },
   "headers": {
     "secretHeaderKeys": ["ibs-secret-login", "ibs-secret-pass", "ibs-secret-url"],
@@ -580,7 +580,7 @@ Response:
 | `deploymentMode` | `TEST` or `PRODUCTION` |
 | `mcpConfig.packagesConfigured` | Value of `IBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES` |
 | `mcpConfig.prechainActive` | Whether a prechain is configured (env var or header) |
-| `mcpConfig.javadocRequired` | Whether `IBS.MCP.REQUIRE_JAVADOC` is enabled |
+| `mcpConfig.javadocQualityGate` | Active value of `IBS.MCP.REQUIRE_JAVADOC` (`false`, `true`, or `strict`) |
 | `headers.secretHeaderKeys` | Names of `ibs-secret-*` headers received (values suppressed) |
 | `headers.envVarHeaders` | Decoded env-var headers (`ibs-env-*` prefix stripped, uppercased) |
 | `headers.regularHeaderCount` | Count of headers that are neither secret nor env-var |
@@ -883,16 +883,36 @@ Without the dependency, tools are still fully functional; only the description q
 
 ### Javadoc quality gate
 
-By default (`IBS.MCP.REQUIRE_JAVADOC=true`), BridgeService **only exposes methods that have a
-non-empty Javadoc comment**. Methods without Javadoc are silently skipped at startup and will not
-appear in `tools/list`.
+BridgeService enforces a configurable documentation quality gate via `IBS.MCP.REQUIRE_JAVADOC`.
+Methods that do not satisfy the active gate are silently skipped at startup and will not appear
+in `tools/list`.
 
-This is intentional. A method with no Javadoc would receive a generic fallback description such as
-`"Calls com.example.MyClass.method()"`, which gives an AI agent no useful information about when
-or why to call it. Exposing such tools increases the risk of accidental invocations.
+The three levels are:
 
-**To opt out** (expose all public static methods regardless of documentation):
+| Value | What is required to be exposed |
+|---|---|
+| `false` | Nothing — all public static methods are exposed regardless of documentation |
+| `true` | A non-empty Javadoc comment on the method |
+| `strict` *(default)* | A non-empty comment **and** a non-empty `@param` tag for every parameter |
 
+**Why `strict` is the default:** a method with parameters but no `@param` tags causes BridgeService
+to fall back to the Java type name as the parameter description (e.g. `"description": "String"`).
+This gives the AI agent almost no guidance on what to pass, which leads to incorrect calls and
+wasted round-trips. `strict` prevents such tools from appearing in the catalog.
+
+At startup, BridgeService logs the active gate level and its effect so you can confirm your
+configuration is applied:
+```
+MCPRequestHandler ready: 12 individual tool(s) + java_call + ibs_diagnostics.
+Javadoc quality gate: strict — only methods with Javadoc comment + @param for every parameter are exposed
+```
+
+**To use the previous default** (non-empty comment only):
+```
+IBS.MCP.REQUIRE_JAVADOC=true
+```
+
+**To expose all public static methods** (no documentation required):
 ```
 IBS.MCP.REQUIRE_JAVADOC=false
 ```
@@ -1113,11 +1133,11 @@ tool invocation.
 3. **What each parameter expects** — use `@param` tags; BridgeService uses them as argument descriptions in the tool schema.
 4. **When to use it vs similar methods** — if overloads or related methods exist, say which scenario each is for.
 
-**The quality gate enforces the minimum bar.** `IBS.MCP.REQUIRE_JAVADOC=true` (the default)
-silently drops any method with no Javadoc from the catalog entirely — it will not appear in
-`tools/list` and cannot be called via auto-discovery. Passing the gate (a non-empty comment)
-is necessary but not sufficient: a one-word description passes the gate but still produces a
-useless tool entry.
+**The quality gate enforces the minimum bar.** `IBS.MCP.REQUIRE_JAVADOC=strict` (the default)
+silently drops any method that lacks a comment or is missing `@param` tags — it will not appear in
+`tools/list` and cannot be called via auto-discovery. Passing the gate is necessary but not
+sufficient: a one-word description with perfunctory `@param` tags passes the gate but still
+produces a low-quality tool entry.
 
 **Good Javadoc pays compound interest.** A well-described method is discovered correctly the
 first time, requires no follow-up prompting, and stays reliable as the AI session context

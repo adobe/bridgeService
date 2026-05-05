@@ -171,15 +171,80 @@ This will make the service available under :
 
 ### Running a DEMO
 
-The bridge service can be launched in this project with a demo project (Included in an aggregator mode). When deployed
-in this mode, we include the module `bridgeService-data` which is part of this project. If you want to include this
-project in your deployment you need to set the property `demo.project.mode` to `compile`.
+The bridge service can be launched with a built-in demo project (`bridgeService-data`) in Aggregator mode. Start it with:
 
-from the root project:
-```mvn -pl integroBridgeService exec:java -Dexec.args="test" -Ddemo.project.mode=compile ```
+```bash
+mvn -pl integroBridgeService exec:java -Dexec.args="test" \
+  -Ddemo.project.mode=compile \
+  -DIBS.MCP.ENABLED=true \
+  -DIBS.CLASSLOADER.STATIC.INTEGRITY.PACKAGES=com.adobe.campaign.tests.bridge.testdata
+```
 
-or directly from the module "integroBridgeService":
-```mvn exec:java -Dexec.args="test" -Ddemo.project.mode=compile```
+This starts BridgeService on `http://localhost:8080` and exposes the demo classes from `com.adobe.campaign.tests.bridge.testdata.*` as both REST endpoints and MCP tools.
+
+For MCP usage, configure your AI client to point at `http://localhost:8080/mcp` — see [docs/MCP.md](docs/MCP.md) for client-specific setup.
+
+#### Use case 1 — Call a method with a string argument
+
+```json
+{
+  "callContent": {
+    "result": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodAcceptingStringArgument",
+      "args": ["world"]
+    }
+  }
+}
+```
+
+| | REST (`POST /call` with payload above) | MCP (AI prompt) |
+|---|---|---|
+| **Response** | `{"returnValues":{"result":"world_Success"},"callDurations":{"result":3}}` | `world_Success` |
+| **AI prompt** | — | *"Call the method that accepts a string argument and pass 'world' to it"* |
+
+#### Use case 2 — Call a method returning a list
+
+```json
+{
+  "callContent": {
+    "countries": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.ClassWithLogger",
+      "method": "getCountries"
+    }
+  }
+}
+```
+
+| | REST (`POST /call` with payload above) | MCP (AI prompt) |
+|---|---|---|
+| **Response** | `{"returnValues":{"countries":["AT","AU","CA","CH","DE"]},"callDurations":{"countries":1}}` | `["AT", "AU", "CA", "CH", "DE"]` |
+| **AI prompt** | — | *"Get the list of available countries"* |
+
+#### Use case 3 — Call chaining
+
+Pass the result of one call as the argument to the next in a single request:
+
+```json
+{
+  "callContent": {
+    "country": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.ClassWithLogger",
+      "method": "fetchRandomCountry"
+    },
+    "result": {
+      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
+      "method": "methodAcceptingStringArgument",
+      "args": ["country"]
+    }
+  }
+}
+```
+
+| | REST (`POST /call` with payload above) | MCP (AI prompt) |
+|---|---|---|
+| **Response** | `{"returnValues":{"country":"AU","result":"AU_Success"},...}` *(country is random)* | `AU_Success` *(country is random)* |
+| **AI prompt** | — | *"Get a random country and pass it as an argument to methodAcceptingStringArgument"* |
 
 ## Setting Information About your Environment
 

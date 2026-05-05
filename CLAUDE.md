@@ -107,7 +107,7 @@ These are managed by `ConfigValueHandlerIBS.java`.
 ## Java & Dependency Notes
 
 - Java 11 (source/target) is required. Do not use APIs introduced after Java 11.
-- Web framework: Spark Java 2.9.4
+- Web framework: Javalin 6.x (Jetty 11, `jakarta.*`). Javalin 7 is not planned — Javalin 6 already supports Java 11–21, so there is no reason to upgrade.
 - JSON: Jackson 2.18.x
 - Logging: Log4j 2 (50MB rotation, 3GB cleanup, 10-day retention per `docs/Technical.md`)
 
@@ -124,7 +124,7 @@ Apply these prefixes consistently in all new and modified Java code:
 
 ## Release Process
 
-The release branch is `release`. Releases are cut from that branch by triggering the **Release-BridgeService** GitHub Actions workflow (`workflow_dispatch`), which runs the Maven Release Plugin.
+The release branch is `release`. Releases are cut from that branch using the Maven Release Plugin.
 
 ### Steps to prepare a release
 
@@ -152,7 +152,10 @@ The release branch is `release`. Releases are cut from that branch by triggering
    git push --set-upstream origin release
    ```
 
-5. **Trigger the release** via GitHub Actions — go to **Actions → Release-BridgeService → Run workflow** (the workflow uses `workflow_dispatch`). It runs `mvn release:prepare release:perform` on the `release` branch automatically. Do not run the Maven release commands locally.
+5. **Trigger the release** via the Maven Release Plugin (run by CI or manually):
+   ```bash
+   mvn release:prepare release:perform
+   ```
 
 ### Notes
 - The next development version in the POMs on `main` is already set to `X.Y.Z-SNAPSHOT` by the Maven Release Plugin after the previous release; do not change it manually.

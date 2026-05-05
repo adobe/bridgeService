@@ -1124,9 +1124,7 @@ public class MCPBridgeServerTest {
     public void testHasAdequateJavadoc_runtimeJavadocThrows_returnsFalse() throws Exception {
         Method l_method = SimpleStaticMethods.class.getMethod("methodAcceptingStringArgument", String.class);
         try (MockedStatic<RuntimeJavadoc> l_mock = Mockito.mockStatic(RuntimeJavadoc.class)) {
-            // First call (from hasJavadoc) delegates to real impl; second call (inside hasAdequateJavadoc) throws.
             l_mock.when(() -> RuntimeJavadoc.getJavadoc(l_method))
-                    .thenAnswer(invocation -> invocation.callRealMethod())
                     .thenThrow(new RuntimeException("simulated Javadoc read failure"));
             assertThat(MCPToolDiscovery.hasAdequateJavadoc(l_method), is(false));
         }

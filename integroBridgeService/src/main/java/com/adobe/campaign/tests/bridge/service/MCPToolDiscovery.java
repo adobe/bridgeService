@@ -190,12 +190,11 @@ public class MCPToolDiscovery {
      * they have a non-empty comment.
      */
     static boolean hasAdequateJavadoc(Method method) {
-        if (!hasJavadoc(method)) return false;
-        int l_paramCount = method.getParameterCount();
-        if (l_paramCount == 0) return true;
         try {
             MethodJavadoc l_javadoc = RuntimeJavadoc.getJavadoc(method);
-            if (l_javadoc == null) return false;
+            if (l_javadoc == null || COMMENT_FORMATTER.format(l_javadoc.getComment()).isEmpty()) return false;
+            int l_paramCount = method.getParameterCount();
+            if (l_paramCount == 0) return true;
             List<ParamJavadoc> l_params = l_javadoc.getParams();
             if (l_params.size() < l_paramCount) return false;
             return l_params.stream().allMatch(p -> !COMMENT_FORMATTER.format(p.getComment()).isEmpty());

@@ -186,65 +186,24 @@ For MCP usage, configure your AI client to point at `http://localhost:8080/mcp` 
 
 #### Use case 1 — Call a method with a string argument
 
-```json
-{
-  "callContent": {
-    "result": {
-      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
-      "method": "methodAcceptingStringArgument",
-      "args": ["world"]
-    }
-  }
-}
-```
-
-| | REST (`POST /call` with payload above) | MCP (AI prompt) |
+| | REST (`POST /call`) | MCP (AI prompt) |
 |---|---|---|
+| **Call** | `{"callContent":{"result":{"class":"...testdata.one.SimpleStaticMethods","method":"methodAcceptingStringArgument","args":["world"]}}}` | *"Call the method that accepts a string argument and pass 'world' to it"* |
 | **Response** | `{"returnValues":{"result":"world_Success"},"callDurations":{"result":3}}` | `world_Success` |
-| **AI prompt** | — | *"Call the method that accepts a string argument and pass 'world' to it"* |
 
 #### Use case 2 — Call a method returning a list
 
-```json
-{
-  "callContent": {
-    "countries": {
-      "class": "com.adobe.campaign.tests.bridge.testdata.one.ClassWithLogger",
-      "method": "getCountries"
-    }
-  }
-}
-```
-
-| | REST (`POST /call` with payload above) | MCP (AI prompt) |
+| | REST (`POST /call`) | MCP (AI prompt) |
 |---|---|---|
-| **Response** | `{"returnValues":{"countries":["AT","AU","CA","CH","DE"]},"callDurations":{"countries":1}}` | `["AT", "AU", "CA", "CH", "DE"]` |
-| **AI prompt** | — | *"Get the list of available countries"* |
+| **Call** | `{"callContent":{"countries":{"class":"...testdata.one.ClassWithLogger","method":"getCountries"}}}` | *"Get the list of available countries"* |
+| **Response** | `{"returnValues":{"countries":["AT","AU","CA","CH","DE"]},"callDurations":{"countries":1}}` | `["AT","AU","CA","CH","DE"]` |
 
 #### Use case 3 — Call chaining
 
-Pass the result of one call as the argument to the next in a single request:
-
-```json
-{
-  "callContent": {
-    "country": {
-      "class": "com.adobe.campaign.tests.bridge.testdata.one.ClassWithLogger",
-      "method": "fetchRandomCountry"
-    },
-    "result": {
-      "class": "com.adobe.campaign.tests.bridge.testdata.one.SimpleStaticMethods",
-      "method": "methodAcceptingStringArgument",
-      "args": ["country"]
-    }
-  }
-}
-```
-
-| | REST (`POST /call` with payload above) | MCP (AI prompt) |
+| | REST (`POST /call`) | MCP (AI prompt) |
 |---|---|---|
+| **Call** | `{"callContent":{"country":{"class":"...ClassWithLogger","method":"fetchRandomCountry"},"result":{"class":"...SimpleStaticMethods","method":"methodAcceptingStringArgument","args":["country"]}}}` | *"Get a random country and pass it as an argument to methodAcceptingStringArgument"* |
 | **Response** | `{"returnValues":{"country":"AU","result":"AU_Success"},...}` *(country is random)* | `AU_Success` *(country is random)* |
-| **AI prompt** | — | *"Get a random country and pass it as an argument to methodAcceptingStringArgument"* |
 
 ## Setting Information About your Environment
 

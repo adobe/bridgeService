@@ -13,9 +13,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.adobe.campaign.tests.bridge.service</groupId>
     <artifactId>integroBridgeService</artifactId>
-    <description>Bridge Service</description>
+    <description>REST service that invokes Java methods via reflection — enables Cypress, Python, and any HTTP client to call Java libraries without rewriting them. Supports call chaining, Hamcrest assertions, custom class loaders, and MCP tool exposure.</description>
     <packaging>jar</packaging>
-    <name>${project.groupId}:${project.artifactId}</name>
+    <name>BridgeService - REST Service</name>
     <properties>
         <demo.project.mode>test</demo.project.mode>
     </properties>

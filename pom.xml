@@ -16,7 +16,7 @@
     <version>3.11.5-SNAPSHOT</version>
     <description>BridgeService exposes any Java library as REST endpoints, enabling cross-language test automation and AI agent tool use (MCP). Call Java methods directly from Cypress, Python, or any HTTP client — no rewriting required.</description>
     <packaging>pom</packaging>
-    <name>BridgeService</name>
+    <name>${project.groupId}:${project.artifactId}</name>
     <url>https://github.com/adobe/bridgeService</url>
     <inceptionYear>2022</inceptionYear>
     <organization>

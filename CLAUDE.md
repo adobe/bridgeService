@@ -157,10 +157,22 @@ The release branch is `release`. Releases are cut from that branch using the Mav
    git push --set-upstream origin release
    ```
 
-5. **Trigger the release** via the Maven Release Plugin (run by CI or manually):
+5. **Open a pull request** from `release` → `main` for review before triggering the workflow:
    ```bash
-   mvn release:prepare release:perform
+   gh pr create --title "Prepare release X.Y.Z" --base main --head release
    ```
+   If the PR shows conflicts (because `main` advanced after the release prep), merge `origin/main` into `release` and resolve:
+   ```bash
+   git merge origin/main --no-edit
+   # Conflicts in README.md, ReleaseNotes.md, docs/MCP.md are version-number conflicts.
+   # Keep the release branch side (3.11.4, not 3.11.3):
+   git checkout --ours README.md ReleaseNotes.md docs/MCP.md
+   git add README.md ReleaseNotes.md docs/MCP.md
+   git commit --no-edit
+   git push origin release
+   ```
+
+6. **Trigger the release** by manually dispatching the **Release-BridgeService** GitHub Actions workflow (`.github/workflows/maven-publish-release.yml`). Go to the Actions tab on GitHub, select "Release-BridgeService", and click "Run workflow" on the `release` branch. The workflow runs `mvn release:prepare release:perform` with GPG signing and Sonatype credentials, then promotes the artifact to Maven Central automatically. No GitHub Release is created — Maven Central is the canonical artifact location.
 
 ### Notes
 - The next development version in the POMs on `main` is already set to `X.Y.Z-SNAPSHOT` by the Maven Release Plugin after the previous release; do not change it manually.

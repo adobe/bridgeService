@@ -1,4 +1,8 @@
 # Bridge Service - RELEASE NOTES
+## 3.11.4
+* **MCP** [#40 Three-level Javadoc quality gate for MCP tool discovery](https://github.com/adobe/bridgeService/pull/52) Tool descriptions are now validated at three levels: method Javadoc, `@param` tags, and `@return` tag. Methods missing any level are excluded from `tools/list` at startup.
+* **Docs** [#50 Add demo usage examples to Running a DEMO section](https://github.com/adobe/bridgeService/pull/51) Added concrete curl and payload examples to the demo section of the README.
+
 ## 3.11.3
 * **HTTP Framework** [#38 Migrate from Spark Java to Javalin 6](https://github.com/adobe/bridgeService/pull/43) Replaced Spark Java 2.9.4 (Jetty 9, `javax.*`) with Javalin 6.3.0 (Jetty 11, `jakarta.*`). IBS stays on Java 11; injection into Java 17 and Java 21 host JVMs now works without `--add-opens` flags.
 

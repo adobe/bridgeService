@@ -157,10 +157,7 @@ The release branch is `release`. Releases are cut from that branch using the Mav
    git push --set-upstream origin release
    ```
 
-5. **Trigger the release** via the Maven Release Plugin (run by CI or manually):
-   ```bash
-   mvn release:prepare release:perform
-   ```
+5. **Trigger the release** by manually dispatching the **Release-BridgeService** GitHub Actions workflow (`.github/workflows/maven-publish-release.yml`). Go to the Actions tab on GitHub, select "Release-BridgeService", and click "Run workflow" on the `release` branch. The workflow runs `mvn release:prepare release:perform` with GPG signing and Sonatype credentials, then promotes the artifact to Maven Central automatically. No GitHub Release is created — Maven Central is the canonical artifact location.
 
 ### Notes
 - The next development version in the POMs on `main` is already set to `X.Y.Z-SNAPSHOT` by the Maven Release Plugin after the previous release; do not change it manually.

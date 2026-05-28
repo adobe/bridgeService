@@ -145,7 +145,7 @@ public class CallContent {
 
         Object lr_object;
         try {
-            LogManager.getLogger().debug("Calling  Class: {} and  Method: {} with {} arguments.", this.getClassName(), this.getMethodName(), this.args.length);
+            LogManager.getLogger(CallContent.class).debug("Calling  Class: {} and  Method: {} with {} arguments.", this.getClassName(), this.getMethodName(), this.args.length);
             //Add our package to the classLoader integrity paths
             if (ConfigValueHandlerIBS.INTEGRITY_PACKAGE_INJECTION_MODE.is("semi-manual")) {
 

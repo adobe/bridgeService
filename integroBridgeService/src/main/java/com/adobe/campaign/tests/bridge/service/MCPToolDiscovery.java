@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  */
 public class MCPToolDiscovery {
 
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(MCPToolDiscovery.class);
     private static final CommentFormatter COMMENT_FORMATTER = new CommentFormatter();
 
     /**

@@ -41,7 +41,7 @@ public class IntegroAPI {
     public static final String JAVA_CALL_REF = "call_part";
     public static final String ERROR_BAD_MULTI_PART_REQUEST = "When sending a multi-part request, you need to at least have a payload for the callContent.";
     public static final String STD_UPLOAD_DIR = "upload";
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(IntegroAPI.class);
 
     public static Javalin startServices(int in_port) {
 

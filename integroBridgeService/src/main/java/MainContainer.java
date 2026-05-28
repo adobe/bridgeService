@@ -12,7 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class MainContainer {
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(MainContainer.class);
     public static final int PROD_PORT = 443;
     public static final int TEST_PORT = 8080;
 

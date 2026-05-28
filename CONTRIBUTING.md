@@ -42,6 +42,16 @@ process that must reach lazy consensus (silence is approval) before invitations
 are issued. If you feel you are qualified and want to get more deeply involved,
 feel free to reach out to existing committers to have a conversation about that.
 
+### Module Structure
+
+The project has three modules:
+
+| Module | Purpose | Deployed to Central |
+|---|---|---|
+| `integroBridgeService` | Main REST/MCP service | Yes |
+| `bridgeService-data` | Test data and demo classes | No |
+| `bridgeService-test-injection` | E2E tests for the injection model (BridgeService embedded in a host JVM); run against JDK 17 and 21 in CI | No |
+
 ### Commit Rules
 All code pushed onto the repository must pass the following quality gates:
 * Passed Unit Tests

@@ -42,11 +42,14 @@ mvn package
 
 ```
 parent (pom.xml)
-├── integroBridgeService/   ← main service
-└── bridgeService-data/     ← test data & demo classes used by the test suite
+├── integroBridgeService/        ← main service
+├── bridgeService-data/          ← test data & demo classes used by the test suite
+└── bridgeService-test-injection/ ← E2E injection model tests (not deployed to Maven Central)
 ```
 
 `bridgeService-data` is a dependency of the test scope in `integroBridgeService`. It provides concrete Java classes (under `com.adobe.campaign.tests.bridge.testdata.*`) that the tests call through the REST API.
+
+`bridgeService-test-injection` verifies the **injection model** — where BridgeService is embedded as a library inside a host JVM rather than run as a standalone server. Its tests (`InjectionModelE2ETests`, `InjectionModelMCPTests`) start the service in-process and exercise both the REST and MCP paths. CI runs this module against JDK 17 and JDK 21 via a matrix job (`injection-compat`). The module has `sonar.skip=true` and `maven.deploy.skip=true` so it is excluded from coverage reporting and Central publishing.
 
 ## Architecture Overview
 

@@ -19,9 +19,18 @@
     <properties>
         <sonar.skip>true</sonar.skip>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <injection.java.version>11</injection.java.version>
     </properties>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${injection.java.version}</source>
+                    <target>${injection.java.version}</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -30,6 +39,9 @@
                     <suiteXmlFiles>
                         <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
+                    <systemPropertyVariables>
+                        <bridgeservice.root.dir>${project.basedir}/..</bridgeservice.root.dir>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
@@ -78,6 +90,6 @@
     <parent>
         <groupId>com.adobe.campaign.tests.bridge</groupId>
         <artifactId>parent</artifactId>
-        <version>3.11.4-SNAPSHOT</version>
+        <version>3.11.5-SNAPSHOT</version>
     </parent>
 </project>

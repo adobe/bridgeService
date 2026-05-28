@@ -16,7 +16,7 @@ import java.util.Optional;
 
 public class LogManagement {
     public static final String STD_CURRENT_STEP = "currentStep";
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(LogManagement.class);
 
     /**
      * Logs the step in the context. it will later be used by the Error Object to generate step info in the error

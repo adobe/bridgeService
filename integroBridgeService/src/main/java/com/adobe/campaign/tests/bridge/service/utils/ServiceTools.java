@@ -66,7 +66,7 @@ public class ServiceTools {
 
     private static int STD_WAIT_BEFORE_INVALIDATE = 5000;
 
-    protected static Logger log = LogManager.getLogger();
+    protected static Logger log = LogManager.getLogger(ServiceTools.class);
 
     public static void setWAIT_BEFORE_INVALIDATE(int in_waitTimeMS) {
         STD_WAIT_BEFORE_INVALIDATE = in_waitTimeMS;

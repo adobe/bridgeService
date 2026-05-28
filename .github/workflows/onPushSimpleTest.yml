@@ -17,7 +17,7 @@ name: unit-tests
 on:
   push:
     branches:
-      - '*'
+      - '**'
   pull_request:
     branches: [ main ]
 
@@ -71,7 +71,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
       - name: Run injection tests on JDK ${{ matrix.java-version }}
-        run: mvn --batch-mode -pl bridgeService-data,integroBridgeService,bridgeService-test-injection install
+        run: mvn --batch-mode -pl bridgeService-data,integroBridgeService,bridgeService-test-injection install -Dinjection.java.version=${{ matrix.java-version }}
         env:
           OSSRH_ARTIFACTORY_USER: ${{ secrets.OSSRH_ARTIFACTORY_USER }}
           OSSRH_ARTIFACTORY_API_TOKEN: ${{ secrets.OSSRH_ARTIFACTORY_API_TOKEN }}

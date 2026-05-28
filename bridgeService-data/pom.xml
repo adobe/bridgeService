@@ -15,7 +15,7 @@
     <groupId>com.adobe.campaign.tests.bridge.testdata</groupId>
     <artifactId>bridgeService-data</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>Test Library for the Bridge Service</description>
+    <description>Concrete Java test classes and demo data used by the BridgeService integration test suite.</description>
     <properties>
         <sonar.skip>true</sonar.skip>
         <maven.deploy.skip>true</maven.deploy.skip>

@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  */
 public class MCPRequestHandler {
 
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(MCPRequestHandler.class);
     private static final String JSONRPC_VERSION = "2.0";
     private static final String MCP_PROTOCOL_VERSION = "2024-11-05";
     private static final String JAVA_CALL_TOOL_NAME = "java_call";

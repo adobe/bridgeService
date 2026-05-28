@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class JavaCalls {
 
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(JavaCalls.class);
     private Map<String, Assertion> assertions;
     private Long timeout;
     private Map<String, CallContent> callContent;

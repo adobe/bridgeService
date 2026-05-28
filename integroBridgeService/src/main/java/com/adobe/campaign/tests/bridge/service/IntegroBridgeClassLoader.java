@@ -17,7 +17,7 @@ import java.io.InputStream;
 import java.util.*;
 
 public class IntegroBridgeClassLoader extends ClassLoader {
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(IntegroBridgeClassLoader.class);
     private Set<String> secretSet;
     private Set<String> headerSet;
     private Map<String, Object> callResultCache;

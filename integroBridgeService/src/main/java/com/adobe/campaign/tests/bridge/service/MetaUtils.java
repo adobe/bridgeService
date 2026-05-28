@@ -25,7 +25,7 @@ public class MetaUtils {
             boolean.class, Integer.class, Long.class, Boolean.class, Date.class, Object.class);
     public static final int RECURSION_DEPTH_LIMIT = Integer.parseInt(
             ConfigValueHandlerIBS.DESERIALIZATION_DEPTH_LIMIT.fetchValue());
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(MetaUtils.class);
 
     /**
      * Extracts a possible field name given a method name

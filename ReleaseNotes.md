@@ -1,4 +1,10 @@
 # Bridge Service - RELEASE NOTES
+## 3.11.5
+* **Bug Fix** [#62 Fix fat-JAR crash: replace parameterless LogManager.getLogger() calls](https://github.com/adobe/bridgeService/pull/62) Resolved startup crash in fat-JAR deployments caused by `LogManager.getLogger()` without a class argument.
+* **CI** [#59/#60 Injection compatibility matrix for JDK 17 and 21](https://github.com/adobe/bridgeService/pull/60) Added a CI matrix job that runs injection tests against JDK 17 and JDK 21 host JVMs.
+* **Promotion** [#64 Enrich Maven Central metadata](https://github.com/adobe/bridgeService/pull/63) Added keyword-rich descriptions, organization, inceptionYear, issueManagement, and ciManagement to POMs for better discoverability on Maven Central.
+* **Dependency Updates** Updated log4j2 to 2.26.0; routine GitHub Actions version bumps.
+
 ## 3.11.4
 * **MCP** [#40 Three-level Javadoc quality gate for MCP tool discovery](https://github.com/adobe/bridgeService/pull/52) Tool descriptions are now validated at three levels: method Javadoc, `@param` tags, and `@return` tag. Methods missing any level are excluded from `tools/list` at startup.
 * **Docs** [#50 Add demo usage examples to Running a DEMO section](https://github.com/adobe/bridgeService/pull/51) Added concrete curl and payload examples to the demo section of the README.

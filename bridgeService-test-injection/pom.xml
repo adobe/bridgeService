@@ -39,6 +39,9 @@
                     <suiteXmlFiles>
                         <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
+                    <systemPropertyVariables>
+                        <bridgeservice.root.dir>${project.basedir}/..</bridgeservice.root.dir>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>

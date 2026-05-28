@@ -32,4 +32,14 @@
             <package name="com.adobe.campaign.tests.bridge.dependency" />
         </packages>
     </test>
+    <test verbose="2" name="Static Analysis Tests" time-out="60000">
+        <groups>
+            <run>
+                <include name="static-analysis"/>
+            </run>
+        </groups>
+        <packages>
+            <package name="com.adobe.campaign.tests.bridge.dependency" />
+        </packages>
+    </test>
 </suite>

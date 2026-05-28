@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Random;
 
 public class ClassWithLogger {
-    protected static Logger log = LogManager.getLogger();
+    protected static Logger log = LogManager.getLogger(ClassWithLogger.class);
 
     private static final List<String> countries = Arrays.asList("AT", "AU",
             "CA", "CH", "DE");

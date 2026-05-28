@@ -13,7 +13,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.adobe.campaign.tests.bridge</groupId>
     <artifactId>parent</artifactId>
-    <version>3.11.5</version>
+    <version>3.11.6-SNAPSHOT</version>
     <description>BridgeService exposes any Java library as REST endpoints, enabling cross-language test automation and AI agent tool use (MCP). Call Java methods directly from Cypress, Python, or any HTTP client — no rewriting required.</description>
     <packaging>pom</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
@@ -216,7 +216,7 @@
         <url>https://github.com/adobe/bridgeService/tree/main/src</url>
         <connection>scm:git::https://github.com/adobe/bridgeService.git</connection>
         <developerConnection>scm:git:https://github.com/adobe/bridgeService.git</developerConnection>
-        <tag>parent-3.11.5</tag>
+        <tag>HEAD</tag>
     </scm>
     <distributionManagement>
         <snapshotRepository>

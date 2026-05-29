@@ -121,7 +121,7 @@ The following dependency needs to be added to your pom file:
 #### Considerations
 
 Since the BridgeService uses Jetty (via Javalin 6) it is quite possible that there may be conflicts in the project when
-you add this library. BridgeService 3.12+ uses the `jakarta.servlet` namespace (Jetty 11). If your project still uses
+you add this library. BridgeService 3.11.3+ uses the `jakarta.servlet` namespace (Jetty 11). If your project still uses
 `javax.servlet`, you will need to migrate to `jakarta.servlet` or ensure the two are isolated on the classpath.
 
 ### Including your project in the BridgeService
@@ -138,15 +138,15 @@ Legend: ✅ Works &nbsp;|&nbsp; ⚠️ Works with workarounds &nbsp;|&nbsp; ❌ 
 
 | IBS release                    | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
 | ------------------------------ | :------------: | :-------------: | :-------------: | :-------------: |
-| **pre-3.12** (Spark, Java 11)  |      ❌ ¹      |       ✅        |      ⚠️ ²       |      ❌ ³       |
-| **3.12+** (Javalin 6, Java 11) |      ❌ ¹      |       ✅        |       ✅        |       ✅        |
+| **pre-3.11.3** (Spark, Java 11)  |      ❌ ¹      |       ✅        |      ⚠️ ²       |      ❌ ³       |
+| **3.11.3+** (Javalin 6, Java 11) |      ❌ ¹      |       ✅        |       ✅        |       ✅        |
 
 **Aggregator Model** — IBS runs its own JVM and loads the exposed project's classes via reflection.
 
 | IBS release                    | Exposed Java 8 | Exposed Java 11 | Exposed Java 17 | Exposed Java 21 |
 | ------------------------------ | :------------: | :-------------: | :-------------: | :-------------: |
-| **pre-3.12** (Spark, Java 11)  |       ✅       |       ✅        |      ❌ ⁴       |      ❌ ⁴       |
-| **3.12+** (Javalin 6, Java 11) |       ✅       |       ✅        |      ❌ ⁴       |      ❌ ⁴       |
+| **pre-3.11.3** (Spark, Java 11)  |       ✅       |       ✅        |      ❌ ⁴       |      ❌ ⁴       |
+| **3.11.3+** (Javalin 6, Java 11) |       ✅       |       ✅        |      ❌ ⁴       |      ❌ ⁴       |
 
 ¹ Exposed project JVM cannot load IBS bytecode — `UnsupportedClassVersionError`.  
 ² Spark is unofficial on Java 17 and requires `--add-opens` flags.  
